@@ -1,0 +1,121 @@
+[build-system]
+requires = ["setuptools>=77.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "laqta"
+version = "0.1.0"
+description = "Laqta — local-first, Arabic-first long-video to vertical Shorts engine."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [{ name = "thewizard2030" }]
+keywords = [
+    "video",
+    "shorts",
+    "local-first",
+    "transcription",
+    "arabic",
+    "bidi",
+    "ffmpeg",
+    "whisper",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: End Users/Desktop",
+    "Natural Language :: Arabic",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Video :: Conversion",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+]
+
+# ---------------------------------------------------------------------------
+# The `laqta` core package is the manifest-based pipeline (schema, config,
+# stages) plus the `laqta` command line interface. It is deliberately free of
+# any web framework: the FastAPI layer lives in `backend/`.
+#
+# Heavy ASR/analysis libraries are NOT hard dependencies. The stages import
+# them lazily, so `import qatta.core` never loads them and the package stays
+# installable on Python versions without wheels (e.g. 3.14 for mediapipe).
+# The affected stages then fail with a clear "capability unavailable" error
+# instead of a broken import.
+#
+# License policy: MIT / Apache-2.0 / BSD / ISC / Unlicense only. No AGPL-3.0
+# packages (ultralytics/YOLOv8 is explicitly forbidden).
+# ---------------------------------------------------------------------------
+dependencies = [
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.2.0",
+    "numpy>=1.26",
+    # CLI (typer + rich) — both MIT.
+    "typer>=0.12",
+    "rich>=13",
+]
+
+[project.optional-dependencies]
+# Local CPU speech recognition (faster-whisper + CTranslate2, MIT).
+asr = ["faster-whisper>=1.1"]
+# Optional analysis stages (shot detection, audio features, face landmarks).
+analysis = [
+    "librosa>=0.10",
+    "soundfile>=0.12",
+    "scenedetect[opencv]>=0.6",
+    "mediapipe>=0.10",
+]
+# URL ingestion / YouTube captions-first flow (Unlicense).
+# The platform-policy/rights review was completed by owner decision on
+# 2026-10-19; per-import rights confirmation remains mandatory and the
+# QATTA_ENABLE_URL_INGESTION=false opt-out is always honored.
+url = ["yt-dlp>=2024.04"]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23.0",
+    "ruff>=0.5.0",
+]
+# Everything above, for a one-shot install.
+all = [
+    "faster-whisper>=1.1",
+    "librosa>=0.10",
+    "soundfile>=0.12",
+    "scenedetect[opencv]>=0.6",
+    "mediapipe>=0.10",
+    "yt-dlp>=2024.04",
+]
+
+[project.urls]
+Homepage = "https://github.com/thewizard2030/laqta"
+Repository = "https://github.com/thewizard2030/laqta"
+Issues = "https://github.com/thewizard2030/laqta/issues"
+Changelog = "https://github.com/thewizard2030/laqta/blob/main/CHANGELOG.md"
+
+[project.scripts]
+laqta = "qatta.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["qatta*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "backend/tests"]
+pythonpath = [".", "backend"]
+asyncio_mode = "auto"
+addopts = "-ra -q"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = [".", "backend"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "N"]
+ignore = []
+
+[tool.ruff.lint.isort]
+# The core package (`qatta/`) and the backend app (`app/`) are first-party
+# in this repository. Declaring them keeps the import order identical no
+# matter which directory ruff is invoked from.
+known-first-party = ["qatta", "app"]

@@ -1,0 +1,16 @@
+# Laqta backend — development tooling.
+#
+# The API runtime plus the test and lint tools. Combine it with a runtime
+# profile when you need more:
+#
+#   pip install -r requirements-asr.txt -r requirements-dev.txt
+#   pip install -r requirements-all.txt -r requirements-dev.txt
+#
+#   pytest            # backend tests
+#   ruff check .      # lint
+
+-r requirements.txt
+
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+ruff>=0.5.0

@@ -1,0 +1,71 @@
+name: Release
+
+# A tag in the form `vX.Y.Z` publishes a GitHub Release. The release notes
+# are taken from the matching section of CHANGELOG.md.
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to publish (e.g. v0.1.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    name: Publish the release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Resolve the tag
+        id: tag
+        run: |
+          TAG="${{ inputs.tag || github.ref_name }}"
+          echo "value=$TAG" >> "$GITHUB_OUTPUT"
+          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+            echo "::error::Tag $TAG does not exist in this repository."
+            exit 1
+          fi
+
+      - name: Verify the tag matches the manifests
+        run: |
+          python scripts/check_version.py
+          VERSION="$(python -c 'import qatta; print(qatta.__version__)')"
+          TAG="${{ steps.tag.outputs.value }}"
+          if [ "$TAG" != "v$VERSION" ]; then
+            echo "::error::Tag $TAG does not match the package version $VERSION."
+            exit 1
+          fi
+
+      - name: Write the release notes from the changelog
+        run: |
+          python scripts/release_notes.py "${{ steps.tag.outputs.value }}" > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "::error::The release notes are empty."
+            exit 1
+          fi
+          cat release-notes.md
+
+      - name: Build the source archive
+        run: |
+          mkdir -p dist
+          git archive --format=tar.gz --prefix="laqta-${{ steps.tag.outputs.value }}/" \
+            -o "dist/laqta-${{ steps.tag.outputs.value }}.tar.gz" "${{ steps.tag.outputs.value }}"
+
+      - name: Publish the GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.tag.outputs.value }}
+          name: Laqta ${{ steps.tag.outputs.value }}
+          body_path: release-notes.md
+          files: dist/*.tar.gz
+          fail_on_unmatched_files: true

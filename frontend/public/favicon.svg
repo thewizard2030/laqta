@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="laqta" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#8b5cf6" />
+      <stop offset="55%" stop-color="#7c4dff" />
+      <stop offset="100%" stop-color="#22d3ee" />
+    </linearGradient>
+  </defs>
+  <rect width="48" height="48" rx="14" fill="url(#laqta)" />
+  <path d="M48 12 L36 12 L48 26 Z" fill="#070A11" fill-opacity="0.28" />
+  <path d="M13 11 H21 V27 H35 V35 H13 Z" fill="#FFFFFF" />
+  <path d="M25 12.5 L33 17 L25 21.5 Z" fill="#FFFFFF" fill-opacity="0.92" />
+</svg>

@@ -1,0 +1,87 @@
+# --- Local agent / editor tooling -----------------------------------------
+# `.opencode/` holds local AI-assistant skills and their datasets. They are
+# developer tooling, not product source, and are not part of a release.
+.opencode/
+.claude/
+.cursor/
+
+# --- Python ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+backend/.venv/
+.venv/
+env/
+venv/
+ENV/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+/lib/
+/lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+.pytest_cache/
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.venv*/
+.tox/
+.mypy.ini
+
+# --- Node & Frontend ------------------------------------------------------
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+frontend/.vite/
+.npm/
+*.tsbuildinfo
+.eslintcache
+
+# --- IDEs & OS ------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# --- Laqta local data directory ------------------------------------------
+# Projects, imported media, transcripts, renders and the local SQLite DB.
+data/
+*.db
+*.sqlite3
+logs/
+temp/
+output/
+*.bak
+*.orig
+*.rej
+
+# --- Environment files ----------------------------------------------------
+# `.env` is a local secret file and must never be committed.
+.env
+.env.local
+.env.*.local
+# `.env.example` IS committed — it is the documented template.
+!.env.example
+
+# --- Release artifacts ----------------------------------------------------
+release/
+build/
+*.spec

@@ -1,0 +1,49 @@
+name: Feature request
+description: Suggest an improvement to Laqta
+title: "[Feature]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Laqta is local-first and CPU-first. Please describe the outcome you
+        want rather than the implementation you have in mind.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: What are you trying to do today that is hard or impossible?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What would you like Laqta to do?
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you have considered
+      description: Workarounds, other tools, or a manual process that gets you there today.
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Does this need to work offline?
+      options:
+        - Yes — it must never touch the network
+        - No — a hosted provider would be acceptable (with the usual disclosure)
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Your setup
+      description: Hardware, languages, and the kind of videos you work with.
+      placeholder: 8 GB RAM laptop, CPU only, Arabic and English podcasts

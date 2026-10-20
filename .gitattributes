@@ -1,0 +1,48 @@
+# Normalise line endings for everything Git treats as text.
+* text=auto eol=lf
+
+# Files that must keep their exact bytes.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+*.mp4 binary
+*.webm binary
+*.mov binary
+*.mkv binary
+*.mp3 binary
+*.wav binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.pdf binary
+*.zip binary
+*.gz binary
+*.tar binary
+*.so binary
+*.dll binary
+*.dylib binary
+*.onnx binary
+*.bin binary
+*.safetensors binary
+*.model binary
+
+# Lock files are generated but committed verbatim.
+package-lock.json -diff
+uv.lock -diff
+
+# Keep the diff of generated/large text files readable.
+*.md text diff=markdown
+*.py text diff=python
+*.ts text diff=typescript
+*.tsx text diff=typescript
+*.css text diff=css
+*.html text diff=html
+
+# Binary assets that must never be line-ending converted.
+*.vtt text eol=lf
+*.srt text eol=lf
+*.ass text eol=lf

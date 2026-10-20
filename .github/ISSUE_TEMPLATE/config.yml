@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Question or discussion
+    url: https://github.com/thewizard2030/laqta/discussions
+    about: "How do I …? Usage, configuration, ideas — start here."
+  - name: Security report
+    url: https://github.com/thewizard2030/laqta/security/advisories/new
+    about: "Report a vulnerability privately. Please do not open a public issue."
+  - name: Support
+    url: https://github.com/thewizard2030/laqta/blob/main/SUPPORT.md
+    about: "Common questions and troubleshooting."

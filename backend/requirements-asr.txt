@@ -1,0 +1,13 @@
+# Laqta backend — recommended profile: API + local CPU speech recognition.
+#
+# faster-whisper (MIT) pulls CTranslate2 and downloads the model weights on
+# first use (~145 MB for the `base` profile). This is the profile a normal
+# installation wants: everything local, no account, no API key.
+#
+#   pip install -r requirements-asr.txt
+
+-r requirements.txt
+
+# Default transcription provider (local CPU ASR). Transcription degrades to a
+# clear PACKAGE_NOT_INSTALLED error if missing; the app never requires cloud.
+faster-whisper>=1.1

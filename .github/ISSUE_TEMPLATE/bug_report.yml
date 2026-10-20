@@ -1,0 +1,88 @@
+name: Bug report
+description: Something does not work as documented
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting this. Please run `laqta doctor` and paste the
+        output below — it shows exactly what is installed on your machine.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you see, and what did you expect to see instead?
+      placeholder: The clip list stayed empty after the import finished.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: textarea
+    id: doctor
+    attributes:
+      label: "Output of `laqta doctor`"
+      description: The output of `backend/.venv/bin/laqta doctor`.
+      render: shell
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Laqta version
+      description: The output of `laqta --version`, or the commit you are on.
+      placeholder: Laqta 0.1.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where did it happen?
+      options:
+        - The studio UI (browser)
+        - The API (`/api/...`)
+        - The `laqta` command line
+        - The core pipeline (`qatta/`)
+        - Installation / setup
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS, Python version, Node version, GPU (if any).
+      placeholder: Fedora 41, Python 3.11, Node 20, no GPU
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or error output
+      description: Only the part that matters — please remove any personal data first.
+      render: shell
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checks
+      options:
+        - label: I searched the existing issues for this.
+          required: true
+        - label: I did not include any personal media, transcripts or API keys in this report.
+          required: true

@@ -1,0 +1,155 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+# Least privilege: the workflows only need to read the repository.
+permissions:
+  contents: read
+
+# A new push supersedes the previous run for the same ref.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  # ---------------------------------------------------------------------
+  # Backend: the API, the core pipeline and the quality gates.
+  # ---------------------------------------------------------------------
+  backend:
+    name: Backend (py${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install system media dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libass-dev
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: backend/requirements-dev.txt
+
+      - name: Install the backend
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-dev.txt
+
+      - name: Install the core package (editable)
+        run: pip install -e .
+
+      - name: Lint (ruff)
+        run: |
+          pip install ruff
+          ruff check qatta backend/app backend/tests tests scripts
+          ruff format --check qatta backend/app backend/tests tests scripts
+
+      - name: Verify the version is consistent across the manifests
+        run: python scripts/check_version.py
+
+      - name: Test — backend API
+        working-directory: backend
+        run: pytest
+
+      - name: Test — core pipeline
+        run: pytest tests
+
+  # ---------------------------------------------------------------------
+  # Frontend: typecheck, lint, format, unit tests and a production build.
+  # ---------------------------------------------------------------------
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: frontend
+        run: npm run typecheck
+
+      - name: Lint (eslint)
+        working-directory: frontend
+        run: npm run lint
+
+      - name: Check formatting (prettier)
+        working-directory: frontend
+        run: npm run format:check
+
+      - name: Unit tests (vitest)
+        working-directory: frontend
+        run: npm run test
+
+      - name: Production build
+        working-directory: frontend
+        run: npm run build
+
+  # ---------------------------------------------------------------------
+  # Supply chain: no vulnerable or untrusted dependency may enter.
+  # ---------------------------------------------------------------------
+  security:
+    name: Security
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Scan for committed secrets
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Audit the Python runtime profile
+        run: |
+          python -m pip install --upgrade pip
+          pip install pip-audit
+          pip-audit --requirement backend/requirements-asr.txt --progress-spinner off
+
+      - name: Audit the shipped Node dependencies
+        working-directory: frontend
+        run: npm audit --omit=dev --audit-level=high
+
+  # ---------------------------------------------------------------------
+  # Dependency review: only approve dependency changes that are sane.
+  # ---------------------------------------------------------------------
+  dependency-review:
+    name: Dependency review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: moderate
