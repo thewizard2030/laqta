@@ -24,12 +24,12 @@ jobs:
   # Backend: the API, the core pipeline and the quality gates.
   # ---------------------------------------------------------------------
   backend:
-    name: Backend (py${{ matrix.python-version }})
+    name: Backend (py${{ matrix.python_version }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.11", "3.12"]
+        python_version: ["3.11", "3.12"]
     steps:
       - uses: actions/checkout@v4
 
@@ -41,7 +41,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ matrix.python_version }}
           cache: pip
           cache-dependency-path: backend/requirements-dev.txt
 
