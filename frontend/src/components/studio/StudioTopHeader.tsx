@@ -146,9 +146,7 @@ export const StudioTopHeader: React.FC<StudioTopHeaderProps> = ({
         >
           <span
             className={`h-2 w-2 rounded-full ${
-              health?.status === "degraded"
-                ? "bg-amber-400"
-                : "bg-neon-emerald animate-pulse-glow"
+              health?.status === "degraded" ? "bg-amber-400" : "bg-neon-emerald animate-pulse-glow"
             }`}
             aria-hidden="true"
           />

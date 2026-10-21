@@ -1,0 +1,57 @@
+# Laqta — pre-commit hooks
+#
+#   pip install pre-commit   (or: uv tool install pre-commit)
+#   pre-commit install
+#
+# The hooks mirror what CI runs: the Python formatter/linter, the frontend
+# formatter, and the version-consistency check. They are fast on purpose —
+# the full test suite stays in CI.
+
+default_language_version:
+  python: python3
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.0
+    hooks:
+      - id: ruff
+        args: [--fix, --exit-non-zero-on-fix]
+        files: ^(backend/|qatta/|tests/|scripts/).*\.py$
+      - id: ruff-format
+        files: ^(backend/|qatta/|tests/|scripts/).*\.py$
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: check-added-large-files
+        args: ["--maxkb=1024"]
+      - id: check-merge-conflict
+      - id: check-toml
+      - id: check-yaml
+      - id: end-of-file-fixer
+        exclude: \.(png|jpg|svg|ico)$
+      - id: trailing-whitespace
+        exclude: \.(png|jpg|svg|ico)$
+
+  - repo: local
+    hooks:
+      - id: version-consistency
+        name: version consistency across the manifests
+        entry: python scripts/check_version.py
+        language: system
+        pass_filenames: false
+        files: ^(qatta/__init__\.py|pyproject\.toml|backend/pyproject\.toml|frontend/package\.json)$
+
+      - id: prettier
+        name: prettier (frontend)
+        entry: bash -c 'cd frontend && npx prettier --check "src/**/*.{ts,tsx}" "*.{js,json,ts}"'
+        language: system
+        pass_filenames: false
+        files: ^frontend/.*\.(ts|tsx|js|json)$
+
+      - id: env-example
+        name: .env.example documents every variable
+        entry: python -m pytest tests/test_env_example.py -q
+        language: system
+        pass_filenames: false
+        files: ^(\.env\.example|backend/app/core/config\.py|qatta/core/config\.py)$

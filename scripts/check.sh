@@ -50,7 +50,7 @@ PY="$VENV_DIR/bin/python"
 run "ruff lint"            "$VENV_DIR/bin/ruff" check qatta backend/app backend/tests tests scripts
 run "ruff format"          "$VENV_DIR/bin/ruff" format --check qatta backend/app backend/tests tests scripts
 run "version consistency"  "$PY" scripts/check_version.py
-run "backend tests"        "$VENV_DIR/bin/pytest" -q --cov=app --cov=../qatta --cov-report=term:skip-covered backend
+run "backend tests"        "$VENV_DIR/bin/pytest" -q -n auto --cov=app --cov=../qatta --cov-report=term:skip-covered backend
 run "core tests"           "$VENV_DIR/bin/pytest" -q tests
 
 # --- Frontend --------------------------------------------------------------

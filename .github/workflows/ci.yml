@@ -65,7 +65,7 @@ jobs:
 
       - name: Test — backend API (with coverage)
         working-directory: backend
-        run: pytest --cov=app --cov=../qatta --cov-report=term:skip-covered --cov-report=json:../coverage-backend.json
+        run: pytest -n auto --cov=app --cov=../qatta --cov-report=term:skip-covered --cov-report=json:../coverage-backend.json
 
       - name: Test — core pipeline
         run: pytest tests

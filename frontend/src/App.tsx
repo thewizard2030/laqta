@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { StudioLayout } from "./components/studio/StudioLayout";
+import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import { StudioNavTab } from "./components/studio/StudioSidebar";
 import { PrivacyBanner } from "./components/PrivacyBanner";
 import { CapabilitiesCard } from "./components/CapabilitiesCard";
@@ -181,113 +182,115 @@ export const App: React.FC = () => {
     : null;
 
   return (
-    <StudioLayout
-      activeTab={activeTab}
-      onTabChange={(tab) => {
-        setActiveTab(tab);
-        if (tab === "dashboard" || tab === "projects") {
-          setSelectedProjectId(null);
-        }
-      }}
-      onCreateProject={() => setIsCreateModalOpen(true)}
-      projectCount={projects.length}
-      selectedProjectName={selectedProject?.name}
-      onClearSelectedProject={handleClearSelection}
-      capabilities={capabilities}
-      health={health}
-      hasMedia={hasMedia}
-      hasTranscript={selectedProject ? workspaceStats.hasTranscript : false}
-      clipCount={selectedProject ? workspaceStats.clipCount : 0}
-      mediaDetails={mediaDetails}
-      searchQuery={globalSearchQuery}
-      onSearchChange={setGlobalSearchQuery}
-    >
-      <div className="w-full space-y-6">
-        {/* 1. Visible Local-Processing Privacy Copy (on dashboard and settings) */}
-        {!selectedProject && <PrivacyBanner llm={capabilities?.llm ?? null} />}
+    <ErrorBoundary title="The studio could not be rendered">
+      <StudioLayout
+        activeTab={activeTab}
+        onTabChange={(tab) => {
+          setActiveTab(tab);
+          if (tab === "dashboard" || tab === "projects") {
+            setSelectedProjectId(null);
+          }
+        }}
+        onCreateProject={() => setIsCreateModalOpen(true)}
+        projectCount={projects.length}
+        selectedProjectName={selectedProject?.name}
+        onClearSelectedProject={handleClearSelection}
+        capabilities={capabilities}
+        health={health}
+        hasMedia={hasMedia}
+        hasTranscript={selectedProject ? workspaceStats.hasTranscript : false}
+        clipCount={selectedProject ? workspaceStats.clipCount : 0}
+        mediaDetails={mediaDetails}
+        searchQuery={globalSearchQuery}
+        onSearchChange={setGlobalSearchQuery}
+      >
+        <div className="w-full space-y-6">
+          {/* 1. Visible Local-Processing Privacy Copy (on dashboard and settings) */}
+          {!selectedProject && <PrivacyBanner llm={capabilities?.llm ?? null} />}
 
-        {/* 2. Loading State */}
-        {isLoading && <LoadingSkeleton />}
+          {/* 2. Loading State */}
+          {isLoading && <LoadingSkeleton />}
 
-        {/* 3. Error State */}
-        {!isLoading && isError && (
-          <ErrorMessage message={errorMessage} onRetry={handleRetry} isRetrying={isRetrying} />
-        )}
+          {/* 3. Error State */}
+          {!isLoading && isError && (
+            <ErrorMessage message={errorMessage} onRetry={handleRetry} isRetrying={isRetrying} />
+          )}
 
-        {/* 4. Capabilities (settings tab). The dashboard renders its own
+          {/* 4. Capabilities (settings tab). The dashboard renders its own
             honest engine audit (features/dashboard/EngineStatusStrip). */}
-        {!isLoading && capabilities && activeTab === "settings" && (
-          <CapabilitiesCard capabilities={capabilities} />
+          {!isLoading && capabilities && activeTab === "settings" && (
+            <CapabilitiesCard capabilities={capabilities} />
+          )}
+
+          {/* 5. Main Workspace Area */}
+          {!isLoading && !isError && (
+            <>
+              {activeTab === "settings" ? null : selectedProject ? (
+                <ProjectDetailView
+                  project={selectedProject}
+                  onBack={handleClearSelection}
+                  onDeleteProject={handleDeleteProject}
+                  onRenameProject={handleRenameProject}
+                  onMediaUpdated={handleProjectMediaUpdated}
+                  capabilities={capabilities}
+                  onStatsChange={setWorkspaceStats}
+                />
+              ) : activeTab === "dashboard" ? (
+                <DashboardHome
+                  projects={projects}
+                  capabilities={capabilities}
+                  health={health}
+                  onSelectProject={(id) => {
+                    setReturnTab("dashboard");
+                    setSelectedProjectId(id);
+                  }}
+                  onOpenCreateModal={() => setIsCreateModalOpen(true)}
+                  onOpenProjects={() => setActiveTab("projects")}
+                  onDirectVideoDrop={handleDirectVideoDrop}
+                  onCreateWorkspace={handleCreateWorkspace}
+                  globalSearchQuery={globalSearchQuery}
+                />
+              ) : projects.length > 0 ? (
+                <ProjectList
+                  projects={projects}
+                  onSelectProject={(id) => {
+                    setReturnTab("projects");
+                    setSelectedProjectId(id);
+                    setActiveTab("dashboard");
+                  }}
+                  onOpenCreateModal={() => setIsCreateModalOpen(true)}
+                  onDeleteProject={handleDeleteProject}
+                  onRenameProject={handleRenameProject}
+                  onDuplicateProject={handleDuplicateProject}
+                  capabilities={capabilities}
+                  health={health}
+                  globalSearchQuery={globalSearchQuery}
+                  onClearGlobalSearch={() => setGlobalSearchQuery("")}
+                />
+              ) : (
+                <EmptyState onCreateProject={() => setIsCreateModalOpen(true)} />
+              )}
+            </>
+          )}
+        </div>
+
+        {toast && (
+          <Toast
+            type={toast.type}
+            message={toast.message}
+            onClose={() => setToast(null)}
+            autoDismissMs={6000}
+          />
         )}
 
-        {/* 5. Main Workspace Area */}
-        {!isLoading && !isError && (
-          <>
-            {activeTab === "settings" ? null : selectedProject ? (
-              <ProjectDetailView
-                project={selectedProject}
-                onBack={handleClearSelection}
-                onDeleteProject={handleDeleteProject}
-                onRenameProject={handleRenameProject}
-                onMediaUpdated={handleProjectMediaUpdated}
-                capabilities={capabilities}
-                onStatsChange={setWorkspaceStats}
-              />
-            ) : activeTab === "dashboard" ? (
-              <DashboardHome
-                projects={projects}
-                capabilities={capabilities}
-                health={health}
-                onSelectProject={(id) => {
-                  setReturnTab("dashboard");
-                  setSelectedProjectId(id);
-                }}
-                onOpenCreateModal={() => setIsCreateModalOpen(true)}
-                onOpenProjects={() => setActiveTab("projects")}
-                onDirectVideoDrop={handleDirectVideoDrop}
-                onCreateWorkspace={handleCreateWorkspace}
-                globalSearchQuery={globalSearchQuery}
-              />
-            ) : projects.length > 0 ? (
-              <ProjectList
-                projects={projects}
-                onSelectProject={(id) => {
-                  setReturnTab("projects");
-                  setSelectedProjectId(id);
-                  setActiveTab("dashboard");
-                }}
-                onOpenCreateModal={() => setIsCreateModalOpen(true)}
-                onDeleteProject={handleDeleteProject}
-                onRenameProject={handleRenameProject}
-                onDuplicateProject={handleDuplicateProject}
-                capabilities={capabilities}
-                health={health}
-                globalSearchQuery={globalSearchQuery}
-                onClearGlobalSearch={() => setGlobalSearchQuery("")}
-              />
-            ) : (
-              <EmptyState onCreateProject={() => setIsCreateModalOpen(true)} />
-            )}
-          </>
-        )}
-      </div>
-
-      {toast && (
-        <Toast
-          type={toast.type}
-          message={toast.message}
-          onClose={() => setToast(null)}
-          autoDismissMs={6000}
+        {/* Create Project Modal */}
+        <CreateProjectModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onCreate={handleCreateProject}
         />
-      )}
-
-      {/* Create Project Modal */}
-      <CreateProjectModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        onCreate={handleCreateProject}
-      />
-    </StudioLayout>
+      </StudioLayout>
+    </ErrorBoundary>
   );
 };
 

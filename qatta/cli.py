@@ -137,13 +137,21 @@ def version() -> None:
 
 
 @app.command()
-def doctor() -> None:
+def doctor(
+    json_output: bool = typer.Option(
+        False, "--json", help="Print the report as JSON (for scripts and CI)."
+    ),
+) -> None:
     """Check this machine for everything Laqta needs.
 
     Reports exactly what is installed and what is missing — the same honest
     detection the studio UI shows. Exits non-zero only when a *required*
     component is missing.
     """
+    if json_output:
+        _doctor_json()
+        return
+
     console.print("\n[bold]Laqta doctor[/bold] — local environment check\n")
 
     required_failures: list[str] = []
@@ -325,6 +333,86 @@ def doctor() -> None:
         "\n[bold green]Ready.[/bold green] Start the studio with "
         "`laqta studio` (API + frontend in one command).\n"
     )
+
+
+def _doctor_json() -> None:
+    """Print the doctor report as JSON — the same facts, machine-readable."""
+    import json
+
+    report: dict[str, object] = {
+        "app": "Laqta",
+        "version": __version__,
+        "python": ".".join(str(part) for part in sys.version_info[:3]),
+        "ok": True,
+        "missing": [],
+    }
+    missing: list[str] = []
+
+    def add(name: str, present: bool, detail: str, required: bool = False) -> None:
+        report[name] = {"present": present, "detail": detail}
+        if not present:
+            if required:
+                report["ok"] = False
+                missing.append(name)
+
+    ffmpeg = _which("ffmpeg")
+    add(
+        "ffmpeg",
+        ffmpeg is not None,
+        _binary_version(ffmpeg) if ffmpeg else "not found in PATH",
+        required=True,
+    )
+    ffprobe = _which("ffprobe")
+    add(
+        "ffprobe",
+        ffprobe is not None,
+        _binary_version(ffprobe) if ffprobe else "not found in PATH",
+        required=True,
+    )
+    ytdlp = _which("yt-dlp")
+    add("yt_dlp", ytdlp is not None, "yt-dlp" if ytdlp else "not installed")
+
+    try:
+        import faster_whisper  # noqa: F401
+
+        add("asr", True, "faster-whisper")
+    except Exception:  # noqa: BLE001
+        add("asr", False, "not installed")
+
+    if _backend_importable():
+        try:
+            from app.services.media.probe import detect_capabilities
+
+            capabilities = detect_capabilities()
+            add("backend", True, "importable")
+            add(
+                "storage",
+                capabilities.storage.writable,
+                capabilities.storage.data_dir,
+                required=True,
+            )
+            add(
+                "url_ingestion",
+                capabilities.url_ingestion.feature_flag,
+                "enabled" if capabilities.url_ingestion.feature_flag else "disabled by operator",
+            )
+        except Exception as exc:  # noqa: BLE001
+            add("backend", False, f"{type(exc).__name__}: {exc}")
+    else:
+        add("backend", False, "the API server ships with the source checkout")
+
+    api_port = os.environ.get("QATTA_PORT", "8000")
+    add(
+        "api",
+        _probe_http(f"http://127.0.0.1:{api_port}/api/health") is not None,
+        f":{api_port}",
+    )
+    add("studio", _probe_http("http://127.0.0.1:5173/") is not None, ":5173")
+
+    report["missing"] = missing
+    print(json.dumps(report, indent=2, sort_keys=True))
+    if not report["ok"]:
+        raise typer.Exit(code=1)
 
 
 @app.command()
