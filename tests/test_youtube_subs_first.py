@@ -70,7 +70,12 @@ Language: ar
 
 
 def make_settings(tmp_path: Path, **overrides) -> QattaSettings:
-    return QattaSettings(data_dir=tmp_path / "data", _env_file=None, **overrides)
+    # URL ingestion is fail-closed in production (it ships disabled). These
+    # tests exercise the enabled path, so they opt in unless they say
+    # otherwise.
+    options = {"enable_url_ingestion": True}
+    options.update(overrides)
+    return QattaSettings(data_dir=tmp_path / "data", _env_file=None, **options)
 
 
 def make_candidate(
@@ -329,7 +334,12 @@ def test_ingest_captions_first_fetches_subs_not_media(
 def test_ingest_captions_no_track_is_honest_error(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    settings = make_settings(tmp_path, transcription_backend="youtube_subs_first")
+    # URL ingestion is fail-closed: the test opts in explicitly.
+    settings = make_settings(
+        tmp_path,
+        transcription_backend="youtube_subs_first",
+        enable_url_ingestion=True,
+    )
     manifest = QattaManifest(
         project_id="proj_notrack",
         source_path="https://youtube.com/watch?v=x",

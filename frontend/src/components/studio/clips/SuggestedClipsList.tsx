@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import {
   Sparkles,
   ArrowUpDown,
@@ -83,9 +83,14 @@ export const SuggestedClipsList: React.FC<SuggestedClipsListProps> = ({
   }, [candidates, sortBy, filterTag]);
 
   // A new ranking or filter is a new list — start from the first page again.
-  useEffect(() => {
+  // Adjusted during render (React's documented pattern for a prop change)
+  // instead of in an effect, which would show a stale page for one frame.
+  const listKey = `${sortBy}:${filterTag}:${candidates.length}`;
+  const [previousListKey, setPreviousListKey] = useState(listKey);
+  if (previousListKey !== listKey) {
+    setPreviousListKey(listKey);
     setVisibleCount(CLIPS_PAGE_SIZE);
-  }, [sortBy, filterTag, candidates.length]);
+  }
 
   const visibleCandidates = useMemo(
     () => sortedCandidates.slice(0, visibleCount),

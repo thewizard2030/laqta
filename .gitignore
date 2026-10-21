@@ -35,6 +35,8 @@ wheels/
 .coverage
 .coverage.*
 coverage.xml
+coverage-backend.json
+coverage-frontend/
 htmlcov/
 .mypy_cache/
 .ruff_cache/

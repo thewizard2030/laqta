@@ -43,8 +43,8 @@ def _require_url_download_permitted(settings: QattaSettings) -> None:
     if not settings.cloud_backend_permitted("youtube_subs_first"):
         raise PipelineError(
             "Downloading winning clip sections requires URL ingestion "
-            "(QATTA_ENABLE_URL_INGESTION=true); it was explicitly "
-            "disabled, so nothing was downloaded."
+            "(QATTA_ENABLE_URL_INGESTION=true); it is not enabled "
+            "on this machine, so nothing was downloaded."
         )
 
 

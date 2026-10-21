@@ -116,3 +116,29 @@ def test_cloud_gates_are_documented_and_off_by_default(variable: str) -> None:
         assert match.group(1) == "False", (
             f"{variable} must default to False — the cloud path is opt-in"
         )
+
+
+def test_url_ingestion_ships_disabled() -> None:
+    """URL ingestion must be fail-closed: off until an operator opts in.
+
+    It is the only feature that reaches a third party by default, so the
+    shipped default is `False` in both the backend and the core pipeline.
+    """
+    backend_source = BACKEND_CONFIG.read_text(encoding="utf-8")
+    match = re.search(
+        r"^    ENABLE_URL_INGESTION:\s*bool\s*=\s*(\w+)", backend_source, re.MULTILINE
+    )
+    assert match, "ENABLE_URL_INGESTION is not a boolean setting"
+    assert match.group(1) == "False", (
+        "URL ingestion must default to False — it is the only feature that reaches a third party"
+    )
+
+    core_source = CORE_CONFIG.read_text(encoding="utf-8")
+    assert re.search(
+        r"enable_url_ingestion:\s*bool\s*=\s*Field\(\s*\n\s*default=False",
+        core_source,
+    ), "the core pipeline must default enable_url_ingestion to False"
+
+    # The documented template must agree with the code.
+    example = ENV_EXAMPLE.read_text(encoding="utf-8")
+    assert "QATTA_ENABLE_URL_INGESTION=false" in example

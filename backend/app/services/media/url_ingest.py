@@ -2,11 +2,11 @@
 
 Design constraints (all binding):
 - Flag-controlled end-to-end. The route refuses work with an explicit
-  error unless URL ingestion is enabled (default ON since the FR-12
-  review was completed by owner decision on 2026-10-19; disabling via
-  ``QATTA_ENABLE_URL_INGESTION=false`` is always honored), yt-dlp is
-  installed, AND the user explicitly confirmed content rights for this
-  run. Nothing may run silently.
+  error unless URL ingestion is enabled. It ships disabled (fail-closed):
+  an operator must opt in with ``QATTA_ENABLE_URL_INGESTION=true``, and
+  disabling it via ``QATTA_ENABLE_URL_INGESTION=false`` is always
+  honored. yt-dlp must be installed, AND the user must have explicitly
+  confirmed content rights for this run. Nothing may run silently.
 - The download runs as a background job only; request handlers never block
   on network/file processing.
 - Strict subprocess argument arrays (no shell=True), a finite download

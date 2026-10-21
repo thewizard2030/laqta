@@ -1,0 +1,7 @@
+{
+  "_comment": "Coverage floor for CI. These are the measured values, not targets: a pull request that lowers them fails. Raise them deliberately, never by accident.",
+  "backend": 60.0,
+  "lines": 80.89,
+  "functions": 52.91,
+  "branches": 72.32
+}

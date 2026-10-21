@@ -82,6 +82,9 @@ export const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    // fetchAppData awaits the API; its setState runs in a promise callback,
+    // not synchronously in this effect body.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAppData();
   }, [fetchAppData]);
 

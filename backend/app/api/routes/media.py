@@ -244,9 +244,9 @@ async def ingest_media_from_url(payload: UrlIngestRequest) -> UrlIngestAcceptedR
     """Queue a yt-dlp download into a project as a background job.
 
     Fail-closed gating, in explicit order — every refusal is a clear error:
-    1. ``QATTA_ENABLE_URL_INGESTION`` must be enabled locally (on by default
-       after the FR-12 platform-policy/rights review was completed by owner
-       decision on 2026-10-19; an explicit ``false`` is always honored).
+    1. ``QATTA_ENABLE_URL_INGESTION`` must be enabled locally. It ships
+       disabled (fail-closed): an operator has to opt in explicitly with
+       ``QATTA_ENABLE_URL_INGESTION=true``.
     2. yt-dlp must be installed locally.
     3. The user must have confirmed content rights for THIS import.
     4. The URL must be a public http(s) resource (SSRF-guarded).
@@ -265,8 +265,8 @@ async def ingest_media_from_url(payload: UrlIngestRequest) -> UrlIngestAcceptedR
             status_code=status.HTTP_403_FORBIDDEN,
             detail=(
                 "URL ingestion is disabled on this machine "
-                "(QATTA_ENABLE_URL_INGESTION=false). Remove the override to "
-                "re-enable it."
+                "(QATTA_ENABLE_URL_INGESTION=false). Set it to true to "
+                "enable it."
             ),
         )
 

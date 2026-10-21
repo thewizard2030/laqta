@@ -134,10 +134,9 @@ class UrlIngestionCapabilities(BaseModel):
         ...,
         description=(
             "Whether URL ingestion is fully available: requires "
-            "QATTA_ENABLE_URL_INGESTION (enabled by default after the "
-            "FR-12 review completed on 2026-10-19) AND an installed yt-dlp. "
-            "Every import still requires the per-request rights "
-            "confirmation."
+            "QATTA_ENABLE_URL_INGESTION (disabled by default — an operator "
+            "must opt in) AND an installed yt-dlp. Every import still "
+            "requires the per-request rights confirmation."
         ),
     )
     feature_flag: bool = Field(

@@ -8,9 +8,9 @@ Policy notes enforced by defaults:
 - Transcription is LOCAL first. ``groq_api`` (cloud) requires an explicit
   opt-in flag AND credentials. ``youtube_subs_first`` fetches the
   platform's own caption track (no media download in Pass 1). URL ingestion
-  is available by default, but the ``QATTA_ENABLE_URL_INGESTION=false``
-  opt-out is always honored and a user-facing per-import rights
-  confirmation stays mandatory. See ``docs/POLICY.md``.
+  is fail-closed: it ships disabled and needs an explicit operator opt-in
+  (``QATTA_ENABLE_URL_INGESTION=true``); a user-facing per-import rights
+  confirmation stays mandatory either way. See ``docs/POLICY.md``.
 - The captions-first flow skips local Whisper for YouTube sources and
   downloads ONLY ranking-selected clip sections (s05b) for local Pass 2
   word timing. Real per-stage wall time is measured and persisted in
@@ -88,12 +88,11 @@ class QattaSettings(BaseSettings):
     # still confirm the user owns the content or has permission (a UI
     # confirmation requirement, not an env flag).
     enable_url_ingestion: bool = Field(
-        default=True,
+        default=False,
         description=(
-            "URL ingestion via yt-dlp (PRD FR-12). Default ON since the "
-            "FR-12 policy review was completed by owner decision "
-            "(2026-10-19); user-facing rights confirmation remains "
-            "mandatory in the backend/UI flow."
+            "URL ingestion via yt-dlp (PRD FR-12). Fail-closed: disabled by "
+            "default and enabled only by an explicit operator opt-in. The "
+            "user-facing per-import rights confirmation remains mandatory."
         ),
     )
 

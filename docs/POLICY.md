@@ -29,7 +29,7 @@ Laqta is built so that the **normal** path never touches the network:
 |---------|-------------|--------------------|
 | Local transcription (faster-whisper) | nothing | always available, no key |
 | Local clip ranking (deterministic CPS) | nothing | always available |
-| URL import (yt-dlp) | the URL you typed | only with `QATTA_ENABLE_URL_INGESTION=true` **and** a per-import rights confirmation |
+| URL import (yt-dlp) | the URL you typed | only with `QATTA_ENABLE_URL_INGESTION=true` (off by default) **and** a per-import rights confirmation |
 | Hosted ranker (OpenRouter / Groq / OpenAI-compatible) | the transcript text of the window being scored | only with `QATTA_ALLOW_CLOUD_APIS=true` **and** `QATTA_LLM_HOSTED_OPT_IN=true` **and** a configured key |
 | Hosted transcription (Groq / AssemblyAI) | the audio of the segment | only with the same two flags **and** a key |
 
@@ -45,10 +45,11 @@ and the CLI (`laqta doctor`) reports the same state.
 
 **You are responsible for having the right to use the material you import.**
 
-- URL ingestion is **available by default** (it needs `yt-dlp`, which is part
-  of the "everything" install profile). Set `QATTA_ENABLE_URL_INGESTION=false`
-  to remove it entirely — the import button then stays visible but refuses
-  with the reason.
+- URL ingestion is **disabled by default** — it is fail-closed, like every
+  other path that touches the network. Set
+  `QATTA_ENABLE_URL_INGESTION=true` to enable it (it also needs `yt-dlp`,
+  which is part of the "everything" install profile). While it is disabled the
+  import button stays visible but refuses with the reason.
 - Every import requires a **per-import rights confirmation** in the dialog.
   The confirmation is a statement by you, not a check by Laqta.
 - The default sources are caption tracks and the sections that the ranker

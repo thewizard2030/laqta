@@ -798,8 +798,8 @@ def _require_permitted_backend(settings: QattaSettings) -> str:
             raise PipelineError(
                 "Captions-first transcription (youtube_subs_first) "
                 "requires URL ingestion to be enabled "
-                "(QATTA_ENABLE_URL_INGESTION=true); it was explicitly "
-                "disabled, so nothing was fetched."
+                "(QATTA_ENABLE_URL_INGESTION=true); it is not enabled "
+                "on this machine, so nothing was fetched."
             )
         return backend
     raise PipelineError(

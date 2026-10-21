@@ -362,6 +362,9 @@ class TestSubtitleExtraction:
     def test_execute_url_ingest_creates_transcript_and_manifest(self, monkeypatch, tmp_path):
         from app.services.media.url_ingest import UrlIngestResult
 
+        # URL ingestion is fail-closed: the test opts in explicitly.
+        monkeypatch.setattr(settings, "ENABLE_URL_INGESTION", True)
+
         vtt_sample = (
             "WEBVTT\n\n"
             "00:00:01.000 --> 00:00:03.000\n"
@@ -651,6 +654,9 @@ class TestSubtitleExtraction:
         self, monkeypatch, tmp_path
     ):
         from app.services.media.url_ingest import UrlIngestResult
+
+        # URL ingestion is fail-closed: the test opts in explicitly.
+        monkeypatch.setattr(settings, "ENABLE_URL_INGESTION", True)
 
         project = job_manager.repo.create_project("Test Auto Whisper Fallback")
         job = job_manager.repo.create_job(

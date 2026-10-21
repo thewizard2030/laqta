@@ -1,4 +1,4 @@
-import React, { memo, useState, useEffect } from "react";
+import React, { memo, useState } from "react";
 import { Clock, Film, Play, Gauge, Check, Zap } from "lucide-react";
 import { Candidate } from "../../../types/candidates";
 import { formatMsAsClock } from "../../../lib/i18n/bidi";
@@ -33,10 +33,16 @@ const ClipCardItemComponent: React.FC<ClipCardItemProps> = ({
 }) => {
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
 
-  // Reset failed state on thumbnailEpoch change so newly generated frames load
-  useEffect(() => {
+  // Reset the "failed" flag when the frame source changes, so a newly
+  // generated thumbnail is requested again. Comparing during render is
+  // React's documented way to adjust state on a prop change — an effect
+  // would render once with the stale value first.
+  const thumbnailSource = `${thumbnailEpoch}:${candidate.id}:${mediaId ?? ""}`;
+  const [previousThumbnailSource, setPreviousThumbnailSource] = useState(thumbnailSource);
+  if (previousThumbnailSource !== thumbnailSource) {
+    setPreviousThumbnailSource(thumbnailSource);
     setThumbnailFailed(false);
-  }, [thumbnailEpoch, candidate.id, mediaId]);
+  }
 
   const thumbnailUrl =
     mediaId && !thumbnailFailed ? generateCandidateThumbnailUrl(mediaId, candidate.id) : null;

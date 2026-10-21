@@ -1,0 +1,43 @@
+name: Scorecard
+
+# The OpenSSF Scorecard grades the repository's security posture. The
+# "Pinned-Dependencies" check only reaches 10/10 when every action is pinned
+# to a full commit SHA — which is how the workflows in this repository are
+# written.
+on:
+  branch_protection_rule:
+  schedule:
+    # Mondays at 08:00 UTC.
+    - cron: "0 8 * * 1"
+  push:
+    branches: [main]
+
+permissions: read-all
+
+jobs:
+  analysis:
+    name: Scorecard analysis
+    runs-on: ubuntu-24.04
+    permissions:
+      security-events: write
+      id-token: write
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Run the Scorecard analysis
+        uses: ossf/scorecard-action@fa7117db83c52d787ae5a89f350999701505d78e # v2.5.0
+        with:
+          results_file: results.sarif
+          results_format: sarif
+          publish_results: true
+
+      - name: Upload the results as an artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: Scorecard results
+          path: results.sarif
+          retention-days: 5

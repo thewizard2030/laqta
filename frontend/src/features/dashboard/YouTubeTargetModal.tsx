@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { FolderPlus, Loader2, Youtube } from "lucide-react";
 import { Modal } from "../../components/ui/Modal";
 import { Project } from "../../types/projects";
@@ -31,11 +31,16 @@ export const YouTubeTargetModal: React.FC<YouTubeTargetModalProps> = ({
 }) => {
   const [selected, setSelected] = useState<string>(projects[0]?.id ?? NEW_WORKSPACE);
 
-  useEffect(() => {
+  // Whenever the dialog opens, preselect the first workspace. The reset is
+  // applied during render (React's documented pattern for a prop change)
+  // instead of in an effect, so the dialog never shows a stale selection.
+  const [wasOpen, setWasOpen] = useState(isOpen);
+  if (wasOpen !== isOpen) {
+    setWasOpen(isOpen);
     if (isOpen) {
       setSelected(projects[0]?.id ?? NEW_WORKSPACE);
     }
-  }, [isOpen, projects]);
+  }
 
   const handleContinue = async () => {
     await onResolveTarget(selected);

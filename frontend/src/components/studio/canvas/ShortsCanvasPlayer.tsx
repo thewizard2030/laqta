@@ -50,14 +50,17 @@ export const ShortsCanvasPlayer: React.FC<ShortsCanvasPlayerProps> = ({
   const [scrubberMode, setScrubberMode] = useState<"clip" | "full">("clip");
 
   // When the clip window changes, default the scrubber back to clip mode.
-  // The dependency is a stable key so the effect does not re-run when the
-  // parent passes a new object with the same range.
+  // The key is stable, so a new object with the same range does not reset it.
+  // The reset is applied during render (React's documented pattern for a
+  // prop change) rather than in an effect.
   const clipWindowKey = clipWindow ? `${clipWindow.startSec}-${clipWindow.endSec}` : null;
-  useEffect(() => {
+  const [previousClipWindowKey, setPreviousClipWindowKey] = useState(clipWindowKey);
+  if (previousClipWindowKey !== clipWindowKey) {
+    setPreviousClipWindowKey(clipWindowKey);
     if (clipWindowKey) {
       setScrubberMode("clip");
     }
-  }, [clipWindowKey]);
+  }
 
   // Synchronize external play/pause state with video element
   useEffect(() => {

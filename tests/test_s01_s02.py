@@ -86,7 +86,11 @@ def wav_10s(pcm_10s, tmp_path: Path) -> Path:
 
 
 def make_settings(tmp_path: Path, **overrides) -> QattaSettings:
-    return QattaSettings(data_dir=tmp_path / "data", _env_file=None, **overrides)
+    # URL ingestion is fail-closed in production (it ships disabled). The
+    # tests that exercise the enabled path opt in explicitly.
+    options = {"enable_url_ingestion": True}
+    options.update(overrides)
+    return QattaSettings(data_dir=tmp_path / "data", _env_file=None, **options)
 
 
 def make_candidate(

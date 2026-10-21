@@ -125,12 +125,11 @@ class Settings(BaseSettings):
     # before any request leaves the device (PRD §9).
     LLM_HOSTED_OPT_IN: bool = False
 
-    # URL ingestion (yt-dlp) — PRD FR-12. The platform-policy/rights review
-    # was completed by owner decision on 2026-10-19, so ingestion is ON by
-    # default. Every import STILL requires the explicit per-request rights
-    # confirmation from the user, and the opt-out flag is always honored
-    # (nothing may run when this is false — fail-closed).
-    ENABLE_URL_INGESTION: bool = True
+    # URL ingestion (yt-dlp) — PRD FR-12. Fail-closed: the feature ships
+    # DISABLED and an operator has to opt in explicitly. Every import still
+    # requires the per-request rights confirmation from the user, and the
+    # opt-out flag is always honored (nothing may run when this is false).
+    ENABLE_URL_INGESTION: bool = False
     # Whole-download deadline for the yt-dlp subprocess (argument array only).
     URL_INGEST_TIMEOUT_SECONDS: float = 1800.0
     # Preferred subtitle languages for URL ingestion (no 'all' to avoid YouTube 429 rate limits)

@@ -178,14 +178,17 @@ def extract_audio_16k(source: Path, destination: Path, settings: QattaSettings) 
 
 
 def _require_url_ingestion_permitted(settings: QattaSettings) -> None:
-    """Fail-closed gate shared by both URL ingestion paths. Nothing may
-    touch the network without the (now default-on, FR-12-reviewed) flag,
-    and explicit opt-out must be honored."""
+    """Fail-closed gate shared by both URL ingestion paths.
+
+    Nothing may touch the network without the explicit operator opt-in
+    (``QATTA_ENABLE_URL_INGESTION=true``). The feature ships disabled, and
+    an explicit opt-out is always honored.
+    """
     if not settings.cloud_backend_permitted("youtube_subs_first"):
         raise PipelineError(
             "Ingesting a URL requires URL ingestion to be enabled "
-            "(QATTA_ENABLE_URL_INGESTION=true). It was explicitly "
-            "disabled, so nothing was fetched or downloaded."
+            "(QATTA_ENABLE_URL_INGESTION=true). It is not enabled on this "
+            "machine, so nothing was fetched or downloaded."
         )
 
 

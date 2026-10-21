@@ -25,13 +25,13 @@ jobs:
   # ---------------------------------------------------------------------
   backend:
     name: Backend (py${{ matrix.python_version }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     strategy:
       fail-fast: false
       matrix:
         python_version: ["3.11", "3.12"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Install system media dependencies
         run: |
@@ -39,7 +39,7 @@ jobs:
           sudo apt-get install -y ffmpeg libass-dev
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
           python-version: ${{ matrix.python_version }}
           cache: pip
@@ -63,24 +63,27 @@ jobs:
       - name: Verify the version is consistent across the manifests
         run: python scripts/check_version.py
 
-      - name: Test — backend API
+      - name: Test — backend API (with coverage)
         working-directory: backend
-        run: pytest
+        run: pytest --cov=app --cov=../qatta --cov-report=term:skip-covered --cov-report=json:../coverage-backend.json
 
       - name: Test — core pipeline
         run: pytest tests
+
+      - name: Coverage — no regression
+        run: python scripts/check_coverage.py --backend coverage-backend.json
 
   # ---------------------------------------------------------------------
   # Frontend: typecheck, lint, format, unit tests and a production build.
   # ---------------------------------------------------------------------
   frontend:
     name: Frontend
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 20
           cache: npm
@@ -102,9 +105,13 @@ jobs:
         working-directory: frontend
         run: npm run format:check
 
-      - name: Unit tests (vitest)
+      - name: Unit tests (vitest, with coverage)
         working-directory: frontend
-        run: npm run test
+        run: npm run test -- --coverage.enabled --coverage.provider=v8 --coverage.reporter=text-summary --coverage.reporter=json-summary --coverage.reportsDirectory=../coverage-frontend
+
+      - name: Coverage — no regression
+        working-directory: frontend
+        run: python ../scripts/check_coverage.py --frontend ../coverage-frontend/coverage-summary.json
 
       - name: Production build
         working-directory: frontend
@@ -115,17 +122,17 @@ jobs:
   # ---------------------------------------------------------------------
   security:
     name: Security
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
       security-events: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           persist-credentials: false
 
       - name: Scan for committed secrets
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7 # v2.3.9
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -145,11 +152,11 @@ jobs:
   dependency-review:
     name: Dependency review
     if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/dependency-review-action@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+      - uses: actions/dependency-review-action@2031cfc080254a8a887f58cffee85186f0e49e48 # v4.9.0
         with:
           fail-on-severity: moderate

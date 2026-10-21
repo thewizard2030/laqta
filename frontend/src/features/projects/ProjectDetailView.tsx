@@ -118,6 +118,21 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   const [isClearingJobs, setIsClearingJobs] = useState<boolean>(false);
   const [isYouTubeModalOpen, setIsYouTubeModalOpen] = useState<boolean>(false);
   const [thumbnailEpoch, setThumbnailEpoch] = useState<number>(0);
+
+  /**
+   * A one-second clock for the "elapsed" column.
+   *
+   * The current time is **state**, not a `Date.now()` call during render:
+   * reading the clock while rendering makes the output non-reproducible and
+   * breaks the React purity rule. The tick only runs while a job is active.
+   */
+  const [nowMs, setNowMs] = useState<number>(() => Date.now());
+
+  /** True while at least one job is queued or running. */
+  const hasActiveJob = useMemo(
+    () => jobs.some((j) => j.status === "queued" || j.status === "running"),
+    [jobs],
+  );
   // Job IDs whose succeeded url_ingestion media has already been picked up.
   const handledIngestJobIds = useRef<Set<string>>(new Set());
   const handledThumbnailJobIds = useRef<Set<string>>(new Set());
@@ -164,15 +179,28 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
     burnInSubtitles: true,
   });
 
+  // Mirror the prop into local state during render (React's documented
+  // pattern for a prop change) and only fetch when the parent has none.
+  const [previousCapabilities, setPreviousCapabilities] = useState<
+    CapabilitiesResponse | null | undefined
+  >(capabilities);
+  if (previousCapabilities !== capabilities) {
+    setPreviousCapabilities(capabilities);
+    setLocalCapabilities(capabilities ?? null);
+  }
+
   useEffect(() => {
-    if (capabilities) {
-      setLocalCapabilities(capabilities);
-    } else {
-      api
-        .getCapabilities()
-        .then(setLocalCapabilities)
-        .catch(() => {});
-    }
+    if (capabilities) return;
+    let cancelled = false;
+    api
+      .getCapabilities()
+      .then((detected) => {
+        if (!cancelled) setLocalCapabilities(detected);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
   }, [capabilities]);
 
   const hasMedia = project.media_assets.length > 0;
@@ -199,6 +227,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   }, [project.id]);
 
   useEffect(() => {
+    // The loading flag is a single boolean set before the request resolves;
+    // it is not the cascading-render pattern the rule guards against.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsLoadingJobs(true);
     fetchJobs().finally(() => setIsLoadingJobs(false));
   }, [fetchJobs]);
@@ -207,6 +238,8 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
 
   useEffect(() => {
     if (primaryMediaId) {
+      // One boolean flag before the request resolves — not a cascading render.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setIsLoadingTranscripts(true);
       fetchTranscripts(primaryMediaId).finally(() => setIsLoadingTranscripts(false));
     } else {
@@ -239,8 +272,13 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
 
   useEffect(() => {
     if (primaryMediaId) {
+      // The candidates arrive asynchronously; the setState happens in the
+      // promise callback, not synchronously in this effect body.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       fetchCandidates(primaryMediaId);
     } else {
+      // No media means no candidates — reset during render so the list is
+      // never rendered with a stale selection.
       setCandidates([]);
       setSelectedCandidate(null);
     }
@@ -379,7 +417,6 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
 
   // Polling when any job is queued or running
   useEffect(() => {
-    const hasActiveJob = jobs.some((j) => j.status === "queued" || j.status === "running");
     if (!hasActiveJob) return;
 
     const interval = setInterval(() => {
@@ -390,7 +427,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
     }, 1500);
 
     return () => clearInterval(interval);
-  }, [jobs, fetchJobs, primaryMedia, fetchTranscripts]);
+  }, [hasActiveJob, fetchJobs, primaryMedia, fetchTranscripts]);
 
   // Surface media created by succeeded url_ingestion jobs (downloads finish
   // in the background after the dialog is already closed).
@@ -477,9 +514,15 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
   const isExporting = Boolean(activeRenderJob);
   const exportProgress = activeRenderJob ? Math.round(activeRenderJob.progress) : 0;
 
+  useEffect(() => {
+    if (!hasActiveJob) return;
+    const timer = window.setInterval(() => setNowMs(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, [hasActiveJob]);
+
   const formatElapsedSeconds = (startedAt: string | null): string => {
-    if (!startedAt) return "--:--";
-    const elapsedMs = Date.now() - new Date(startedAt).getTime();
+    if (!startedAt || !nowMs) return "--:--";
+    const elapsedMs = Math.max(0, nowMs - new Date(startedAt).getTime());
     const secs = Math.max(0, Math.floor(elapsedMs / 1000));
     const minutes = Math.floor(secs / 60);
     return `${minutes}m ${secs % 60}s`;

@@ -83,6 +83,8 @@ export const CandidatesPanel: React.FC<CandidatesPanelProps> = ({
   }, [mediaId]);
 
   useEffect(() => {
+    // fetchCandidates awaits the API; its setState runs in a promise callback.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchCandidates();
   }, [fetchCandidates]);
 
