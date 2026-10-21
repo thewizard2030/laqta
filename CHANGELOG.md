@@ -9,6 +9,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Nothing yet.
 
+## [0.1.2] — 2026-10-21
+
+The release that makes Laqta an application you launch, and proves it.
+
+### Added
+
+- **Release mode.** The API serves the built studio: the root opens the UI,
+  deep links fall back to the SPA entry point and the API keeps working.
+  `laqta studio --production` builds the studio and serves everything from
+  <http://127.0.0.1:8000> — one command, one address, no second terminal.
+- **A release proof.** `scripts/verify_release.sh` clones the repository
+  into a temporary directory, installs it from scratch and drives the whole
+  pipeline with a synthetic video: import → transcribe → rank → render →
+  verify the MP4. It runs weekly and on every pull request that touches the
+  backend, the core or the scripts.
+- **An error boundary** in the studio: a single bad render no longer blanks
+  the app. The panel states what happened, keeps the error message visible
+  and offers "try again" / "reload".
+- `laqta doctor --json` — the same report, machine-readable.
+- `scripts/setup.ps1` — a first-class Windows install path.
+- `docs/UPGRADING.md` and `docs/ARCHITECTURE.md`.
+- Pre-commit hooks that run the same checks as CI.
+
+### Fixed
+
+- **The health endpoint no longer lies.** It reported "healthy" even when the
+  job worker was dead — which means queued jobs would never run. It now
+  reports the worker state and answers "degraded" when the worker is
+  stopped; the studio's status pill follows it.
+- **A silent clip was scored as if it had speech.** The silence threshold
+  was zero for a digitally silent signal, so every frame fell *above* it
+  and the silence ratio came out as 0.0 instead of 1.0. A quiet clip could
+  therefore score as if it were clear, voiced audio.
+- **The analyser no longer aborts the pipeline** when ffmpeg cannot decode
+  the source: scene cuts degrade to "none measured" instead of failing the
+  stage.
+- The **core test suite** no longer creates real projects in your own data
+  directory (hermetic, like the backend suite).
+- The **backend tests** are no longer affected by a frontend you happen to
+  have built.
+
+### Changed
+
+- The backend suite runs in parallel (70 s → 37 s).
+- The dev extras and the requirements files no longer drift apart.
+
 ## [0.1.1] — 2026-10-21
 
 A hardening release: no known vulnerabilities, a reproducible CI, and the
@@ -101,6 +147,7 @@ on your own machine — no account, no upload, no telemetry.
 - Transcripts and media metadata are treated as untrusted data and are never
   interpolated into shell commands.
 
-[Unreleased]: https://github.com/thewizard2030/laqta/compare/v0.1.1...HEAD
+[Unreleased]: https://github.com/thewizard2030/laqta/compare/v0.1.2...HEAD
+[0.1.2]: https://github.com/thewizard2030/laqta/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/thewizard2030/laqta/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/thewizard2030/laqta/releases/tag/v0.1.0

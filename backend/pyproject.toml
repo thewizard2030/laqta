@@ -1,6 +1,6 @@
 [project]
 name = "laqta-backend"
-version = "0.1.1"
+version = "0.1.2"
 description = "Laqta backend — local-first API for the long-video-to-Shorts studio."
 readme = "README.md"
 requires-python = ">=3.11"

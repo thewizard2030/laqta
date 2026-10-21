@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "laqta"
-version = "0.1.1"
+version = "0.1.2"
 description = "Laqta — local-first, Arabic-first long-video to vertical Shorts engine."
 readme = "README.md"
 requires-python = ">=3.11"

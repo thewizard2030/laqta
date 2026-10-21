@@ -80,13 +80,24 @@ cd laqta
 ```
 
 That creates the backend environment, installs the pinned dependencies and the
-frontend, and registers the `laqta` command. Then:
+frontend, and registers the `laqta` command. Then — **one command, one
+address**:
 
 ```bash
-./scripts/dev.sh          # API on :8000 + studio on :5173
+laqta studio --production
 ```
 
-Open <http://127.0.0.1:5173>.
+It builds the studio and serves the whole application from
+<http://127.0.0.1:8000>. (For development with hot reload, use
+`./scripts/dev.sh` instead: the API on `:8000` and the Vite dev server on
+`:5173`.)
+
+Check the machine at any time:
+
+```bash
+laqta doctor            # what is installed and what is running
+laqta doctor --json     # the same facts, machine-readable
+```
 
 ### Platform notes
 
@@ -106,9 +117,7 @@ brew install ffmpeg          # includes libass
 ```powershell
 winget install Gyan.FFmpeg
 # then, in the repository:
-python -m venv backend\.venv
-backend\.venv\Scripts\pip install -r backend\requirements-asr.txt
-cd frontend; npm install; npm run dev
+powershell -ExecutionPolicy Bypass -File scripts\setup.ps1
 ```
 
 </details>
@@ -150,9 +159,12 @@ capability probe the studio shows.
 ## The `laqta` command
 
 ```bash
-laqta doctor     # check this machine for everything Laqta needs
-laqta serve      # run the local API server (127.0.0.1)
-laqta models     # show the locally cached speech models
+laqta doctor                  # check this machine for everything Laqta needs
+laqta doctor --json           # the same report, machine-readable
+laqta serve                   # run the local API server (127.0.0.1)
+laqta studio                  # run the API and the studio together
+laqta studio --production      # build the studio, serve it from the API
+laqta models                  # show the locally cached speech models
 laqta --version
 ```
 
@@ -202,6 +214,7 @@ clear error instead of a broken import.
 | Document | What it covers |
 |----------|----------------|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | How the pieces fit together, the manifest lifecycle, where to change things |
+| [docs/UPGRADING.md](docs/UPGRADING.md) | What changed between the releases, and what you have to do |
 | [docs/PRD.md](docs/PRD.md) | The product requirements the code implements |
 | [docs/POLICY.md](docs/POLICY.md) | What leaves your machine, rights for URL imports, model licences |
 | [docs/PERFORMANCE.md](docs/PERFORMANCE.md) | Profiles, two-pass transcription, benchmarks |

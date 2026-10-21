@@ -27,6 +27,7 @@ scene-change measurement, not a stub.
 
 from __future__ import annotations
 
+import logging
 import shutil
 import subprocess
 from pathlib import Path
@@ -49,13 +50,22 @@ PITCH_HOP_MS = 20
 SCENE_DIFF_THRESHOLD = 0.12  # mean |Δ| over grayscale frames (0..1)
 SCENE_FPS = 4
 
+logger = logging.getLogger(__name__)
+
 
 def _silence_threshold(rms: np.ndarray) -> float:
-    """The stage's silence threshold (noise floor + 1.5x, like Pass 1)."""
+    """The stage's silence threshold (noise floor + 1.5x, like Pass 1).
+
+    A digitally silent signal (every frame at zero) must still count as
+    silence: the threshold is the *lower* bound of a frame, so it has to be
+    strictly positive for a zero frame to fall below it. Returning 0.0 would
+    report a silent clip as "not silent" and let it score as if it had
+    speech.
+    """
     floor = float(np.percentile(rms, 20))
     peak = float(rms.max()) if rms.size else 0.0
     if peak <= 0:
-        return 0.0
+        return 1e-9
     return max(floor * 1.5, peak * 0.04)
 
 
@@ -282,9 +292,16 @@ def run_multimodal_stage(
     scene_cuts: list[int] = []
     source = Path(manifest.source_path)
     if source.is_file():
-        scene_cuts = _scene_cuts_scenedetect(source)
-        if scene_cuts is None:
-            scene_cuts = _scene_cuts_ffmpeg_fallback(source)
+        try:
+            scene_cuts = _scene_cuts_scenedetect(source)
+            if scene_cuts is None:
+                scene_cuts = _scene_cuts_ffmpeg_fallback(source)
+        except PipelineError as exc:
+            # Scene cuts are one signal among many. A source ffmpeg cannot
+            # decode must degrade to "no scene cuts" instead of aborting the
+            # whole pipeline — the ranking still works without them.
+            logger.warning("Scene-cut detection failed, continuing without it: %s", exc)
+            scene_cuts = []
 
     data = manifest.model_dump()
     data["atomic_utterances"] = [u.model_dump() for u in updated_utterances]
