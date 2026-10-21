@@ -3,6 +3,7 @@
 import os
 import shutil
 import tempfile
+from pathlib import Path
 
 # Redirect all storage into an isolated temp directory BEFORE the app is
 # imported: app.core.config.Settings reads QATTA_DATA_DIR at import time and
@@ -11,6 +12,12 @@ import tempfile
 # files into the user's real data directory (~/.local/share/qatta).
 _TEST_DATA_DIR = tempfile.mkdtemp(prefix="qatta-test-data-")
 os.environ["QATTA_DATA_DIR"] = _TEST_DATA_DIR
+
+# The studio UI must not leak into the tests: if the developer happens to have
+# a built frontend, the API would serve it and the API tests would change
+# behaviour. Point the setting at a directory that does not exist; the
+# release-mode test sets its own.
+os.environ["QATTA_FRONTEND_DIST"] = str(Path(_TEST_DATA_DIR) / "no-frontend-build")
 
 # Tests must be hermetic: a developer's local .env (which may hold a real
 # OpenRouter key and hosted opt-ins) must never change test behaviour — and a

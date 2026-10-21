@@ -19,6 +19,11 @@ class Settings(BaseSettings):
 
     # Application metadata
     APP_NAME: str = "Laqta"
+
+    # Where the built studio UI lives. When the directory exists, the API
+    # serves the studio as well ("release mode"): one address, one process.
+    # Empty disables it and leaves the UI to the Vite dev server.
+    FRONTEND_DIST: str = ""
     # The version is NOT a setting: it comes from the `qatta` core package
     # (`qatta.__version__`), the single source of truth. An environment
     # variable must never be able to make the API report a different
@@ -185,6 +190,19 @@ class Settings(BaseSettings):
     @property
     def redacted_openrouter_key(self) -> str:
         return redact_secret(self.LLM_OPENROUTER_API_KEY)
+
+    def frontend_dist_path(self) -> Path:
+        """The directory that holds the built studio UI (may not exist).
+
+        When it exists the API serves the studio too ("release mode"): one
+        address, one process.
+        """
+        if self.FRONTEND_DIST:
+            return Path(self.FRONTEND_DIST).expanduser().resolve()
+        # Default: <repository>/frontend/dist (backend/app/core/config.py ->
+        # backend/app/core -> backend/app -> backend -> <repository>).
+        repo_root = Path(__file__).resolve().parents[3]
+        return (repo_root / "frontend" / "dist").resolve()
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod

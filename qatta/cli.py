@@ -489,10 +489,23 @@ def studio(
     frontend_only: bool = typer.Option(
         False, "--frontend-only", help="Start only the studio frontend."
     ),
+    production: bool = typer.Option(
+        False,
+        "--production",
+        help=(
+            "Build the studio and serve it from the API — one process, one "
+            "address (http://127.0.0.1:8000)."
+        ),
+    ),
+    skip_build: bool = typer.Option(
+        False, "--skip-build", help="Do not rebuild the frontend (--production)."
+    ),
 ) -> None:
     """Run the API and the studio frontend together.
 
-    Equivalent to `scripts/dev.sh`, but from the installed command.
+    Equivalent to `scripts/dev.sh`, but from the installed command. With
+    ``--production`` the studio is built and served by the API itself, so
+    the whole application lives on a single address.
     """
     import signal
     import subprocess
@@ -504,6 +517,27 @@ def studio(
         uvicorn_bin = backend_dir / ".venv" / "Scripts" / "uvicorn.exe"
 
     processes: list[subprocess.Popen] = []
+
+    def build_frontend() -> None:
+        """Build the studio so the API can serve it."""
+        if not (frontend_dir / "node_modules").is_dir():
+            console.print(
+                "[red]No frontend dependencies found.[/red] Run ./scripts/setup.sh first."
+            )
+            raise typer.Exit(code=1)
+        npm = shutil.which("npm")
+        if npm is None:
+            console.print("[red]npm was not found.[/red] Install Node.js 22.12+.")
+            raise typer.Exit(code=1)
+        console.print("[cyan]Building[/cyan]   the studio (npm run build) …")
+        result = subprocess.run(  # noqa: S603
+            [npm, "run", "build"],
+            cwd=str(frontend_dir),
+            check=False,
+        )
+        if result.returncode != 0:
+            console.print("[red]The frontend build failed.[/red]")
+            raise typer.Exit(code=1)
 
     def start_backend() -> None:
         if not uvicorn_bin.exists():
@@ -538,10 +572,17 @@ def studio(
             )
         )
 
-    if not frontend_only:
+    if production:
+        # One process, one address: the API serves the built studio.
+        if not skip_build:
+            build_frontend()
+        console.print(f"[cyan]Studio[/cyan]   → http://{host}:{port}  (built studio)")
         start_backend()
-    if not api_only:
-        start_frontend()
+    else:
+        if not frontend_only:
+            start_backend()
+        if not api_only:
+            start_frontend()
 
     console.print("\n[bold]Laqta is running.[/bold] Press Ctrl-C to stop.\n")
 

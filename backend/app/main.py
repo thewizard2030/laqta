@@ -7,9 +7,9 @@ CORS is restricted to explicitly configured local origins (no wildcard '*').
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Response
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
 
 import qatta
 from app.api.routes import api_router
@@ -84,8 +84,15 @@ async def openai_models_alias() -> JSONResponse:
 
 
 @app.get("/", include_in_schema=False)
-async def root_status() -> JSONResponse:
-    """Root info endpoint providing basic guidance."""
+async def root_status() -> Response:
+    """The studio UI in release mode, the API status otherwise.
+
+    With a built frontend the root opens the studio — one address for the
+    whole application. Without one it stays a helpful JSON status.
+    """
+    dist = settings.frontend_dist_path()
+    if dist.is_dir():
+        return FileResponse(dist / "index.html")
     return JSONResponse(
         content={
             "app": settings.APP_NAME,
@@ -94,8 +101,44 @@ async def root_status() -> JSONResponse:
             "health": "/api/health",
             "capabilities": "/api/capabilities",
             "local_only": True,
+            "studio": "run `npm run dev` in frontend/ for the studio UI",
         }
     )
+
+
+# ---------------------------------------------------------------------------
+# The studio UI (release mode)
+# ---------------------------------------------------------------------------
+# When the frontend has been built (`npm run build`), the API serves it too.
+# That is what makes Laqta a one-command application: `laqta studio
+# --production` builds the UI and serves everything from a single address.
+#
+# The catch-all is registered AFTER the API router, so /api/* always wins.
+@app.get("/{full_path:path}", include_in_schema=False)
+async def studio_ui(full_path: str) -> Response:
+    """Serve the built studio, falling back to index.html (client routing).
+
+    The directory is resolved per request, so building the studio while the
+    API runs is enough to switch it into release mode.
+    """
+    dist = settings.frontend_dist_path()
+    if not dist.is_dir():
+        return JSONResponse(
+            content={
+                "detail": "Not found",
+                "hint": (
+                    "The studio UI is not built. Run `npm run build` in "
+                    "frontend/, or use `npm run dev` for the dev server."
+                ),
+            },
+            status_code=404,
+        )
+
+    candidate = (dist / full_path).resolve()
+    # Never serve anything outside the build directory.
+    if full_path and candidate.is_file() and candidate.is_relative_to(dist.resolve()):
+        return FileResponse(candidate)
+    return FileResponse(dist / "index.html")
 
 
 if __name__ == "__main__":
