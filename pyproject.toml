@@ -75,7 +75,9 @@ url = ["yt-dlp>=2024.04"]
 dev = [
     "pytest>=8.0",
     "pytest-asyncio>=0.23.0",
+    "pytest-cov>=5.0.0",
     "ruff>=0.5.0",
+    "pip-audit>=2.7.0",
 ]
 # Everything above, for a one-shot install.
 all = [
@@ -98,6 +100,10 @@ laqta = "qatta.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["qatta*"]
+
+[tool.setuptools.package-data]
+# The package ships type information (PEP 561).
+qatta = ["py.typed"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "backend/tests"]

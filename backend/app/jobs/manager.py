@@ -118,6 +118,14 @@ class JobManager:
             self._worker_task = asyncio.create_task(self._worker_loop(), name="job_worker_loop")
             logger.info("JobManager worker started (max_workers=1).")
 
+    def is_running(self) -> bool:
+        """Whether the background worker is alive.
+
+        The health endpoint uses this: a stopped worker means queued jobs
+        would never run, so the API must not report "healthy".
+        """
+        return self._running
+
     async def stop(self) -> None:
         """Stop worker task gracefully and cancel any in-flight work."""
         async with self._lock:

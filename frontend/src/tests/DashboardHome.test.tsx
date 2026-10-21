@@ -11,6 +11,7 @@ const mockHealth: HealthResponse = {
   app: "Laqta",
   version: "0.1.0",
   timestamp: "2026-10-19T05:00:00Z",
+    worker: "running",
 };
 
 const baseCapabilities: CapabilitiesResponse = {

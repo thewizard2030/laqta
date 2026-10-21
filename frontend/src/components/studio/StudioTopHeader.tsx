@@ -136,13 +136,20 @@ export const StudioTopHeader: React.FC<StudioTopHeaderProps> = ({
 
       {/* Right: Hardware Telemetry Pill & Action Icons */}
       <div className="flex items-center gap-2 shrink-0">
-        {/* Hardware Status Pill */}
+        {/* Hardware Status Pill — the dot reflects the *reported* state.
+            A stopped job worker means queued jobs would never run, so the
+            studio must not show a healthy green dot in that case. */}
         <div
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-obsidian-950/80 border border-slate-800 text-xs text-slate-300 shadow-sm"
-          title={`Status: ${health?.status || "online"} • Storage: ${capabilities?.storage.data_dir || "local"}`}
+          title={`Status: ${health?.status || "unknown"} • Worker: ${health?.worker || "unknown"} • Storage: ${capabilities?.storage.data_dir || "local"}`}
+          data-testid="studio-health-pill"
         >
           <span
-            className="h-2 w-2 rounded-full bg-neon-emerald animate-pulse-glow"
+            className={`h-2 w-2 rounded-full ${
+              health?.status === "degraded"
+                ? "bg-amber-400"
+                : "bg-neon-emerald animate-pulse-glow"
+            }`}
             aria-hidden="true"
           />
           <span className="font-medium text-[11px] text-slate-200 hidden sm:inline">
@@ -151,7 +158,13 @@ export const StudioTopHeader: React.FC<StudioTopHeaderProps> = ({
           <span className="text-slate-500 hidden sm:inline" aria-hidden="true">
             •
           </span>
-          <span className="text-[11px] text-neon-cyan">Local 127.0.0.1</span>
+          <span
+            className={`text-[11px] ${
+              health?.status === "degraded" ? "text-amber-300" : "text-neon-cyan"
+            }`}
+          >
+            {health?.status === "degraded" ? "Worker stopped" : "Local 127.0.0.1"}
+          </span>
         </div>
 
         {/* Fullscreen Button */}

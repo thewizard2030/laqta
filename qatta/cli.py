@@ -43,6 +43,15 @@ WARN = "[yellow]![/yellow]"
 FAIL = "[red]✗[/red]"
 
 
+BACKEND_MISSING_HINT = (
+    "The API server ships with the Laqta source checkout, not with the "
+    "published package. Clone the repository (git clone "
+    "https://github.com/thewizard2030/laqta.git) and run the command from "
+    "there, or start the API directly with `uvicorn app.main:app` from the "
+    "backend/ directory."
+)
+
+
 def _backend_on_path() -> bool:
     """Make the backend package importable (it lives beside the core)."""
     if not BACKEND_DIR.is_dir():
@@ -50,6 +59,17 @@ def _backend_on_path() -> bool:
     path = str(BACKEND_DIR)
     if path not in sys.path:
         sys.path.insert(0, path)
+    return True
+
+
+def _backend_importable() -> bool:
+    """Whether the API package can actually be imported."""
+    if not _backend_on_path():
+        return False
+    try:
+        import app.main  # noqa: F401
+    except Exception:  # noqa: BLE001 - any import error means "not usable"
+        return False
     return True
 
 
@@ -270,6 +290,16 @@ def doctor() -> None:
             "Start it with `laqta serve`",
         )
 
+    if _backend_importable():
+        table.add_row(OK, "Backend", "importable", "the API server can be started here")
+    else:
+        table.add_row(
+            WARN,
+            "Backend",
+            "not available here",
+            "the API server ships with the source checkout",
+        )
+
     frontend = _probe_http("http://127.0.0.1:5173/")
     if frontend is not None:
         table.add_row(OK, "Studio", "running on :5173", "open http://127.0.0.1:5173")
@@ -309,7 +339,8 @@ def serve(
 ) -> None:
     """Run the local API server (binds to 127.0.0.1 by default)."""
     if not _backend_on_path():
-        console.print("[red]The backend package was not found next to the core package.[/red]")
+        console.print("[red]The API server is not available here.[/red]")
+        console.print(BACKEND_MISSING_HINT)
         raise typer.Exit(code=1)
     try:
         import uvicorn
