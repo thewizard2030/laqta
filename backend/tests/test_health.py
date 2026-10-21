@@ -2,6 +2,8 @@
 
 from fastapi.testclient import TestClient
 
+from qatta import __version__
+
 
 def test_get_health(client: TestClient) -> None:
     """Verify health endpoint returns status 200 and expected schema."""
@@ -10,7 +12,8 @@ def test_get_health(client: TestClient) -> None:
     data = response.json()
     assert data["status"] == "healthy"
     assert data["app"] == "Laqta"
-    assert data["version"] == "0.1.0"
+    # The version comes from the package, so a release bump cannot break it.
+    assert data["version"] == __version__
     assert "timestamp" in data
 
 

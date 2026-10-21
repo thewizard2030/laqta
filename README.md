@@ -201,6 +201,7 @@ clear error instead of a broken import.
 
 | Document | What it covers |
 |----------|----------------|
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | How the pieces fit together, the manifest lifecycle, where to change things |
 | [docs/PRD.md](docs/PRD.md) | The product requirements the code implements |
 | [docs/POLICY.md](docs/POLICY.md) | What leaves your machine, rights for URL imports, model licences |
 | [docs/PERFORMANCE.md](docs/PERFORMANCE.md) | Profiles, two-pass transcription, benchmarks |

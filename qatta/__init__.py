@@ -5,4 +5,4 @@ FastAPI backend in ``backend/``. See ``docs/PERFORMANCE.md`` and the
 architectural rules section in ``AGENTS.md``.
 """
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"

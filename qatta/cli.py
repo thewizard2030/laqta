@@ -5,6 +5,7 @@
     laqta --version      print the version
     laqta doctor         check this machine for everything Laqta needs
     laqta serve          run the local API server
+    laqta studio         run the API and the studio frontend together
     laqta models         show the locally cached speech models
 
 The CLI never contacts the network and never uploads anything: it only
@@ -17,6 +18,7 @@ import os
 import shutil
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import typer
@@ -72,6 +74,22 @@ def _binary_version(path: str, args: list[str] | None = None) -> str:
         if first_line.startswith(token):
             return first_line[len(token) :].split(" ")[0]
     return first_line or "unknown version"
+
+
+def _probe_http(url: str, timeout: float = 1.5) -> str | None:
+    """Return the response body of a local URL, or None when unreachable.
+
+    Uses the standard library only: the CLI must work without the backend's
+    dependencies installed.
+    """
+    import urllib.error
+    import urllib.request
+
+    try:
+        with urllib.request.urlopen(url, timeout=timeout) as response:  # noqa: S310
+            return response.read().decode("utf-8", "replace")
+    except (urllib.error.URLError, OSError, ValueError):
+        return None
 
 
 def _human_bytes(size: float) -> str:
@@ -230,6 +248,39 @@ def doctor() -> None:
     except OSError:
         table.add_row(WARN, "Disk space", "unknown", "")
 
+    # --- The running services -------------------------------------------
+    # A local machine can have everything installed and still have no server
+    # running; say so explicitly instead of leaving the user guessing.
+    api_port = os.environ.get("QATTA_PORT", "8000")
+    health = _probe_http(f"http://127.0.0.1:{api_port}/api/health")
+    if health:
+        try:
+            import json
+
+            payload = json.loads(health)
+            label = f"{payload.get('app', 'Laqta')} {payload.get('version', '')}".strip()
+        except ValueError:
+            label = "reachable"
+        table.add_row(OK, "API", f"running on :{api_port}", label)
+    else:
+        table.add_row(
+            WARN,
+            "API",
+            f"not running on :{api_port}",
+            "Start it with `laqta serve`",
+        )
+
+    frontend = _probe_http("http://127.0.0.1:5173/")
+    if frontend is not None:
+        table.add_row(OK, "Studio", "running on :5173", "open http://127.0.0.1:5173")
+    else:
+        table.add_row(
+            WARN,
+            "Studio",
+            "not running on :5173",
+            "Start it with `npm run dev` in frontend/",
+        )
+
     console.print(table)
 
     if required_failures:
@@ -242,7 +293,7 @@ def doctor() -> None:
 
     console.print(
         "\n[bold green]Ready.[/bold green] Start the studio with "
-        "`laqta serve` and `npm run dev` in `frontend/`.\n"
+        "`laqta studio` (API + frontend in one command).\n"
     )
 
 
@@ -309,6 +360,92 @@ def models() -> None:
         return
     console.print(table)
     console.print("")
+
+
+@app.command()
+def studio(
+    host: str = typer.Option("127.0.0.1", "--host", help="API interface."),
+    port: int = typer.Option(8000, "--port", help="API port."),
+    api_only: bool = typer.Option(False, "--api-only", help="Start only the API."),
+    frontend_only: bool = typer.Option(
+        False, "--frontend-only", help="Start only the studio frontend."
+    ),
+) -> None:
+    """Run the API and the studio frontend together.
+
+    Equivalent to `scripts/dev.sh`, but from the installed command.
+    """
+    import signal
+    import subprocess
+
+    backend_dir = REPO_ROOT / "backend"
+    frontend_dir = REPO_ROOT / "frontend"
+    uvicorn_bin = backend_dir / ".venv" / "bin" / "uvicorn"
+    if sys.platform.startswith("win"):  # pragma: no cover - Windows layout
+        uvicorn_bin = backend_dir / ".venv" / "Scripts" / "uvicorn.exe"
+
+    processes: list[subprocess.Popen] = []
+
+    def start_backend() -> None:
+        if not uvicorn_bin.exists():
+            console.print(
+                "[red]No backend environment found.[/red] Run ./scripts/setup.sh first.",
+                style=None,
+            )
+            raise typer.Exit(code=1)
+        console.print(f"[cyan]API[/cyan]      → http://{host}:{port}")
+        processes.append(
+            subprocess.Popen(  # noqa: S603
+                [str(uvicorn_bin), "app.main:app", "--host", host, "--port", str(port)],
+                cwd=str(backend_dir),
+            )
+        )
+
+    def start_frontend() -> None:
+        if not (frontend_dir / "node_modules").is_dir():
+            console.print(
+                "[red]No frontend dependencies found.[/red] Run ./scripts/setup.sh first."
+            )
+            raise typer.Exit(code=1)
+        npm = shutil.which("npm")
+        if npm is None:
+            console.print("[red]npm was not found.[/red] Install Node.js 22.12+.")
+            raise typer.Exit(code=1)
+        console.print("[cyan]Studio[/cyan]   → http://127.0.0.1:5173")
+        processes.append(
+            subprocess.Popen(  # noqa: S603
+                [npm, "run", "dev"],
+                cwd=str(frontend_dir),
+            )
+        )
+
+    if not frontend_only:
+        start_backend()
+    if not api_only:
+        start_frontend()
+
+    console.print("\n[bold]Laqta is running.[/bold] Press Ctrl-C to stop.\n")
+
+    def shutdown(*_: object) -> None:
+        for process in processes:
+            if process.poll() is None:
+                process.terminate()
+        for process in processes:
+            try:
+                process.wait(timeout=5)
+            except subprocess.TimeoutExpired:
+                process.kill()
+
+    signal.signal(signal.SIGINT, lambda *_: shutdown())
+    try:
+        while True:
+            for process in processes:
+                if process.poll() is not None:
+                    shutdown()
+                    raise typer.Exit(code=process.returncode or 0)
+            time.sleep(0.5)
+    except KeyboardInterrupt:  # pragma: no cover - interactive
+        shutdown()
 
 
 def main() -> None:

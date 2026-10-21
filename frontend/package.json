@@ -1,7 +1,7 @@
 {
   "name": "laqta-frontend",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Laqta studio frontend \u2014 local-first long-video-to-Shorts workbench.",
   "license": "MIT",
   "repository": {

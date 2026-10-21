@@ -9,6 +9,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Nothing yet.
 
+## [0.1.1] — 2026-10-21
+
+A hardening release: no known vulnerabilities, a reproducible CI, and the
+fail-closed defaults the product promises.
+
+### Security
+
+- **The frontend toolchain is fully upgraded** — Vitest 5, Vite 8, Tailwind 4,
+  React 19 and Lucide 1. `npm audit` now reports **0 vulnerabilities**, down
+  from 13. The critical one was `tinypool` (a prototype-pollution RCE in the
+  test worker pool), reached through Vitest 2.
+- **URL ingestion is fail-closed.** It shipped enabled; it now ships
+  **disabled** and needs an explicit `QATTA_ENABLE_URL_INGESTION=true`. The
+  policy, the env template, the error messages and the tests agree.
+- **Every GitHub Action is pinned to a full commit SHA**, and the OpenSSF
+  Scorecard workflow checks it (the *Pinned-Dependencies* check).
+- The CI runners are pinned to `ubuntu-24.04` before `ubuntu-latest` moves
+  to Ubuntu 26.
+
+### Fixed
+
+- The job panel read the clock **during render**, which made the elapsed time
+  non-reproducible. It now comes from a one-second state clock, so it also
+  ticks on its own between polls.
+- The state resets that ran inside effects (thumbnail failure, clip
+  pagination, the canvas scrubber, the YouTube dialog) are adjusted during
+  render instead. ESLint is at **zero warnings**, not zero errors.
+- The **core test suite is hermetic**: it used to create real projects in the
+  developer's own data directory.
+- `laqta doctor` now reports whether the API and the studio are actually
+  running, not just what is installed.
+
+### Added
+
+- `laqta studio` — runs the API and the studio frontend together.
+- `scripts/check.sh` — every quality gate in one command, exactly like CI.
+- Coverage is measured in CI and gated on non-regression
+  (`config/coverage-baseline.json`).
+- `docs/ARCHITECTURE.md` — the module map, the manifest lifecycle and where
+  to change things.
+- The GitHub and YouTube marks are now Laqta's own inline SVGs (Lucide v1
+  removed its brand icons).
+
+### Changed
+
+- Tailwind v4 is CSS-first: the theme moved from `tailwind.config.js` into
+  an `@theme` block in `index.css`, and the gradient utilities were renamed
+  (`bg-gradient-to-*` → `bg-linear-to-*`). The rendered result is unchanged.
+- The Node baseline is **22.12+** (the Vitest 5 requirement).
+
 ## [0.1.0] — 2026-10-20
 
 The first public release. Laqta turns long videos into ranked vertical Shorts
@@ -51,5 +101,6 @@ on your own machine — no account, no upload, no telemetry.
 - Transcripts and media metadata are treated as untrusted data and are never
   interpolated into shell commands.
 
-[Unreleased]: https://github.com/thewizard2030/laqta/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/thewizard2030/laqta/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/thewizard2030/laqta/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/thewizard2030/laqta/releases/tag/v0.1.0
