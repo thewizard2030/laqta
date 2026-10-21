@@ -144,3 +144,86 @@ def test_lock_file_pins_every_package_with_a_hash() -> None:
     assert lock.count("--hash=sha256:") >= len(packages)
     assert "fastapi==" in lock
     assert "faster-whisper==" in lock
+
+
+# --- the CLI's local probes --------------------------------------------------
+
+
+def test_http_probe_returns_none_for_a_closed_port() -> None:
+    """A port that nothing listens on must report "not running"."""
+    from qatta.cli import _probe_http
+
+    # Port 1 is reserved and never has a listener.
+    assert _probe_http("http://127.0.0.1:1/api/health", timeout=0.5) is None
+
+
+def test_http_probe_reads_a_local_response() -> None:
+    """The probe must return the body of a reachable local server."""
+    import http.server
+    import threading
+
+    from qatta.cli import _probe_http
+
+    class Handler(http.server.BaseHTTPRequestHandler):
+        def do_GET(self) -> None:  # noqa: N802 - http.server API
+            body = b'{"app": "Laqta", "version": "0.1.1"}'
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+
+        def log_message(self, *args: object) -> None:
+            pass
+
+    server = http.server.HTTPServer(("127.0.0.1", 0), Handler)
+    thread = threading.Thread(target=server.serve_forever, daemon=True)
+    thread.start()
+    try:
+        port = server.server_address[1]
+        payload = _probe_http(f"http://127.0.0.1:{port}/api/health", timeout=2)
+    finally:
+        server.shutdown()
+        server.server_close()
+
+    assert payload is not None
+    assert "Laqta" in payload
+
+
+def test_doctor_reports_the_running_api_and_studio(monkeypatch) -> None:
+    """The doctor must say whether the services are up, not only what is installed."""
+    from typer.testing import CliRunner
+
+    from qatta.cli import app
+
+    monkeypatch.setattr("qatta.cli._probe_http", lambda url, timeout=1.5: "{}")
+    result = CliRunner().invoke(app, ["doctor"])
+
+    assert result.exit_code in (0, 1)
+    assert "running on :8000" in result.stdout
+    assert "running on :5173" in result.stdout
+
+
+def test_doctor_reports_a_stopped_api(monkeypatch) -> None:
+    from typer.testing import CliRunner
+
+    from qatta.cli import app
+
+    monkeypatch.setattr("qatta.cli._probe_http", lambda url, timeout=1.5: None)
+    result = CliRunner().invoke(app, ["doctor"])
+
+    assert "not running on :8000" in result.stdout
+    assert "not running on :5173" in result.stdout
+
+
+def test_studio_refuses_to_start_without_a_backend_environment(monkeypatch, tmp_path) -> None:
+    """`laqta studio` must fail clearly instead of half-starting."""
+    from typer.testing import CliRunner
+
+    from qatta import cli
+
+    monkeypatch.setattr(cli, "REPO_ROOT", tmp_path)
+    result = CliRunner().invoke(cli.app, ["studio"])
+
+    assert result.exit_code == 1
+    assert "setup.sh" in result.stdout
