@@ -278,7 +278,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
   return (
     <div className="mx-auto w-full max-w-[1500px] space-y-6" data-testid="project-list-view">
       {/* 1. Library banner */}
-      <div className="bg-gradient-to-r from-obsidian-900/90 via-purple-950/20 to-obsidian-900/90 border border-slate-800/90 rounded-2xl p-6 backdrop-blur-md shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-5">
+      <div className="bg-linear-to-r from-obsidian-900/90 via-purple-950/20 to-obsidian-900/90 border border-slate-800/90 rounded-2xl p-6 backdrop-blur-md shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-5">
         <div className="space-y-2">
           <div className="flex items-center space-x-2.5">
             <div className="p-2.5 bg-purple-600/20 border border-purple-500/30 rounded-xl text-laqta-400">
@@ -322,7 +322,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
         <div className="flex items-center space-x-3 shrink-0">
           <button
             onClick={onOpenCreateModal}
-            className="inline-flex items-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-laqta-600 via-purple-600 to-indigo-600 hover:from-laqta-500 hover:to-indigo-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-laqta-600/20 active:scale-95 transition-all cursor-pointer"
+            className="inline-flex items-center space-x-2 px-4 py-2.5 bg-linear-to-r from-laqta-600 via-purple-600 to-indigo-600 hover:from-laqta-500 hover:to-indigo-500 text-white text-xs font-semibold rounded-xl shadow-lg shadow-laqta-600/20 active:scale-95 transition-all cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             <span>Create New Project</span>
@@ -497,7 +497,7 @@ export const ProjectList: React.FC<ProjectListProps> = ({
                   }`}
                 >
                   {/* Subtle top glow highlight on hover */}
-                  <div className="absolute inset-x-0 top-0 h-0.5 bg-gradient-to-r from-transparent via-purple-500/0 group-hover:via-purple-500/50 to-transparent transition-all"></div>
+                  <div className="absolute inset-x-0 top-0 h-0.5 bg-linear-to-r from-transparent via-purple-500/0 group-hover:via-purple-500/50 to-transparent transition-all"></div>
 
                   <div>
                     {/* Top Row: Selection Checkbox, Folder Icon, and Actions */}

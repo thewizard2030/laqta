@@ -4,12 +4,12 @@ import {
   PlusCircle,
   FolderKanban,
   Sliders,
-  Github,
   ShieldCheck,
   Star,
   X,
 } from "lucide-react";
 import { BrandLogo } from "../ui/BrandLogo";
+import { GitHubIcon } from "../ui/BrandIcons";
 import { REPO_URL } from "../../lib/brand";
 import { CapabilitiesResponse } from "../../types/capabilities";
 
@@ -111,7 +111,7 @@ export const StudioSidebar: React.FC<StudioSidebarProps> = ({
           >
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-700"
+              className="pointer-events-none absolute inset-0 -translate-x-full bg-linear-to-r from-transparent via-white/20 to-transparent group-hover:translate-x-full transition-transform duration-700"
             />
             <PlusCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
             <span>Create New Project</span>
@@ -192,7 +192,7 @@ export const StudioSidebar: React.FC<StudioSidebarProps> = ({
           {/* Open Source GitHub Card */}
           <div className="p-3 rounded-xl bg-obsidian-950/70 border border-slate-800/80 space-y-2.5">
             <div className="flex items-center space-x-2.5">
-              <Github className="h-4 w-4 text-slate-300 shrink-0" />
+              <GitHubIcon className="h-4 w-4 text-slate-300 shrink-0" />
               <div className="min-w-0">
                 <p className="text-xs font-semibold text-white">Open Source</p>
                 <p className="text-[10px] text-slate-400 truncate">
@@ -220,7 +220,7 @@ export const StudioSidebar: React.FC<StudioSidebarProps> = ({
             title="Laqta runs entirely on this device — no accounts, no cloud, no telemetry."
           >
             <div className="flex items-center space-x-2.5 min-w-0">
-              <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-laqta-600 to-cyan-400 p-0.5 shrink-0">
+              <div className="h-8 w-8 rounded-full bg-linear-to-tr from-laqta-600 to-cyan-400 p-0.5 shrink-0">
                 <div className="h-full w-full rounded-full bg-obsidian-950 flex items-center justify-center">
                   <ShieldCheck className="h-3.5 w-3.5 text-neon-cyan" />
                 </div>

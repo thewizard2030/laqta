@@ -91,7 +91,7 @@ export const WaveformTrack: React.FC<WaveformTrackProps> = ({
               key={i}
               className={`flex-1 rounded-full transition-all ${
                 isInActiveClip
-                  ? "bg-gradient-to-t from-laqta-600 via-laqta-400 to-cyan-400 opacity-90"
+                  ? "bg-linear-to-t from-laqta-600 via-laqta-400 to-cyan-400 opacity-90"
                   : "bg-slate-700/50 opacity-40 hover:opacity-70"
               }`}
               style={{ height: `${height}%` }}

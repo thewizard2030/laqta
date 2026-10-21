@@ -158,7 +158,7 @@ export const MediaUploader: React.FC<MediaUploaderProps> = ({ projectId, onMedia
                 className="w-full bg-slate-800 rounded-full h-2 overflow-hidden"
               >
                 <div
-                  className="bg-gradient-to-r from-laqta-500 to-indigo-500 h-2 rounded-full transition-all duration-150"
+                  className="bg-linear-to-r from-laqta-500 to-indigo-500 h-2 rounded-full transition-all duration-150"
                   style={{ width: `${uploadProgress}%` }}
                 />
               </div>

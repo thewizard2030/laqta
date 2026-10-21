@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { FolderPlus, Loader2, Youtube } from "lucide-react";
+import { FolderPlus, Loader2 } from "lucide-react";
+import { YouTubeIcon } from "../../components/ui/BrandIcons";
 import { Modal } from "../../components/ui/Modal";
 import { Project } from "../../types/projects";
 
@@ -128,12 +129,12 @@ export const YouTubeTargetModal: React.FC<YouTubeTargetModalProps> = ({
               void handleContinue();
             }}
             disabled={isResolving}
-            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-gradient-to-r from-laqta-600 to-indigo-600 hover:from-laqta-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-laqta-600/25 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-laqta-400"
+            className="inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-xl text-xs font-semibold text-white bg-linear-to-r from-laqta-600 to-indigo-600 hover:from-laqta-500 hover:to-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-laqta-600/25 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-laqta-400"
           >
             {isResolving ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
             ) : (
-              <Youtube className="h-3.5 w-3.5" aria-hidden="true" />
+              <YouTubeIcon className="h-3.5 w-3.5" />
             )}
             Continue
           </button>

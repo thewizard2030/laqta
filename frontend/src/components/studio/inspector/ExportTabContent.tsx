@@ -201,7 +201,7 @@ export const ExportTabContent: React.FC<ExportTabContentProps> = ({
             download={settings.fileName || "Laqta_Short.mp4"}
             target="_blank"
             rel="noopener noreferrer"
-            className="w-full py-2.5 px-3 rounded-xl font-bold text-xs text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 border border-emerald-400/50 shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
+            className="w-full py-2.5 px-3 rounded-xl font-bold text-xs text-white bg-linear-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 border border-emerald-400/50 shadow-md flex items-center justify-center gap-2 transition-all active:scale-[0.98] cursor-pointer"
             data-testid="download-rendered-short-btn"
           >
             <Download className="h-4 w-4" aria-hidden="true" />

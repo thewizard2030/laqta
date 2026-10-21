@@ -8,7 +8,7 @@
 [![Release](https://img.shields.io/github/v/release/thewizard2030/laqta?label=release&color=7c4dff)](https://github.com/thewizard2030/laqta/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-7c4dff.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/python-3.11%20%7C%203.12-22d3ee.svg)](https://www.python.org/)
-[![Node](https://img.shields.io/badge/node-%E2%89%A520-22d3ee.svg)](https://nodejs.org/)
+[![Node](https://img.shields.io/badge/node-%E2%89%A522.12-22d3ee.svg)](https://nodejs.org/)
 [![Local first](https://img.shields.io/badge/no%20cloud%20required-10b981.svg)](docs/POLICY.md)
 
 </div>
@@ -66,7 +66,7 @@ synthetic demo video — no third-party content.*
 | | |
 |---|---|
 | Python | 3.11 or 3.12 |
-| Node.js | 20 or newer |
+| Node.js | 22.12 or newer (Vitest 5 requirement) |
 | FFmpeg | with **libass** (for the burned-in captions) |
 | Disk | ~2 GB free (the speech model is downloaded once) |
 | RAM | 8 GB works; a GPU is optional |

@@ -114,7 +114,7 @@ export const StudioStatusBar: React.FC<StudioStatusBarProps> = ({
         <Sparkles className="h-3 w-3 text-laqta-200" aria-hidden="true" />
         <span className="italic tracking-wide hidden sm:inline">Better Clips. Bigger Stories.</span>
         <div
-          className="h-3 w-3 rounded-full bg-gradient-to-tr from-laqta-600 to-cyan-400 flex items-center justify-center p-0.5 ml-1"
+          className="h-3 w-3 rounded-full bg-linear-to-tr from-laqta-600 to-cyan-400 flex items-center justify-center p-0.5 ml-1"
           aria-hidden="true"
         >
           <div className="h-full w-full rounded-full bg-obsidian-950"></div>

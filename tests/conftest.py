@@ -11,6 +11,8 @@ singleton is built.
 """
 
 import os
+import shutil
+import tempfile
 
 _HERMETIC_ENV = {
     "QATTA_LLM_PROVIDER": "ollama",
@@ -21,3 +23,16 @@ _HERMETIC_ENV = {
     "QATTA_LLM_RANKER_ENABLED": "false",
 }
 os.environ.update(_HERMETIC_ENV)
+
+# Redirect the storage directory into an isolated temp directory BEFORE the
+# core config is imported: `qatta.core.config` reads QATTA_DATA_DIR at import
+# time. Without this, the integration tests in this suite created real
+# projects, manifests and media rows inside the developer's own data
+# directory (~/.local/share/qatta).
+_TEST_DATA_DIR = tempfile.mkdtemp(prefix="laqta-core-test-data-")
+os.environ["QATTA_DATA_DIR"] = _TEST_DATA_DIR
+
+
+def pytest_sessionfinish(session, exitstatus):
+    """Delete the isolated test data directory."""
+    shutil.rmtree(_TEST_DATA_DIR, ignore_errors=True)

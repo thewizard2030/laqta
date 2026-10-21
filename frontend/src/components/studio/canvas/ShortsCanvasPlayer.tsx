@@ -261,7 +261,7 @@ export const ShortsCanvasPlayer: React.FC<ShortsCanvasPlayerProps> = ({
           ) : (
             <div
               onClick={onTogglePlay}
-              className="h-full w-full bg-gradient-to-b from-slate-900 via-obsidian-950 to-slate-950 flex flex-col items-center justify-center p-6 text-center cursor-pointer relative"
+              className="h-full w-full bg-linear-to-b from-slate-900 via-obsidian-950 to-slate-950 flex flex-col items-center justify-center p-6 text-center cursor-pointer relative"
               data-testid="shorts-video-placeholder"
             >
               <div className="h-16 w-16 rounded-2xl bg-laqta-950/50 border border-laqta-700/50 flex items-center justify-center text-laqta-200 mb-3 shadow-neon-purple">

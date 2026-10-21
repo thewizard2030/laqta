@@ -51,7 +51,7 @@ export const ProjectPoster: React.FC<ProjectPosterProps> = ({
         />
       ) : (
         <div
-          className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-laqta-950/60 via-obsidian-900 to-slate-900"
+          className="absolute inset-0 flex items-center justify-center bg-linear-to-br from-laqta-950/60 via-obsidian-900 to-slate-900"
           data-testid="project-poster-placeholder"
         >
           <Film className="h-6 w-6 text-slate-600" aria-hidden="true" />

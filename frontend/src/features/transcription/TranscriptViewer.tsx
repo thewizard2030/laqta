@@ -11,8 +11,8 @@ import {
   CheckCircle2,
   Plus,
   Zap,
-  Youtube,
 } from "lucide-react";
+import { YouTubeIcon } from "../../components/ui/BrandIcons";
 import { TranscriptResponse, TranscriptionRequest } from "../../types/transcription";
 
 interface TranscriptViewerProps {
@@ -451,7 +451,7 @@ export const TranscriptViewer: React.FC<TranscriptViewerProps> = ({
 
                 {currentTranscript.provider === "youtube" && (
                   <span className="inline-flex items-center space-x-1 text-[11px] text-red-400 bg-red-950/60 border border-red-800/40 px-2.5 py-0.5 rounded-full font-medium">
-                    <Youtube className="h-3 w-3 text-red-400" />
+                    <YouTubeIcon className="h-3 w-3 text-red-400" />
                     <span>YouTube Captions</span>
                   </span>
                 )}

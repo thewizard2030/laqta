@@ -1,5 +1,6 @@
 import React, { useState, useRef } from "react";
-import { Upload, Youtube, Film, Sparkles, CheckCircle2, AlertCircle, X } from "lucide-react";
+import { Upload, Film, Sparkles, CheckCircle2, AlertCircle, X } from "lucide-react";
+import { YouTubeIcon } from "../ui/BrandIcons";
 import { formatMsAsClock } from "../../lib/i18n/bidi";
 
 interface VideoImportHeroProps {
@@ -99,7 +100,7 @@ export const VideoImportHero: React.FC<VideoImportHeroProps> = ({
       data-testid="video-import-hero"
     >
       {/* Background Neon Sheen */}
-      <div className="absolute top-0 right-0 -mt-12 -mr-12 w-48 h-48 bg-gradient-to-br from-purple-600/10 via-cyan-500/10 to-transparent rounded-full blur-2xl pointer-events-none" />
+      <div className="absolute top-0 right-0 -mt-12 -mr-12 w-48 h-48 bg-linear-to-br from-purple-600/10 via-cyan-500/10 to-transparent rounded-full blur-2xl pointer-events-none" />
 
       {activeMedia ? (
         /* State 1: Active Media Loaded Summary */
@@ -178,7 +179,7 @@ export const VideoImportHero: React.FC<VideoImportHeroProps> = ({
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-purple-600 via-laqta-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 shadow-neon-purple hover:shadow-neon-cyan transition-all active:scale-[0.98] disabled:opacity-50"
+              className="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white bg-linear-to-r from-purple-600 via-laqta-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 shadow-neon-purple hover:shadow-neon-cyan transition-all active:scale-[0.98] disabled:opacity-50"
               data-testid="import-upload-btn"
             >
               <Upload className="h-4 w-4" />
@@ -200,7 +201,7 @@ export const VideoImportHero: React.FC<VideoImportHeroProps> = ({
               className="flex items-center space-x-2 px-3.5 py-2.5 rounded-xl text-xs sm:text-sm font-medium text-slate-300 hover:text-white bg-obsidian-950/70 hover:bg-slate-800/80 border border-slate-700/60 hover:border-slate-600 transition disabled:opacity-50"
               data-testid="import-youtube-btn"
             >
-              <Youtube className="h-4 w-4 text-red-400" />
+              <YouTubeIcon className="h-4 w-4 text-red-400" />
               <span>YouTube Link</span>
             </button>
           </div>
@@ -232,7 +233,7 @@ export const VideoImportHero: React.FC<VideoImportHeroProps> = ({
           >
             <div className="flex items-center justify-between border-b border-slate-800/80 pb-3">
               <div className="flex items-center space-x-2">
-                <Youtube className="h-5 w-5 text-red-400" />
+                <YouTubeIcon className="h-5 w-5 text-red-400" />
                 <h3 className="text-sm font-bold text-white">Import from YouTube Link</h3>
               </div>
               <button

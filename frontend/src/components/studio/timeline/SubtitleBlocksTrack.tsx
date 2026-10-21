@@ -61,7 +61,7 @@ export const SubtitleBlocksTrack: React.FC<SubtitleBlocksTrackProps> = ({
               onClick={() => onSelectSegment && onSelectSegment(seg)}
               className={`absolute top-1 bottom-1 px-2 rounded-lg border text-[10px] font-medium flex items-center justify-between truncate cursor-pointer transition-all duration-150 ${
                 isInsideClip
-                  ? "bg-gradient-to-r from-laqta-900/90 to-laqta-950/90 text-white border-laqta-600/60 shadow-[0_0_8px_rgba(0,242,254,0.3)] hover:border-cyan-400"
+                  ? "bg-linear-to-r from-laqta-900/90 to-laqta-950/90 text-white border-laqta-600/60 shadow-[0_0_8px_rgba(0,242,254,0.3)] hover:border-cyan-400"
                   : "bg-slate-900/60 text-slate-400 border-slate-800 hover:border-slate-700 hover:text-slate-300"
               }`}
               style={{

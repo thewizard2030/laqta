@@ -45,7 +45,7 @@ export const FilmstripTrack: React.FC<FilmstripTrackProps> = ({
         {frames.map((frame, idx) => (
           <div
             key={idx}
-            className="flex-1 h-full bg-gradient-to-br from-slate-900/80 to-obsidian-900 flex flex-col items-center justify-between p-1 relative group"
+            className="flex-1 h-full bg-linear-to-br from-slate-900/80 to-obsidian-900 flex flex-col items-center justify-between p-1 relative group"
           >
             <div className="flex items-center opacity-30 group-hover:opacity-80 transition">
               <Film className="h-2.5 w-2.5 text-slate-400" aria-hidden="true" />

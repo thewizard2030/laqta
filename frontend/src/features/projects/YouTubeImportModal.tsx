@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Youtube, ShieldCheck, Loader2, Lock } from "lucide-react";
+import { ShieldCheck, Loader2, Lock } from "lucide-react";
+import { YouTubeIcon } from "../../components/ui/BrandIcons";
 import { Modal } from "../../components/ui/Modal";
 import { api, ApiClientError } from "../../lib/api/client";
 
@@ -103,7 +104,7 @@ export const YouTubeImportModal: React.FC<YouTubeImportModalProps> = ({
         </label>
 
         <div className="flex items-center space-x-2 px-3 py-2 rounded-xl bg-purple-950/40 border border-purple-800/40 text-laqta-200 text-[11px]">
-          <Youtube className="h-3.5 w-3.5 text-red-400 shrink-0" aria-hidden="true" />
+          <YouTubeIcon className="h-3.5 w-3.5 text-red-400 shrink-0" />
           <span>
             Video download + automatic transcript extraction (Arabic & English prioritized).
           </span>
@@ -142,12 +143,12 @@ export const YouTubeImportModal: React.FC<YouTubeImportModalProps> = ({
           <button
             type="submit"
             disabled={!canSubmit}
-            className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-gradient-to-r from-laqta-600 to-indigo-600 hover:from-laqta-500 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold shadow-lg shadow-laqta-600/25 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-laqta-400"
+            className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-linear-to-r from-laqta-600 to-indigo-600 hover:from-laqta-500 hover:to-indigo-500 disabled:opacity-40 disabled:cursor-not-allowed text-white text-xs font-semibold shadow-lg shadow-laqta-600/25 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-laqta-400"
           >
             {isSubmitting ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
             ) : (
-              <Youtube className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
+              <YouTubeIcon className="h-3.5 w-3.5 mr-1.5" />
             )}
             Start Import
           </button>

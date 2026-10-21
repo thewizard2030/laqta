@@ -21,7 +21,6 @@ import {
   Check,
   X,
   UploadCloud,
-  Youtube,
   Download,
   Calendar,
   Clapperboard,
@@ -53,6 +52,7 @@ import { SuggestedClipsList } from "../../components/studio/clips/SuggestedClips
 import { MultiTrackTimeline } from "../../components/studio/timeline/MultiTrackTimeline";
 import { InspectorPanel } from "../../components/studio/inspector/InspectorPanel";
 import { cleanDisplayText } from "../../lib/format";
+import { YouTubeIcon } from "../../components/ui/BrandIcons";
 
 interface ProjectDetailViewProps {
   project: Project;
@@ -822,7 +822,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
           <div className="rounded-2xl border border-slate-800/80 bg-obsidian-900/60 backdrop-blur-md p-5 sm:p-6">
             <div className="flex flex-col lg:flex-row lg:items-center gap-5">
               <div className="flex items-center space-x-3.5 min-w-0">
-                <div className="p-3 rounded-xl bg-gradient-to-br from-laqta-600/25 to-cyan-500/20 border border-laqta-700/50 text-laqta-200 shadow-neon-purple shrink-0">
+                <div className="p-3 rounded-xl bg-linear-to-br from-laqta-600/25 to-cyan-500/20 border border-laqta-700/50 text-laqta-200 shadow-neon-purple shrink-0">
                   <UploadCloud className="h-5 w-5" />
                 </div>
                 <div className="min-w-0">
@@ -857,7 +857,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                     className="relative inline-flex flex-col items-start px-5 py-2 rounded-xl bg-slate-800/60 hover:bg-slate-700/60 border border-slate-700/60 text-slate-200 hover:text-white text-sm font-medium transition cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-laqta-400"
                   >
                     <span className="inline-flex items-center space-x-1.5">
-                      <Youtube className="h-4 w-4 text-red-400" />
+                      <YouTubeIcon className="h-4 w-4 text-red-400" />
                       <span>YouTube Link</span>
                     </span>
                     <span className="text-[10px] text-slate-400">Paste URL here</span>
@@ -877,7 +877,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
                     className="relative inline-flex flex-col items-start px-5 py-2 rounded-xl bg-slate-800/60 border border-slate-700/60 text-slate-400 text-sm font-medium cursor-not-allowed opacity-70"
                   >
                     <span className="inline-flex items-center space-x-1.5">
-                      <Youtube className="h-4 w-4 text-red-400" />
+                      <YouTubeIcon className="h-4 w-4 text-red-400" />
                       <span>YouTube Link</span>
                     </span>
                     <span className="text-[10px] text-slate-500">Paste URL here</span>

@@ -76,6 +76,11 @@ local-first and must work fully offline, and a Google Fonts `<link>` would
 either fail offline or add a network dependency to a product whose main
 promise is that nothing leaves the machine.
 
+The design tokens live in `frontend/src/index.css` (Tailwind v4 is
+CSS-first): the brand ramps, the shadows and the easings are declared in
+`@theme`, so the utility names are unchanged (`bg-laqta-600`,
+`shadow-neon-purple`, `ease-out-expo`).
+
 Hierarchy comes from weight, size and colour instead:
 
 - Headlines: `font-black tracking-tight`

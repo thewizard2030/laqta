@@ -6,13 +6,13 @@ import {
   Mic,
   Sparkles,
   Terminal,
-  Youtube,
   Zap,
   AlertTriangle,
   CheckCircle2,
   CircleDashed,
 } from "lucide-react";
 import { CapabilitiesResponse } from "../../types/capabilities";
+import { YouTubeIcon } from "../../components/ui/BrandIcons";
 
 type EngineState = "ready" | "missing" | "optional";
 
@@ -145,7 +145,7 @@ export const EngineStatusStrip: React.FC<EngineStatusStripProps> = ({ capabiliti
       hint:
         url_ingestion.notice ||
         "URL imports stay gated behind the local flag, yt-dlp and a rights confirmation",
-      icon: <Youtube className="h-4 w-4" aria-hidden="true" />,
+      icon: <YouTubeIcon className="h-4 w-4" />,
     },
     {
       key: "llm",

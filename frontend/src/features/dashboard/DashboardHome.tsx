@@ -16,8 +16,8 @@ import {
   ShieldCheck,
   UploadCloud,
   Video,
-  Youtube,
 } from "lucide-react";
+import { YouTubeIcon } from "../../components/ui/BrandIcons";
 import { ProjectPoster } from "../../components/studio/ProjectPoster";
 import { Toast, ToastType } from "../../components/ui/Toast";
 import { EmptyState } from "../../components/EmptyState";
@@ -353,7 +353,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
                   className="inline-flex items-center gap-2 rounded-xl border border-slate-700/60 bg-obsidian-950/70 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:border-laqta-500/60 hover:bg-laqta-950/40 hover:text-white cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-laqta-400"
                   data-testid="dashboard-youtube-btn"
                 >
-                  <Youtube className="h-4 w-4 text-red-400" aria-hidden="true" />
+                  <YouTubeIcon className="h-4 w-4 text-red-400" />
                   <span>YouTube Link</span>
                 </button>
               ) : (
@@ -371,7 +371,7 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
                   className="inline-flex items-center gap-2 rounded-xl border border-slate-700/60 bg-obsidian-950/50 px-4 py-2.5 text-sm font-medium text-slate-500 cursor-not-allowed opacity-80"
                   data-testid="dashboard-youtube-btn-disabled"
                 >
-                  <Youtube className="h-4 w-4 text-red-400/70" aria-hidden="true" />
+                  <YouTubeIcon className="h-4 w-4 text-red-400/70" />
                   <span>YouTube Link</span>
                 </button>
               )}

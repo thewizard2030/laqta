@@ -346,7 +346,7 @@ export const SuggestedClipsList: React.FC<SuggestedClipsListProps> = ({
             ) : !effectiveHasTranscript && (onStartTranscription || isTranscribing) ? (
               /* Linear Guided Workflow: Transcribe Video First */
               <div className="flex flex-col items-center justify-center p-5 rounded-2xl bg-obsidian-950/70 border border-slate-800/80 space-y-4 text-center h-full">
-                <div className="p-3 rounded-2xl bg-gradient-to-br from-laqta-600/25 to-cyan-500/20 border border-laqta-700/50 text-neon-cyan">
+                <div className="p-3 rounded-2xl bg-linear-to-br from-laqta-600/25 to-cyan-500/20 border border-laqta-700/50 text-neon-cyan">
                   <Cpu className="h-6 w-6" aria-hidden="true" />
                 </div>
 

@@ -12,7 +12,7 @@ export const PrivacyBanner: React.FC<PrivacyBannerProps> = ({ llm }) => {
     llm?.provider === "openrouter" && llm.api_key_configured && llm.hosted_opt_in;
 
   return (
-    <div className="mx-auto w-full max-w-[1500px] bg-gradient-to-r from-slate-900 via-laqta-950/30 to-slate-900 border border-laqta-900/40 rounded-2xl p-4 sm:p-5 shadow-lg">
+    <div className="mx-auto w-full max-w-[1500px] bg-linear-to-r from-slate-900 via-laqta-950/30 to-slate-900 border border-laqta-900/40 rounded-2xl p-4 sm:p-5 shadow-lg">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-start space-x-3.5">
           <div className="p-2.5 bg-laqta-900/40 border border-laqta-700/50 rounded-lg text-laqta-300 shrink-0 mt-0.5 sm:mt-0">

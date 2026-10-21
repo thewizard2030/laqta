@@ -54,10 +54,14 @@ need them:
   timing test samples; never linked into the application runtime.
 
 ## Frontend Libraries
-- **React**: MIT License (Meta Platforms, Inc.).
-- **Vite**: MIT License (Yuxi (Evan) You and Vite contributors).
-- **Tailwind CSS**: MIT License (Tailwind Labs, Inc.).
-- **Vitest**: MIT License.
+- **React / React DOM 19**: MIT License (Meta Platforms, Inc.).
+- **Vite 8**: MIT License (Yuxi (Evan) You and Vite contributors).
+- **Tailwind CSS 4**: MIT License (Tailwind Labs, Inc.).
+- **Vitest 5**: MIT License.
+- **Lucide**: ISC License. The brand marks (GitHub, YouTube) were removed
+  from Lucide v1; Laqta ships its own two small inline SVGs for them
+  (`frontend/src/components/ui/BrandIcons.tsx`) because they identify the
+  platform a link points to.
 - **Lucide Icons**: ISC License.
 
 ## Optional Hosted Services (not libraries, no code is vendored)
