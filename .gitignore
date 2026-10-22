@@ -35,6 +35,7 @@ wheels/
 .coverage
 .coverage.*
 coverage.xml
+.coverage
 coverage-backend.json
 coverage-frontend/
 htmlcov/

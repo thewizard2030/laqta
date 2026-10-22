@@ -9,6 +9,7 @@
 set -uo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+BACKEND_DIR="$REPO_ROOT/backend"
 VENV_DIR="$REPO_ROOT/backend/.venv"
 FRONTEND_DIR="$REPO_ROOT/frontend"
 
@@ -35,6 +36,18 @@ run() {
   fi
 }
 
+run_at() {
+  # run_at <label> <directory> <command...>
+  local label="$1" dir="$2"; shift 2
+  STEP=$((STEP + 1))
+  info "[$STEP] $label"
+  if (cd "$dir" && "$@"); then
+    pass "$label"
+  else
+    fail "$label"
+  fi
+}
+
 if [[ ! -x "$VENV_DIR/bin/python" ]]; then
   echo "No backend environment found. Run ./scripts/setup.sh first." >&2
   exit 1
@@ -50,8 +63,15 @@ PY="$VENV_DIR/bin/python"
 run "ruff lint"            "$VENV_DIR/bin/ruff" check qatta backend/app backend/tests tests scripts
 run "ruff format"          "$VENV_DIR/bin/ruff" format --check qatta backend/app backend/tests tests scripts
 run "version consistency"  "$PY" scripts/check_version.py
-run "backend tests"        "$VENV_DIR/bin/pytest" -q -n auto --cov=app --cov=../qatta --cov-report=term:skip-covered backend
-run "core tests"           "$VENV_DIR/bin/pytest" -q tests
+# Both suites write into ONE coverage session (see the CI workflow): the core
+# suite exercises the `qatta` package, the backend suite the `app` package.
+# Each suite runs in its own directory (both are named `tests`, so they must
+# not be collected in one process).
+export COVERAGE_FILE="$REPO_ROOT/.coverage"
+run_at "backend tests"     "$BACKEND_DIR" "$VENV_DIR/bin/pytest" -q -n auto --cov=app --cov=../qatta --cov-report=
+run_at "core tests"        "$REPO_ROOT"    "$VENV_DIR/bin/pytest" -q --cov=qatta --cov-append --cov-report= tests
+run "coverage report"      "$VENV_DIR/bin/python" -m coverage json --data-file "$COVERAGE_FILE" -o "$REPO_ROOT/coverage-backend.json"
+run "coverage baseline"    "$VENV_DIR/bin/python" scripts/check_coverage.py --backend coverage-backend.json
 
 # --- Frontend --------------------------------------------------------------
 cd "$FRONTEND_DIR" || exit 1

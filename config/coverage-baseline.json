@@ -1,8 +1,8 @@
 {
   "_comment": "Coverage floor for CI. These are the measured values, not targets: a pull request that lowers them fails. Raise them deliberately, never by accident.",
   "_scope": "The frontend numbers include every source file (Vitest 5 counts never-imported files as uncovered). The backend number covers app/ and qatta/.",
-  "_history": "The frontend floor moved from 80.89 to 66.35 in v0.1.1: the coverage provider changed scope (all files, not only the imported ones). The number is stricter, not worse.",
-  "backend": 59.83,
+  "_history": "The floor moved from 59.83 to 78.78 in v0.1.3: the coverage gate measured only the backend session, so the core suite's contribution to the `qatta` package was discarded. Both suites now write into one session.",
+  "backend": 78.78,
   "lines": 66.35,
   "functions": 57.86,
   "branches": 64.78

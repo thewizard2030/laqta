@@ -63,12 +63,24 @@ jobs:
       - name: Verify the version is consistent across the manifests
         run: python scripts/check_version.py
 
+      # Both suites write into ONE coverage session: the core suite exercises
+      # the `qatta` package, the backend suite the `app` package. Measuring them
+      # separately understates the core package badly (78% vs 60% combined).
       - name: Test — backend API (with coverage)
         working-directory: backend
-        run: pytest -n auto --cov=app --cov=../qatta --cov-report=term:skip-covered --cov-report=json:../coverage-backend.json
+        env:
+          COVERAGE_FILE: ${{ github.workspace }}/.coverage
+        run: pytest -n auto --cov=app --cov=../qatta --cov-report=
 
-      - name: Test — core pipeline
-        run: pytest tests
+      - name: Test — core pipeline (with coverage)
+        env:
+          COVERAGE_FILE: ${{ github.workspace }}/.coverage
+        run: pytest tests --cov=qatta --cov-append --cov-report=
+
+      - name: Coverage report
+        run: |
+          python -m coverage json --data-file .coverage -o coverage-backend.json
+          python scripts/check_coverage.py --backend coverage-backend.json
 
       - name: Coverage — no regression
         run: python scripts/check_coverage.py --backend coverage-backend.json
