@@ -38,6 +38,7 @@ coverage.xml
 .coverage
 coverage-backend.json
 coverage-frontend/
+benchmark-report.txt
 htmlcov/
 .mypy_cache/
 .ruff_cache/

@@ -1,0 +1,68 @@
+{
+  "version": 1,
+  "name": "Laqta clip-selection benchmark v1",
+  "description": "A small, self-contained benchmark for the deterministic clip ranking. Every item is a narration script split into sentences; each sentence is labelled highlight, context or filler. The media is synthesised from the script (espeak-ng), so the labelled spans are exact and the whole set is reproducible from source — no third-party media is committed.",
+  "method": [
+    "Each sentence is synthesised separately, so its exact time span is known.",
+    "The sentences are concatenated into one video with the same narration.",
+    "The real pipeline runs on that video: s01_ingest -> s02_transcript -> s04_candidates -> s05_ranking.",
+    "A selected clip counts as a hit when it overlaps a labelled highlight span by at least 30% of its own duration (IoU).",
+    "precision = hits / selected clips; recall = labelled highlights covered / labelled highlights; coverage = selected seconds / media seconds; bad coverage = selected seconds outside a label / selected seconds."
+  ],
+  "notes": [
+    "Every item is at least 90 seconds long, because the shipped configuration only proposes clips between 28 and 58 seconds. A shorter item could never produce a candidate and would measure nothing.",
+    "The labelled spans are the sentences, not the clips: a human marking 'this sentence is worth clipping' is a weaker and more reproducible judgement than marking exact clip boundaries."
+  ],
+  "labels": {
+    "highlight": "A self-contained moment worth clipping on its own.",
+    "context": "Setup that makes the highlight understandable, but is not worth clipping alone.",
+    "filler": "Greetings, housekeeping and sign-off."
+  },
+  "items": [
+    {
+      "id": "synthetic_01",
+      "language": "en",
+      "title": "A short talk with two highlights and a long context block",
+      "sentences": [
+        { "text": "Welcome back to the show, this episode is about keeping a local pipeline fast on a modest laptop.", "label": "filler" },
+        { "text": "We are going to talk about how a long recording becomes a handful of clips you can actually post.", "label": "context" },
+        { "text": "The machine does three things: it listens, it reads, and it cuts, and the order matters more than the speed.", "label": "context" },
+        { "text": "First, the quick idea that changes everything, the slow model only ever runs on the part you keep.", "label": "highlight" },
+        { "text": "So instead of transcribing forty minutes to find one minute, you transcribe one minute to find one minute.", "label": "context" },
+        { "text": "That is the whole trick, and it is why the tool feels instant on hardware that should not be able to.", "label": "context" },
+        { "text": "Second, measure the stages instead of guessing, because the stage that feels slow is rarely the stage that is.", "label": "highlight" },
+        { "text": "Every stage writes its real wall time into the manifest, so the numbers are measured and not remembered.", "label": "context" },
+        { "text": "When you look at the report you can see that the model loaded once and then ran for a while, which is fine.", "label": "context" },
+        { "text": "The mistake people make is tuning the fast stage instead of the slow one, and the report shows that instantly.", "label": "context" },
+        { "text": "Third, keep the ranking explainable, because a score you cannot argue with is a score you cannot trust.", "label": "highlight" },
+        { "text": "Every clip shows the signals that produced it, and the weights add up to exactly one, so nothing is hidden.", "label": "context" },
+        { "text": "If a signal is missing it does not count as zero, it is redistributed, and the clip says that it was measured less.", "label": "context" },
+        { "text": "You can disagree with a weight and change it, and the next run will show you what changed.", "label": "context" },
+        { "text": "That is the difference between a number and an argument, and it is the whole point of the tool.", "label": "context" },
+        { "text": "Thanks for listening, and we will see you in the next episode.", "label": "filler" }
+      ]
+    },
+    {
+      "id": "synthetic_02",
+      "language": "en",
+      "title": "A talk about captions and Arabic text, with one clear highlight",
+      "sentences": [
+        { "text": "Hello everyone, welcome back to the studio, today we look at captions that actually read right.", "label": "filler" },
+        { "text": "Most caption tools assume left to right text, and the moment you switch to Arabic they fall apart.", "label": "context" },
+        { "text": "The problem is that a line of mixed text has no single direction, and the renderer has to guess.", "label": "context" },
+        { "text": "When it guesses wrong, the punctuation jumps to the wrong side and the whole line looks broken.", "label": "context" },
+        { "text": "The fix is to stop guessing, and to mark the direction of every fragment explicitly in the output.", "label": "highlight" },
+        { "text": "Each Arabic run gets an isolate, and each Latin run inside it gets one too, so the order is never ambiguous.", "label": "context" },
+        { "text": "That is what the caption service does now, and the difference is obvious the moment you compare them.", "label": "context" },
+        { "text": "You can mix an English product name into an Arabic sentence and the line still reads correctly.", "label": "context" },
+        { "text": "The same rule applies to the numbers, because a digit next to Arabic text is still neutral on its own.", "label": "context" },
+        { "text": "The second thing worth knowing is that the burned in captions are not an afterthought, they are the render.", "label": "highlight" },
+        { "text": "We shape the text first, then burn it, so what you see in the preview is what ends up in the file.", "label": "context" },
+        { "text": "If the preview and the file ever disagreed, the whole point of the preview would be gone.", "label": "context" },
+        { "text": "So the pipeline measures the shaping, renders it, and then checks the result once more before it ships.", "label": "context" },
+        { "text": "None of this needs a cloud service, which is rather the point of doing it locally.", "label": "context" },
+        { "text": "That is all for today, thanks for watching, and goodbye for now.", "label": "filler" }
+      ]
+    }
+  ]
+}

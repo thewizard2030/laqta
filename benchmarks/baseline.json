@@ -1,0 +1,40 @@
+{
+  "dataset": "clip_selection_v1.json",
+  "items": [
+    {
+      "id": "synthetic_01",
+      "selected": 6,
+      "candidates": 6,
+      "highlights": 3,
+      "hits": 3,
+      "good_clips": 6,
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1": 1.0,
+      "coverage": 0.9511,
+      "bad_coverage": 0.0,
+      "duration_sec": 135.76,
+      "top_clip_cps": 81.08
+    },
+    {
+      "id": "synthetic_02",
+      "selected": 6,
+      "candidates": 6,
+      "highlights": 2,
+      "hits": 2,
+      "good_clips": 5,
+      "precision": 0.8333,
+      "recall": 1.0,
+      "f1": 0.9091,
+      "coverage": 0.9608,
+      "bad_coverage": 0.2171,
+      "duration_sec": 122.67,
+      "top_clip_cps": 81.07
+    }
+  ],
+  "precision": 0.9167,
+  "recall": 1.0,
+  "f1": 0.9565,
+  "coverage": 0.9559,
+  "bad_coverage": 0.1085
+}

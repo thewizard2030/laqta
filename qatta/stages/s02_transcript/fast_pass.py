@@ -837,6 +837,23 @@ def _whisper_language(language_profile: str) -> str | None:
     return None  # let Whisper auto-detect
 
 
+def should_use_arabish_prompt(language_profile: str, settings: QattaSettings) -> bool:
+    """Whether the Arablish prior applies to this audio.
+
+    The prompt describes an Egyptian Arabic podcast. On Arabic or
+    auto-detected audio it helps the model stay in the right language. On
+    audio that is explicitly **not** Arabic it does the opposite: Whisper
+    starts producing Arabic text for English speech, and the transcript
+    degrades into repetition.
+
+    So the prior follows the language: it is used for Arabic and for
+    auto-detection, and left out when the profile says otherwise.
+    """
+    if not settings.arabish_initial_prompt:
+        return False
+    return _whisper_language(language_profile) in (None, "ar")
+
+
 def transcribe_segments(
     pcm: np.ndarray,
     sr: int,
@@ -850,7 +867,11 @@ def transcribe_segments(
     it is mapped to a Whisper language code, or None for auto-detect.
     """
     adapter = adapter or select_transcriber(settings)
-    initial_prompt = settings.arabish_prompt_text if settings.arabish_initial_prompt else None
+    initial_prompt = (
+        settings.arabish_prompt_text
+        if should_use_arabish_prompt(language_profile, settings)
+        else None
+    )
     return adapter.transcribe(
         pcm,
         sr,
