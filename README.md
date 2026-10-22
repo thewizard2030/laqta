@@ -31,7 +31,7 @@ provider and consent to it.
 
 | | |
 |---|---|
-| 🧠 **Explainable ranking** | Every clip carries a Clip Potential Score (0–100) **and the per-signal rationale that produced it**. No "viral score" from a black box. |
+| 🧠 **Explainable ranking** | Every clip carries a Clip Potential Score (0–100) **and the per-signal rationale that produced it**. No "viral score" from a black box — and the ranking is [measured, not asserted](docs/EVALUATION.md). |
 | 🔒 **Local by default** | Media, audio, transcripts and renders stay in your data directory. The API binds to `127.0.0.1`; there is no telemetry at all. |
 | 🌍 **Arabic-first** | RTL caption layout, FSI/PDI isolates, mirrored lines, and an Arabic-aware Whisper prompt that keeps English terms in Latin script. |
 | 🪶 **Modest hardware** | CPU-first and tuned for an 8 GB machine: a fast full pass for the transcript, then word-level re-timing only for the clips you actually render. |
@@ -56,6 +56,26 @@ provider and consent to it.
 
 *Every screenshot in this README was taken from a real, local run on a
 synthetic demo video — no third-party content.*
+
+### Measure the ranking yourself
+
+```bash
+python scripts/evaluate_ranking.py
+```
+
+```
+item              sel  hits    prec     rec      F1     cov     bad
+-------------------------------------------------------------------
+synthetic_01        6     3    1.00    1.00    1.00    0.95    0.00
+synthetic_02        6     2    0.83    1.00    0.91    0.96    0.22
+-------------------------------------------------------------------
+TOTAL                          0.92    1.00    0.96    0.96    0.11
+```
+
+The benchmark synthesises its own narration, labels it by hand and runs the
+real pipeline over it — so the labelled spans are exact and the numbers are
+reproducible. The method and the limits are in
+[docs/EVALUATION.md](docs/EVALUATION.md).
 
 ---
 
@@ -215,6 +235,7 @@ clear error instead of a broken import.
 |----------|----------------|
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | How the pieces fit together, the manifest lifecycle, where to change things |
 | [docs/UPGRADING.md](docs/UPGRADING.md) | What changed between the releases, and what you have to do |
+| [docs/EVALUATION.md](docs/EVALUATION.md) | The measured ranking: precision, recall, F1, coverage, bad coverage |
 | [docs/PRD.md](docs/PRD.md) | The product requirements the code implements |
 | [docs/POLICY.md](docs/POLICY.md) | What leaves your machine, rights for URL imports, model licences |
 | [docs/PERFORMANCE.md](docs/PERFORMANCE.md) | Profiles, two-pass transcription, benchmarks |
@@ -266,7 +287,7 @@ Issues and discussions are open: <https://github.com/thewizard2030/laqta>
 - [x] Transcription: faster-whisper on CPU, two-pass word timing
 - [x] Candidate scoring: explainable CPS with per-signal rationale
 - [x] Rendering: 1080×1920 export with Arabic/English burned-in captions
-- [ ] A public evaluation benchmark and dataset for the ranking signals
+- [x] A public evaluation benchmark and dataset for the ranking signals ([docs/EVALUATION.md](docs/EVALUATION.md))
 
 ---
 

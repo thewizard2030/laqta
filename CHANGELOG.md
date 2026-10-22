@@ -9,6 +9,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Nothing yet.
 
+## [0.1.3] — 2026-10-22
+
+The release that proves the ranking instead of asserting it.
+
+### Added
+
+- **The clip-selection benchmark** — a labelled, reproducible measurement of
+  the ranking: precision, recall, F1, coverage and bad coverage, over a
+  dataset whose labels are exact. It runs weekly in CI and fails when a
+  metric regresses. The method, the results and the limits are in
+  [docs/EVALUATION.md](docs/EVALUATION.md).
+  *Measured: precision 0.92, recall 1.00, F1 0.96, coverage 0.96, bad
+  coverage 0.11 — the ranking finds every labelled highlight and
+  over-selects.*
+- Tests for the CPS arithmetic and the three scoring gates: the score is
+  bounded, the weights renormalise over the measured components, an unknown
+  archetype is an error, and every gate outcome is recorded in the evidence
+  log.
+- The benchmark also reports the **measured** stage times, so the performance
+  numbers come from a run instead of an estimate.
+
+### Fixed
+
+- **The Arabic prior was applied to every transcript**, including English
+  audio — where it made Whisper produce Arabic text for English speech and
+  the transcript degraded into repetition. The prior now follows the
+  language: Arabic and auto-detected audio keep it, an explicit non-Arabic
+  profile does not.
+- **The coverage gate measured the wrong thing.** The two suites ran in
+  separate coverage sessions, so the core suite's contribution to the `qatta`
+  package was discarded: the real number was 78.78 %, not the 59.83 % the
+  baseline recorded. Both suites now write into one session, and the baseline
+  holds the honest number.
+
+### Changed
+
+- The coverage floor is now the combined measurement, and the modules that
+  produce a user-visible result (the renderer, the scorer, the CLI, the audio
+  extractor, the ASR provider, the URL ingest) are covered by tests.
+
 ## [0.1.2] — 2026-10-21
 
 The release that makes Laqta an application you launch, and proves it.
@@ -147,7 +187,8 @@ on your own machine — no account, no upload, no telemetry.
 - Transcripts and media metadata are treated as untrusted data and are never
   interpolated into shell commands.
 
-[Unreleased]: https://github.com/thewizard2030/laqta/compare/v0.1.2...HEAD
+[Unreleased]: https://github.com/thewizard2030/laqta/compare/v0.1.3...HEAD
+[0.1.3]: https://github.com/thewizard2030/laqta/compare/v0.1.2...v0.1.3
 [0.1.2]: https://github.com/thewizard2030/laqta/compare/v0.1.1...v0.1.2
 [0.1.1]: https://github.com/thewizard2030/laqta/compare/v0.1.0...v0.1.1
 [0.1.0]: https://github.com/thewizard2030/laqta/releases/tag/v0.1.0

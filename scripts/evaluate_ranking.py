@@ -27,6 +27,7 @@ import tempfile
 import urllib.request
 import wave
 from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -270,17 +271,37 @@ def _run_pipeline(base: str, media: Path, language: str = "en") -> list[dict]:
     _api("POST", f"{base}/api/media/{media_record['id']}/candidates", {})
     candidates = _api("GET", f"{base}/api/media/{media_record['id']}/candidates")
 
-    return [
-        {
-            "clip_id": candidate["id"],
-            "start_sec": candidate["start_ms"] / 1000.0,
-            "end_sec": candidate["end_ms"] / 1000.0,
-            "cps": _cps_total(candidate.get("cps")),
-            "passed": candidate.get("veto_gates", {}).get("passed_all", True),
-            "evidence": list(candidate.get("rationale") or []),
-        }
-        for candidate in candidates
-    ]
+    # The measured wall time of every stage, straight from the job record.
+    timings: dict[str, float] = {}
+    for job in _api("GET", f"{base}/api/projects/{project['id']}/jobs"):
+        stage = job.get("stage") or job.get("type") or "?"
+        started, finished = job.get("started_at"), job.get("finished_at")
+        if started and finished:
+            timings[stage] = round(
+                (_parse_time(finished) - _parse_time(started)).total_seconds(),
+                2,
+            )
+
+    return {
+        "candidates": [
+            {
+                "clip_id": candidate["id"],
+                "start_sec": candidate["start_ms"] / 1000.0,
+                "end_sec": candidate["end_ms"] / 1000.0,
+                "cps": _cps_total(candidate.get("cps")),
+                "passed": candidate.get("veto_gates", {}).get("passed_all", True),
+                "evidence": list(candidate.get("rationale") or []),
+            }
+            for candidate in candidates
+        ],
+        "timings": timings,
+    }
+
+
+def _parse_time(value: str) -> timedelta:
+    """Parse an ISO timestamp into a timedelta since the epoch."""
+    text = value.replace("Z", "+00:00")
+    return datetime.fromisoformat(text).astimezone(UTC) - datetime(1970, 1, 1, tzinfo=UTC)
 
 
 def _cps_total(cps: object) -> float:
@@ -394,8 +415,10 @@ def evaluate(dataset: Path, base: str = "http://127.0.0.1:8124") -> dict:
         for item in items:
             media, sentences = _synthesise(item, workdir)
             item.sentences = sentences
-            candidates = _run_pipeline(base, media, item.language)
-            reports.append(_score_item(item, candidates))
+            result = _run_pipeline(base, media, item.language)
+            report = _score_item(item, result["candidates"])
+            report["timings"] = result["timings"]
+            reports.append(report)
 
     total_selected = sum(report["selected"] for report in reports)
     total_good = sum(report["good_clips"] for report in reports)
@@ -408,9 +431,15 @@ def evaluate(dataset: Path, base: str = "http://127.0.0.1:8124") -> dict:
     coverage = sum(r["coverage"] for r in reports) / len(reports) if reports else 0.0
     bad_coverage = sum(r["bad_coverage"] for r in reports) / len(reports) if reports else 0.0
 
+    timings: dict[str, float] = {}
+    for report in reports:
+        for stage, seconds in (report.get("timings") or {}).items():
+            timings[stage] = round(timings.get(stage, 0.0) + seconds, 2)
+
     return {
         "dataset": dataset.name,
         "items": reports,
+        "stage_timings_sec": timings,
         "precision": round(precision, 4),
         "recall": round(recall, 4),
         "f1": round(f1, 4),
@@ -558,6 +587,10 @@ def main() -> int:
             "coverage = selected seconds / media seconds · bad coverage = "
             "selected seconds outside a label"
         )
+        if report.get("stage_timings_sec"):
+            print("\nMeasured stage time (seconds):")
+            for stage, seconds in sorted(report["stage_timings_sec"].items()):
+                print(f"  {stage:<24} {seconds:>8.2f}")
 
     if args.write_baseline:
         args.baseline.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
