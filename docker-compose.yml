@@ -1,0 +1,15 @@
+services:
+  laqta:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laqta-studio
+    ports:
+      - "8000:8000"
+    volumes:
+      - laqta-data:/root/.local/share/qatta
+      - ./data:/app/data
+    restart: unless-stopped
+
+volumes:
+  laqta-data:
