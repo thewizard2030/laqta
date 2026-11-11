@@ -20,6 +20,13 @@ import {
   CaptionGenerationRequest,
   RenderRequest,
 } from "../../types/rendering";
+import {
+  ClearCacheResponse,
+  SettingsResponse,
+  SettingsUpdateRequest,
+  VerifyKeyRequest,
+  VerifyKeyResponse,
+} from "../../types/settings";
 
 export class ApiClientError extends Error {
   public status?: number;
@@ -475,6 +482,56 @@ export class ApiClient {
    */
   getRenderFileUrl(renderId: string): string {
     return `${this.baseUrl}/api/renders/${renderId}/file`;
+  }
+
+  /**
+   * Get current application settings and BYOK key status:
+   * GET /api/settings
+   */
+  async getSettings(): Promise<SettingsResponse> {
+    return this.request<SettingsResponse>("/api/settings");
+  }
+
+  /**
+   * Update application settings and BYOK keys:
+   * PATCH /api/settings
+   */
+  async updateSettings(patch: SettingsUpdateRequest): Promise<SettingsResponse> {
+    return this.request<SettingsResponse>("/api/settings", {
+      method: "PATCH",
+      body: JSON.stringify(patch),
+    });
+  }
+
+  /**
+   * Test connection and credentials for an AI provider:
+   * POST /api/settings/verify
+   */
+  async verifyKey(req: VerifyKeyRequest): Promise<VerifyKeyResponse> {
+    return this.request<VerifyKeyResponse>("/api/settings/verify", {
+      method: "POST",
+      body: JSON.stringify(req),
+    });
+  }
+
+  /**
+   * Clear transcript cache from disk:
+   * POST /api/settings/clear-cache
+   */
+  async clearTranscriptCache(): Promise<ClearCacheResponse> {
+    return this.request<ClearCacheResponse>("/api/settings/clear-cache", {
+      method: "POST",
+    });
+  }
+
+  /**
+   * Reset settings to factory defaults:
+   * POST /api/settings/reset
+   */
+  async resetSettings(): Promise<SettingsResponse> {
+    return this.request<SettingsResponse>("/api/settings/reset", {
+      method: "POST",
+    });
   }
 }
 

@@ -100,6 +100,12 @@ CREATE INDEX IF NOT EXISTS idx_jobs_status ON jobs(status);
 CREATE INDEX IF NOT EXISTS idx_transcripts_media_id ON transcripts(media_id);
 CREATE INDEX IF NOT EXISTS idx_candidates_media_id ON candidates(media_id);
 CREATE INDEX IF NOT EXISTS idx_rendered_clips_candidate_id ON rendered_clips(candidate_id);
+
+CREATE TABLE IF NOT EXISTS user_settings (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
 """
 
 

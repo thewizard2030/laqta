@@ -3,7 +3,7 @@ import { StudioLayout } from "./components/studio/StudioLayout";
 import { ErrorBoundary } from "./components/ui/ErrorBoundary";
 import { StudioNavTab } from "./components/studio/StudioSidebar";
 import { PrivacyBanner } from "./components/PrivacyBanner";
-import { CapabilitiesCard } from "./components/CapabilitiesCard";
+import { SettingsView } from "./features/settings/SettingsView";
 import { EmptyState } from "./components/EmptyState";
 import { ErrorMessage } from "./components/ErrorMessage";
 import { LoadingSkeleton } from "./components/LoadingSkeleton";
@@ -93,6 +93,15 @@ export const App: React.FC = () => {
     setIsRetrying(true);
     fetchAppData();
   };
+
+  const refreshCapabilities = useCallback(async () => {
+    try {
+      const updated = await api.getCapabilities();
+      setCapabilities(updated);
+    } catch {
+      // non-fatal
+    }
+  }, []);
 
   /** Close the studio editor and return to the list it was opened from. */
   const handleClearSelection = useCallback(() => {
@@ -216,10 +225,9 @@ export const App: React.FC = () => {
             <ErrorMessage message={errorMessage} onRetry={handleRetry} isRetrying={isRetrying} />
           )}
 
-          {/* 4. Capabilities (settings tab). The dashboard renders its own
-            honest engine audit (features/dashboard/EngineStatusStrip). */}
+          {/* 4. Settings & BYOK Studio */}
           {!isLoading && capabilities && activeTab === "settings" && (
-            <CapabilitiesCard capabilities={capabilities} />
+            <SettingsView capabilities={capabilities} onRefreshCapabilities={refreshCapabilities} />
           )}
 
           {/* 5. Main Workspace Area */}

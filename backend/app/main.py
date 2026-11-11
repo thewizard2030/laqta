@@ -30,8 +30,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info(f"Using effective data directory: {data_dir}")
     from app.db.connection import init_db
     from app.jobs import job_manager
+    from app.services.settings_service import SettingsService
 
     init_db()
+    SettingsService.init_and_sync()
     await job_manager.start()
     yield
     await job_manager.stop()

@@ -122,6 +122,7 @@ describe("App Component", () => {
     });
 
     await user.click(screen.getByRole("button", { name: /Settings & Engine/i }));
+    await user.click(screen.getByRole("tab", { name: /System Audit/i }));
 
     await waitFor(() => {
       expect(screen.getByText(/System Runtime & Media Capabilities/i)).toBeInTheDocument();
