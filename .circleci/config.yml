@@ -10,6 +10,8 @@ executors:
     docker:
       - image: cimg/python:3.12
     resource_class: medium
+    environment:
+      PYTHONPATH: ".:backend"
 
   node-executor:
     docker:
@@ -40,6 +42,7 @@ jobs:
             python -m pip install --upgrade pip
             pip install -r backend/requirements-dev.txt
             pip install -e .
+            pip install -e ./backend
             pip install ruff
 
       - save_cache:
@@ -65,6 +68,10 @@ jobs:
       - run:
           name: Run backend test suite (Smarter Testing)
           command: circleci testsuite run "backend-tests"
+
+      - run:
+          name: Run core pipeline test suite (Smarter Testing)
+          command: circleci testsuite run "core-tests"
 
   frontend:
     executor: node-executor

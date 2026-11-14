@@ -29,21 +29,33 @@ Laqta's CI infrastructure has been migrated to a high-speed, parallel CircleCI p
 
 ## 3. Smarter Testing Configuration (`.circleci/test-suites.yml`)
 
-The Smarter Testing configuration defines two isolated test suites:
+The Smarter Testing configuration defines three clean, isolated test suites:
 
-### Backend Test Suite (`backend-tests`)
+### 1. Backend Test Suite (`backend-tests`)
 ```yaml
 ---
 name: backend-tests
-discover: find tests backend/tests -type f -name 'test*.py' | sort
+discover: find backend/tests -type f -name 'test*.py' | sort
+run: PYTHONPATH=".:backend" pytest --disable-pytest-warnings --no-header --quiet --tb=short --override-ini=junit_family=legacy --junit-xml="<< outputs.junit >>" << test.atoms >>
+options:
+  store-test-results: true
+```
+- **Discovery**: Automatically identifies all 26 Python test files in `backend/tests/` (FastAPI routes, SQLite services, BYOK settings, jobs, rendering).
+- **Execution**: Invokes pytest with JUnit XML output directly delivered to CircleCI's test results collector.
+
+### 2. Core Pipeline Test Suite (`core-tests`)
+```yaml
+---
+name: core-tests
+discover: find tests -type f -name 'test*.py' | sort
 run: pytest --disable-pytest-warnings --no-header --quiet --tb=short --override-ini=junit_family=legacy --junit-xml="<< outputs.junit >>" << test.atoms >>
 options:
   store-test-results: true
 ```
-- **Discovery**: Automatically identifies all 42 Python test files across root `tests/` (core pipeline) and `backend/tests/` (API routes, services, settings, jobs).
-- **Execution**: Invokes pytest with JUnit XML output directly delivered to CircleCI's test results collector.
+- **Discovery**: Automatically identifies all 16 Python test files in `tests/` (manifest lifecycle, scoring gates, clip alignment, stages s01-s07).
+- **Execution**: Tests the core `qatta` pipeline independently with JUnit XML reports.
 
-### Frontend Test Suite (`frontend-tests`)
+### 3. Frontend Test Suite (`frontend-tests`)
 ```yaml
 ---
 name: frontend-tests
