@@ -21,6 +21,7 @@ explicit request field always wins over the profile default.
 from dataclasses import dataclass, field
 
 from app.core.config import Settings
+from app.core.config import settings as runtime_settings
 
 PROFILE_KEYWORDS_WARNING = (
     "The 'accurate' profile transcribes the full video with word-level "
@@ -103,7 +104,7 @@ def _profiles(settings: Settings) -> dict[str, TranscriptionProfile]:
 
 
 def get_profile_names(settings: Settings | None = None) -> list[str]:
-    return list(_profiles(settings or Settings()).keys())
+    return list(_profiles(settings or runtime_settings).keys())
 
 
 @dataclass(frozen=True)
@@ -150,7 +151,7 @@ def resolve_transcription_profile(
     Raises:
         ValueError: Unknown profile name.
     """
-    settings = settings or Settings()
+    settings = settings or runtime_settings
     table = _profiles(settings)
     name = (profile_name or settings.DEFAULT_WHISPER_PROFILE).strip().lower()
     if name not in table:

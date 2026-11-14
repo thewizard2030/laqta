@@ -12,6 +12,13 @@ from app.core.config import settings
 from app.services.settings_service import SettingsService
 
 
+@pytest.fixture(autouse=True)
+def clean_settings_state():
+    """Ensure settings changes in tests do not pollute subsequent tests or environment."""
+    yield
+    SettingsService.reset_to_defaults()
+
+
 def test_get_settings_redacted(client: TestClient) -> None:
     """GET /api/settings returns valid settings schema with properly redacted secrets."""
     response = client.get("/api/settings")

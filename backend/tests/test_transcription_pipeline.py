@@ -89,9 +89,13 @@ def _make_media(tmp_path: Path) -> Path:
     return wav
 
 
-def test_default_profile_resolves_and_persists(client: TestClient, tiny_mp4_bytes: bytes) -> None:
+def test_default_profile_resolves_and_persists(
+    client: TestClient, tiny_mp4_bytes: bytes, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """Enqueue with no options: profile 'fast' must resolve (model base, int8,
     beam 1, no full-video word timestamps) and land in the job config."""
+    monkeypatch.setattr(settings, "DEFAULT_WHISPER_PROFILE", "fast")
+    monkeypatch.delenv("QATTA_DEFAULT_WHISPER_PROFILE", raising=False)
     media_id = _upload_media(client, tiny_mp4_bytes)
     res_job = client.post(
         f"/api/media/{media_id}/transcription-jobs",
