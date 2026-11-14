@@ -6,7 +6,7 @@ of rules that keep it that way.
 
 - **Bug reports and feature requests:** [GitHub Issues](https://github.com/thewizard2030/laqta/issues)
 - **Security issues:** report privately — see [SECURITY.md](SECURITY.md), *not* an issue
-- **Questions:** [Discussions](https://github.com/thewizard2030/laqta/discussions)
+- **Questions & Community:** [GitHub Issues](https://github.com/thewizard2030/laqta/issues)
 
 ---
 

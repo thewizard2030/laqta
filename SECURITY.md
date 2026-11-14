@@ -46,8 +46,7 @@ reasonable window before disclosing publicly.
 - The local API being reachable from outside the machine when the user
   believes it is not.
 - A bypass of the URL-ingestion gate or of the per-import rights confirmation.
-- Secrets, keys or tokens being written to logs, manifests, exports or the
-  SQLite database.
+- Secrets, keys or tokens being leaked in application logs, manifests, exports, or unredacted API responses.
 - Unsafe deserialisation of manifests, job payloads or candidate data.
 
 ### What is out of scope
@@ -109,9 +108,13 @@ reasonable window before disclosing publicly.
    attacker-controlled input. They are never interpolated into shell
    commands; subprocesses always receive argument arrays with `shell=False`,
    a deadline and bounded output.
-5. **Secrets stay secret.** API keys are read from the environment only. They
-   are never logged, never returned by an API endpoint and never written to
-   the manifest, the database or an export.
+5. **Secrets stay protected and local.** In v0.2.0, BYOK credentials can be
+   configured via environment variables or persisted locally in the SQLite
+   database (`user_settings` table) and settings mirror file under POSIX `0600`
+   permissions (`-rw-------`). Secrets are never logged, never returned in plaintext
+   over API endpoints (only masked previews are served), and never written to job
+   manifests or exports. Note: Secrets are stored unencrypted at rest on local disk
+   and rely on OS filesystem permission boundaries.
 6. **Media processing is off the request path.** Long jobs run in a single
    worker with persisted state, so a crash or a restart never leaves a
    half-written project.
