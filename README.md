@@ -6,11 +6,11 @@
 **Turn long videos & podcasts into ranked vertical Shorts — entirely on your own machine.**
 
 [![Language](https://img.shields.io/badge/%D8%A7%D9%84%D8%B9%D8%B1%D8%A8%D9%8A%D8%A9-README.ar.md-22d3ee.svg)](README.ar.md)
-[![CI](https://github.com/thewizard2030/laqta/actions/workflows/ci.yml/badge.svg)](https://github.com/thewizard2030/laqta/actions/workflows/ci.yml)
+[![CircleCI](https://circleci.com/gh/thewizard2030/laqta.svg?style=svg)](https://circleci.com/gh/thewizard2030/laqta)
 [![Release](https://img.shields.io/github/v/release/thewizard2030/laqta?label=release&color=7c4dff)](https://github.com/thewizard2030/laqta/releases/latest)
 [![Stars](https://img.shields.io/github/stars/thewizard2030/laqta?style=flat&color=7c4dff)](https://github.com/thewizard2030/laqta/stargazers)
 [![License: MIT](https://img.shields.io/badge/License-MIT-7c4dff.svg)](LICENSE)
-[![Platform](https://img.shields.io/badge/platform-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey.svg)]()
+[![Platform](https://img.shields.io/badge/platform-Fedora%20%7C%20Linux%20%7C%20macOS-lightgrey.svg)]()
 [![Local first](https://img.shields.io/badge/100%25%20local-no%20cloud%20required-10b981.svg)](docs/POLICY.md)
 [![Arabic RTL](https://img.shields.io/badge/Arabic%20RTL-Native%20BiDi-22d3ee.svg)](README.ar.md)
 
@@ -50,14 +50,50 @@ Laqta (**لقطّة** — *"a take / a cut"*) imports long-form videos or podcas
 | 🌍 **Arabic-First UX** | Native Right-to-Left (RTL) caption layout, FSI/PDI isolate markers, mirrored lines, and an Arabic-aware Whisper prompt that keeps English technical terms in Latin script without breaking layout. |
 | 🔒 **Local-first guarantee** | Media, audio, transcripts, and rendered clips stay in your data directory. The local API binds to `127.0.0.1`; there is no telemetry. |
 | 🪶 **Runs on modest hardware** | CPU-first and tuned for an 8 GB machine: a fast full pass for the transcript, then word-level re-timing only for the clips you actually render. |
-| 🚪 **No subscription lock-in** | Works with zero API keys. Hosted providers (OpenRouter, Groq, AssemblyAI) are optional, opt-in **and** fail-closed. |
+| 🚪 **No subscription lock-in** | Works with zero API keys. Hosted providers (OpenRouter, Groq, Mistral, Cerebras, DeepSeek, Anthropic, Hugging Face) are optional, opt-in **and** fail-closed. |
+| 🔑 **BYOK & Settings Studio** | Full Bring Your Own Keys studio with masked secret management, real provider connection verification, and hardware audit controls. |
 | 💻 **Complete Studio UI** | Modern React + Vite workbench with interactive waveform, drag-and-drop import, timeline scrubbing, and title-safe vertical framing. |
+
+---
+
+## ⚙️ Bring Your Own Keys (BYOK) & Advanced Settings Studio
+
+Introduced in **v0.2.0**, Laqta features a centralized 5-tab Settings Studio that configures the engine without editing configuration files or touching source code:
+
+| Tab | Purpose & Capabilities |
+| :--- | :--- |
+| **AI Providers** | Manage API credentials for OpenRouter, Groq, Mistral, Cerebras, DeepSeek, Anthropic, and Hugging Face. Test connections live with instant latency and status feedback. |
+| **Speech Recognition** | Select local Faster-Whisper models (e.g. `tiny`, `base`, `small`, `turbo`), configure Groq cloud fallback, tune beam size, and customize Arablish prompt behavior. |
+| **Ingestion & Policy** | Explicitly control cloud API permissions (`allow_cloud_apis`) and URL ingestion gates (`enable_url_ingestion`). Rights confirmation remains mandatory per import. |
+| **Storage & Cache** | View and configure data directory paths, manage transcript caches, clear temporary audio buffers, or trigger factory resets with safe confirmation gates. |
+| **System Audit** | Live diagnostics of host hardware (CPU cores, RAM capacity, GPU availability), media tool dependencies (`ffmpeg`, `libass`), and environment configuration. |
+
+### 🔒 Credential Storage & Security Architecture
+
+Laqta treats API keys with defense-in-depth:
+- **Local Isolation Only:** API keys and user preferences persist exclusively in the local SQLite database (`~/.local/share/qatta/qatta.db`) and an atomic JSON file mirror (`settings.json`).
+- **Strict POSIX Permissions:** Directory paths enforce `0700` and file descriptors enforce `0600` (`-rw-------`), preventing read access by other local system users.
+- **Masked Previews & API Redaction:** Keys are never transmitted in plaintext over API responses; secrets are always returned as masked previews (e.g. `sk-or-...a1b2`). Submitting a masked placeholder preserves the existing key without overwriting it.
+- **SSRF Protection:** Connection verification probes reject private, loopback, and cloud metadata IP ranges (`169.254.169.254`, `metadata.google.internal`) and enforce `follow_redirects=False`.
+- **Transparency Notice:** Secrets are stored **unencrypted at rest** within the permissions-protected local database files. Security is enforced via POSIX filesystem permission boundaries on the host machine.
 
 ---
 
 ## 📸 The Studio Workbench
 
-![The Laqta studio workbench](docs/assets/laqta-studio.png)
+<div align="center">
+
+![The Laqta studio workbench](docs/assets/screenshots/laqta-studio.png)
+
+*The multi-track timeline, vertical 9:16 Shorts canvas player, and explainable clip candidate review.*
+
+<br/>
+
+![The Laqta dashboard & engine monitor](docs/assets/screenshots/laqta-dashboard.png)
+
+*The home dashboard, system capabilities probe, and recent project management workspace.*
+
+</div>
 
 *Every screenshot in this repository was taken from a real, local run on a synthetic demo video — no third-party content.*
 
@@ -199,23 +235,44 @@ The benchmark synthesises its own narration, labels it by hand, and runs the rea
 
 ---
 
-## 🏗️ Architecture
+## 🏗️ Architecture & Subsystems
 
 ```text
-qatta/                     # Manifest-based core pipeline (Pydantic v2)
-  core/schema.py           # Atomic per-project state (qatta_manifest.json)
-  core/pipeline.py         # Stage orchestration, resume, wall-clock timings
-  stages/                  # s01_ingest → s02_transcript → s03_multimodal →
-                           # s04_candidates → s05/s05b → s06_reframe_subs → s07_render
-backend/                   # Local FastAPI service (binds strictly to 127.0.0.1)
-  app/api/routes/          # /api/health, /api/capabilities, /api/projects, …
-  app/services/            # Media probing, faster-whisper ASR, captions, render
-frontend/                  # React 18 + TypeScript + Vite + Tailwind CSS
-  src/features/dashboard/  # Home screen & capabilities probe
-  src/components/studio/   # Workbench: clips list, timeline, inspector, player
+qatta/                     # Manifest-based core pipeline (Pydantic v2) & CLI
+backend/                   # Local FastAPI service (binds strictly to 127.0.0.1) & SQLite
+frontend/                  # React 19 + TypeScript + Vite studio workbench
+scripts/                   # Developer tooling, CI checks, and lifecycle automation
 docs/                      # Architecture, evaluation, brand system, PRD
-tests/                     # Test suite (159 core + 274 backend + 106 frontend)
+tests/                     # Test suite (core pipeline, backend routes, unit tests)
 ```
+
+### Subdirectories & System Boundaries
+
+- **[Qatta Core Engine](./qatta/README.md)**: Manifest-based pipeline substrate (`qatta/core/schema.py`, `qatta/core/pipeline.py`) providing Pydantic v2 state serialization to `qatta_manifest.json`, pause-bounded utterance segmentation, stage timing tracking, and modular processing stages (`s01_ingest` through `s07_render_learn`).
+- **[Laqta Backend](./backend/README.md)**: Local FastAPI web service (`backend/app/main.py`) binding exclusively to `127.0.0.1:8000`, SQLite repository layer (`qatta.db`), single-worker background job manager, media probing, transcription adapters, and vertical rendering pipelines.
+- **[Laqta Frontend](./frontend/README.md)**: Local-first React 19 + TypeScript + Vite studio workbench (`frontend/src/App.tsx`) with vertical canvas preview, interactive multi-track timeline, AI-suggested candidate clips with explainable CPS scoring, ASS caption styling, and multi-tab BYOK settings.
+- **[Scripts](./scripts/README.md)**: Repository lifecycle automation, local CI verification (`check.sh`), dual-process development launcher (`dev.sh`), environment bootstrap (`setup.sh`), and ranking benchmark suites (`evaluate_ranking.py`).
+
+### Global Invariants
+
+- **Local-first guarantee**: All media, transcripts, project metadata, and render outputs stay strictly on the local machine (`127.0.0.1`); zero telemetry, no accounts, and no mandatory cloud keys.
+- **Fail-closed cloud gates**: All hosted cloud APIs (Groq, OpenRouter, AssemblyAI, Gemini) and URL ingestion (yt-dlp) require explicit operator opt-in (`allow_cloud_apis=true`, `enable_url_ingestion=true`).
+- **Subprocess security**: All media operations (FFmpeg, FFprobe, yt-dlp) invoke system binaries via explicit argument arrays without `shell=True`, finite deadlines, and bounded memory buffers.
+- **No LLM timestamps**: Transcripts are segmented into `AtomicUtterance` objects bounded by real acoustic pauses (`U_0001`); LLMs only receive and return `u_id` identifiers, never raw timestamps.
+- **Arabic & BiDi correctness**: Subtitles remain in logical order with FSI/PDI directional isolates and RLM marks; BiDi text shaping is delegated to HarfBuzz/FriBiDi in libass.
+
+### Global Side Effects
+
+- **Local SQLite Database**: Persists and queries project workspaces, media assets, transcripts, candidate clips, background jobs, and user BYOK settings in `~/.local/share/qatta/qatta.db`.
+- **Filesystem Storage**: Creates 16 kHz mono WAVs, JPEG preview thumbnails, ASS/SRT subtitles, and rendered vertical MP4 videos in local project folders under `~/.local/share/qatta/`.
+- **System Subprocesses**: Spawns local FFmpeg and FFprobe worker processes for media inspection, audio extraction, and video encoding.
+- **Loopback Ports**: Binds local TCP ports `127.0.0.1:8000` (FastAPI backend) and `127.0.0.1:5173` (Vite studio frontend).
+
+### System Verification
+
+- Run: `./scripts/check.sh --fast` (or `pytest && npm --prefix frontend test`)
+
+---
 
 | Reference Document | What it covers |
 |---|---|

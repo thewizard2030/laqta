@@ -398,6 +398,7 @@ def test_find_local_whisper_snapshot(tmp_path: Path) -> None:
 @pytest.mark.asyncio
 async def test_load_whisper_model_prioritizes_local_snapshot(tmp_path: Path) -> None:
     """load_whisper_model must load directly from local snapshot if present."""
+    import types
     from unittest.mock import MagicMock, patch
 
     from app.services.transcription.faster_whisper_provider import (
@@ -409,12 +410,15 @@ async def test_load_whisper_model_prioritizes_local_snapshot(tmp_path: Path) -> 
     mock_instance = MagicMock()
     mock_whisper_cls.return_value = mock_instance
 
+    mock_fw = types.ModuleType("faster_whisper")
+    mock_fw.WhisperModel = mock_whisper_cls
+
     snap_dir = tmp_path / "snapshots" / "snap_01"
     snap_dir.mkdir(parents=True)
     (snap_dir / "model.bin").write_bytes(b"dummy")
 
     with (
-        patch("faster_whisper.WhisperModel", mock_whisper_cls),
+        patch.dict("sys.modules", {"faster_whisper": mock_fw}),
         patch(
             "app.services.transcription.faster_whisper_provider.find_local_whisper_snapshot",
             return_value=str(snap_dir),
@@ -439,6 +443,7 @@ async def test_load_whisper_model_prioritizes_local_snapshot(tmp_path: Path) -> 
 @pytest.mark.asyncio
 async def test_load_whisper_model_download_failure_diagnostics(tmp_path: Path) -> None:
     """When model is missing and network download fails, raises MODEL_DOWNLOAD_FAILED."""
+    import types
     from unittest.mock import MagicMock, patch
 
     from app.services.transcription.faster_whisper_provider import (
@@ -449,8 +454,11 @@ async def test_load_whisper_model_download_failure_diagnostics(tmp_path: Path) -
     err = "LocalEntryNotFoundError: 403 Forbidden: None."
     mock_whisper_cls = MagicMock(side_effect=Exception(err))
 
+    mock_fw = types.ModuleType("faster_whisper")
+    mock_fw.WhisperModel = mock_whisper_cls
+
     with (
-        patch("faster_whisper.WhisperModel", mock_whisper_cls),
+        patch.dict("sys.modules", {"faster_whisper": mock_fw}),
         patch(
             "app.services.transcription.faster_whisper_provider.find_local_whisper_snapshot",
             return_value=None,

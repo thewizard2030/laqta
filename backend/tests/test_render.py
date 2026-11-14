@@ -6,6 +6,8 @@ a tiny programmatically generated fixture and are skipped with an explicit
 reason when FFmpeg/libass/x264/AAC are unavailable (no silent skips).
 """
 
+from __future__ import annotations
+
 import json
 import subprocess
 import time
@@ -419,7 +421,7 @@ def _await_terminal(client: TestClient, job_id: str, timeout_s: float = 120.0) -
 
 
 def test_full_render_job_pipeline_end_to_end(
-    client: "TestClient", tmp_path: Path, env_report: dict, render_ready: bool
+    client: TestClient, tmp_path: Path, env_report: dict, render_ready: bool
 ):
     """Gate D: one candidate exports as verified 1080x1920 MP4."""
     if not render_ready:
@@ -497,7 +499,7 @@ def test_captions_endpoint_generates_srt_and_ass(client: TestClient, tmp_path: P
 
 
 def test_render_job_clear_error_without_ffmpeg(
-    client: "TestClient", tmp_path: Path, env_report: dict
+    client: TestClient, tmp_path: Path, env_report: dict
 ):
     """When ffmpeg is unavailable the render job must fail with a diagnostic."""
     project, media, candidate = _create_project_media_transcript_candidate(tmp_path)
@@ -511,7 +513,7 @@ def test_render_job_clear_error_without_ffmpeg(
     assert "ffmpeg" in (job["error_message"] or "").lower()
 
 
-def test_serve_candidate_render_file_returns_video(client: "TestClient", tmp_path: Path):
+def test_serve_candidate_render_file_returns_video(client: TestClient, tmp_path: Path):
     project, media, candidate = _create_project_media_transcript_candidate(tmp_path)
     # 404 when no render exists
     res = client.get(f"/api/candidates/{candidate.id}/render-file")

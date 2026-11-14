@@ -1,183 +1,142 @@
-# Laqta — Brand & UI System
+# Laqta — Official Brand & UI System
 
-This document records the product identity of **Laqta** (لقطّة) and the design
-decisions behind the recreated dashboard. It is the reference for any future
-brand or UI work in this repository.
+This document records the official product identity of **Laqta** (لقطة) and the design system implemented across the application. It serves as the single reference for visual identity, design tokens, asset locations, and component styling conventions.
 
 ---
 
-## 1. Name
+## 1. Product Identity
 
-| Form | Value | Where it is used |
-|------|-------|------------------|
-| Latin wordmark | `Laqta` | App title, wordmark, export filenames, backend `APP_NAME` |
-| Arabic wordmark | `لقطّة` | Badge next to the Latin wordmark, fake-ASR sample text |
-| Meaning | "a take / a cut" | Matches the product promise: turning long videos into cuts |
-
-`Laqta` is a neutral, pronounceable Latin spelling, so it works in file
-names, CLI output and logs, while the Arabic badge keeps the Arabic-first
-identity visible in the product UI.
-
-### Identifiers that intentionally keep their old name
-
-Renaming these would break existing local data or operator configuration, so
-the rebrand left them untouched:
-
-- Python package `qatta/` and the classes `QattaManifest` / `QattaSettings`
-- On-disk manifest `qatta_manifest.json` (per project)
-- Environment variable prefix `QATTA_*` (e.g. `QATTA_ENABLE_URL_INGESTION`)
-- Local data directory `~/.local/share/qatta`
+| Attribute | Value | Description & Context |
+|---|---|---|
+| **Product Name** | `Laqta` | Official Latin brand name and application display title |
+| **Arabic Name** | `لقطة` | Official Arabic wordmark / badge ("a take / a cut") |
+| **Tagline** | `Long Videos to Viral Shorts` | Core product promise across web, desktop, and marketing |
+| **Visual Direction** | Premium, modern, creator-focused, dark-first | Optimized for video creator workbenches and dark room editing |
+| **Platform Target** | Linux/Fedora-first desktop application | Native FreeDesktop packaging (`.desktop`) with high-resolution icon suites |
 
 ---
 
-## 2. Colour system
+## 2. Official Brand Palette
 
-The palette lives in `frontend/tailwind.config.js` and `frontend/src/index.css`
-(`--laqta-gradient` plus the `--surface-*` / `--text-*` ramps).
+The palette is extracted directly from the official **Laqta Brand Kit** vector definitions.
 
-| Token | Value | Role |
-|-------|-------|------|
-| `laqta-600` | `#7c4dff` | Brand primary, primary CTA, focus ring |
-| `laqta-500` | `#8b5cf6` | Gradient midpoint, icon tiles |
-| `laqta-200` | `#ddd6fe` | Brand text on dark surfaces |
-| `neon.cyan` | `#22d3ee` | Secondary accent, local/engine status |
-| `neon.emerald` | `#10b981` | "ready" state |
-| `neon.amber` | `#f59e0b` | "missing component" state |
-| `obsidian-950 … 800` | `#070A11 … #141C30` | Surface ramp (app → inputs) |
+### Core Brand Tokens
 
-The identity gradient is **violet → cyan** (`--laqta-gradient`), applied to
-the wordmark, the primary CTA, the dashboard headline and the range-slider
-thumb. Amber is reserved for missing components, so it is never used as a
-brand accent.
+| Token Name | CSS Variable | Hex / RGBA | Usage & Semantic Role |
+|---|---|---|---|
+| **Ink** | `--laqta-background` / `--surface-0` | `#070A14` | Primary dark workspace background |
+| **Deep Navy** | `--laqta-surface-elevated` | `#10162B` | Elevated panels, cards, and light-mode text anchor |
+| **Violet** | `--laqta-violet` | `#A72BFF` | Brand gradient start, active item accents, glow highlights |
+| **Purple** | `--laqta-primary` | `#5637F5` | Brand gradient middle, primary buttons, brand selections |
+| **Cyan** | `--laqta-cyan` | `#00C9E8` | Brand gradient end, live state, playhead, active timers |
+| **White** | `--laqta-text` | `#F8FAFF` | Primary typography and vector icon highlights on dark |
+| **Muted** | `--laqta-muted` | `#AAB6CC` | Secondary body copy, subtitle labels, metadata text |
+| **Surface** | `--laqta-surface` / `--surface-2` | `#0E1424` | Workbench panels, card backgrounds, raised areas |
+| **Hairline** | `--laqta-border` / `--hairline` | `rgba(148, 163, 184, 0.14)` | Subtle 1px dividers and surface borders |
 
-Surfaces stay dark on purpose: the app is a video workbench that is used next
-to a video preview, and `color-scheme: dark` is declared globally.
+### Functional Status Tokens
 
-### The one-accent rule
+| Role | Token | Hex | Where Used |
+|---|---|---|---|
+| **Live State / Scrubber** | `--color-neon-cyan` | `#00C9E8` | Timeline playhead, waveform, active scrubber mode |
+| **Success / Ready** | `--color-neon-emerald` | `#10B981` | Engine ready, FFmpeg verified, export complete |
+| **Warning / Notice** | `--color-neon-amber` | `#F59E0B` | Missing optional engine, unsaved changes |
+| **Danger / Error** | `--danger` | `#F87171` | API offline, rejected files, failed jobs |
 
-The studio used to mix purple, fuchsia, indigo and cyan everywhere. The
-current system has exactly two accents with fixed meanings:
+### Brand Gradient
 
-| Accent | Meaning | Where |
-|--------|---------|-------|
-| `laqta-*` (violet) | **Brand, active and selected UI** | Selected clip card, active inspector/clips tab, primary CTA, focus rings, active aspect-ratio tile, job progress while running |
-| `neon-cyan` | **Live state only** | Timeline playhead, waveform, running job, speaker-crop guide, "Clip / Full" scrubber mode |
-| emerald / amber / red | Status | Ready · missing component · error |
-
-Neutral (`slate`) icons carry the media specification strip; the values stay
-the loud part. Never introduce a fourth accent for decoration.
-
----
-
-## 3. Typography
-
-The app keeps the **system font stack** (no webfont request). Laqta is
-local-first and must work fully offline, and a Google Fonts `<link>` would
-either fail offline or add a network dependency to a product whose main
-promise is that nothing leaves the machine.
-
-The design tokens live in `frontend/src/index.css` (Tailwind v4 is
-CSS-first): the brand ramps, the shadows and the easings are declared in
-`@theme`, so the utility names are unchanged (`bg-laqta-600`,
-`shadow-neon-purple`, `ease-out-expo`).
-
-Hierarchy comes from weight, size and colour instead:
-
-- Headlines: `font-black tracking-tight`
-- Section labels: `text-[11px] font-semibold uppercase tracking-wider`
-- Technical values: `font-mono text-[10px]` (versions, resolutions, paths)
-
----
-
-## 4. Logo
-
-`frontend/src/components/ui/LaqtaMark.tsx` is an inline SVG: a rounded
-"L" monogram (stem = timeline, foot = the cut) on the violet→cyan gradient,
-with a diagonal notch on the shoulder. Inline SVG keeps the mark crisp at
-every size, themeable, and free of a binary asset.
-
-| Asset | Purpose |
-|-------|---------|
-| `frontend/src/components/ui/LaqtaMark.tsx` | The mark itself (inline SVG, used everywhere in the app) |
-| `frontend/public/favicon.svg` | The browser tab icon |
-| `frontend/public/logo.png` | A 512 px raster fallback (56 KB, 8-bit) |
-| `docs/assets/laqta-logo.png` | The full wordmark for the docs and the README |
-
-The wordmark pairs the Latin **Laqta** with the Arabic **لقطّة**. The
-raster wordmark is rendered with the Noto Sans Arabic face so the Arabic
-is properly shaped — never isolated letterforms.
-
-To change the mark, edit the SVG in `frontend/public/favicon.svg` and the
-component in `frontend/src/components/ui/LaqtaMark.tsx`; they must stay in
-sync.
-
----
-
-## 5. Dashboard layout (recreated)
-
-```
-┌──────────────────────────────────────────────┬───────────────────────┐
-│ HERO — import & drop zone                    │ 4 KPI tiles           │
-│  local-only chip · headline · CTAs · notes   │ workspaces / media    │
-│                                              │ footage / disk        │
-├──────────────────────────────────────────────┴───────────────────────┤
-│ LOCAL ENGINE STATUS — honest, probed live                            │
-├──────────────────────────────────────────────┬───────────────────────┤
-│ CONTINUE WHERE YOU LEFT OFF — recent workspaces (max 4)              │
-├──────────────────────────────────────────────┴───────────────────────┤
-│ HOW LAQTA WORKS — import → transcribe → rank → render                 │
-└──────────────────────────────────────────────────────────────────────┘
+```css
+/* Official Brand Gradient */
+--laqta-gradient: linear-gradient(120deg, #A72BFF 0%, #5637F5 48%, #00C9E8 100%);
 ```
 
-Principles that must survive future edits:
-
-1. **The import path is the hero.** A dropped or picked file is the fastest
-   way into the pipeline, so it is the largest, brightest element.
-2. **Real numbers only.** The KPI tiles are computed from the project list
-   (workspaces, media assets, total footage, bytes on disk) — never mock values.
-3. **Honest engine state.** Every tile mirrors `GET /api/capabilities`;
-   optional components are labelled *Optional*, missing ones *Missing*. A
-   hosted LLM is never described as local.
-4. **The pipeline strip describes the product**, not a live job state.
-5. **A single visual language** with the rest of the app: `.laqta-card`,
-   `.laqta-gradient-text`, `.laqta-gradient-surface` and the `laqta-*` /
-   `neon-*` Tailwind ramps.
-
-Accessibility notes: drop-and-drop always has a keyboard-reachable button
-alternative, focus rings are visible on every control, the state badges pair
-colour with a text label (never colour alone), and `prefers-reduced-motion`
-is honoured globally in `src/index.css`.
+Applied to:
+- Primary CTA action buttons (`.laqta-gradient-surface`)
+- Hero headline emphasis (`.laqta-gradient-text`)
+- Playhead and scrubber progress fills
+- Interactive range-slider thumbs
 
 ---
 
-## 6. Studio (project detail) rules
+## 3. Official Logo Geometry & Mark
 
-The workbench follows the same system, plus a few rules of its own:
+The official Laqta mark combines three distinct elements:
+1. **Geometric L Monogram**: Represents the timeline (vertical stem) and the cut (horizontal foot):
+   `M270 240 H408 V648 H750 V786 H338 C300 786 270 756 270 718 Z`
+2. **Playback Triangle**: Positioned inside the counter of the L:
+   `M492 350 L680 470 L492 590 Z`
+3. **Three Vertical Frame Cues**: Three rounded cues on the right representing video frames:
+   `rect x="742" y="242/352/462" width="70" height="70" rx="15"`
 
-1. **Card = button.** A clip card is a `<li>` that contains one stretched
-   `<button>` (the selection target) — never a `role="button"` div with a
-   nested button. The card's rationale line comes from the first *substantive*
-   rationale entry; the backend's `Overall rationale …` header is skipped so
-   the row is never empty.
-2. **Long lists are paged.** The clip list mounts the first 20 cards and adds
-   the rest through a "Show 20 more" button. No list is allowed to mount
-   hundreds of nodes.
-3. **The preview sits on a stage.** The area around the vertical canvas uses
-   `.laqta-stage-grid` + `.laqta-stage-glow`, and a title-safe guide marks
-   where text stays readable in 9:16.
-4. **Jobs are rows, not cards.** One line for status/type/id, one thin
-   progress bar with the percentage and stage inline, one line of timestamps.
-5. **Nothing may be implied.** The engine strip, the job states and the
-   caption readiness all report what the backend actually returned.
+### Supported Variants in `LaqtaMark.tsx`
+
+- `variant="badge"`: The square gradient app icon with rounded corners (`rx="220"`), diagonal cut shadow, and crisp white geometry.
+- `variant="symbol"`: Standalone mark with transparent background, gradient L, white playback triangle, and gradient frame cues.
+- `variant="monochrome"`: Clean single-color vector mark inheriting `currentColor` or solid white.
+
+### Logo Usage Rules
+
+- Use `laqta-logo-dark.svg` (or `BrandLogo` with dark theme) on dark backgrounds (`#070A14` to `#10162B`).
+- Use `laqta-logo-light.svg` on light backgrounds.
+- Maintain at least the clear space of one frame cue (`70px` relative to `1024px` viewBox) around the mark.
+- Never stretch, squash, rotate, or alter the gradient direction (`120deg` Violet → Purple → Cyan).
 
 ---
 
-## 7. Checklist before shipping UI changes
+## 4. Asset Locations
 
-- [ ] No emoji used as an icon (Lucide / inline SVG only)
-- [ ] `npm run typecheck` and `npm run test` pass
-- [ ] Contrast ≥ 4.5:1 for body text in both themes
-- [ ] Focus ring visible on every interactive element
-- [ ] Reduced motion respected
-- [ ] Layout verified at 375 px, 768 px, 1024 px and 1440 px
-- [ ] No capability is claimed that the backend does not report
+### Verified Master Brand Assets (`Laqta_Brand_Kit/`)
+
+- `Laqta_Brand_Kit/svg/laqta-app-icon.svg` — 1024×1024 master application icon.
+- `Laqta_Brand_Kit/svg/laqta-symbol.svg` — 1024×1024 standalone transparent symbol.
+- `Laqta_Brand_Kit/svg/laqta-logo-dark.svg` — Horizontal dark-surface lockup (1500×390).
+- `Laqta_Brand_Kit/svg/laqta-logo-light.svg` — Horizontal light-surface lockup (1500×390).
+- `Laqta_Brand_Kit/svg/favicon.svg` — 64×64 compact browser favicon.
+- `Laqta_Brand_Kit/svg/laqta-brand-banner.svg` — 1600×600 promotional brand banner.
+- `Laqta_Brand_Kit/png/` — Full resolution raster suite (`laqta-icon-16.png` through `laqta-icon-1024.png`).
+
+### Runtime Application Assets (`frontend/public/`)
+
+- `frontend/public/favicon.svg` — Browser tab SVG icon.
+- `frontend/public/favicon-32.png` — Standard 32px favicon fallback.
+- `frontend/public/favicon-64.png` — Retina 64px favicon.
+- `frontend/public/laqta-icon-192.png` — Web / PWA 192px icon.
+- `frontend/public/laqta-icon-512.png` — High-res 512px icon.
+- `frontend/public/logo.png` — 512px fallback asset.
+- `frontend/public/laqta-logo-dark.svg` & `laqta-logo-light.svg` — Vector lockups.
+- `frontend/public/laqta-symbol.svg` — Vector symbol.
+
+### Desktop & Linux Packaging (`packaging/`)
+
+- `packaging/laqta.desktop` — FreeDesktop application launcher specification for Linux/Fedora.
+- `packaging/icons/hicolor/{16x16,32x32,48x48,64x64,128x128,192x192,256x256,512x512,scalable}/apps/` — Full standard Linux icon theme hierarchy.
+
+---
+
+## 5. Typography & Bilingual Arabic Layout
+
+1. **Font Hierarchy**:
+   - Primary Headings: `Manrope`, `Inter`, system-ui (`font-black tracking-tight`).
+   - Body & Controls: System font stack (`-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto`).
+   - Technical & Telemetry: `font-mono` (`ui-monospace, SFMono-Regular, Consolas`).
+   - Arabic Wordmark & Captions: `Noto Sans Arabic`, `Vazirmatn`, `Droid Arabic Kufi`.
+2. **Arabic Layout & BiDi**:
+   - Bilingual badge: `<span dir="rtl">لقطة</span>` paired with `Laqta`.
+   - Arabic text rendering respects proper RTL directionality, cursive shaping, and Unicode isolation (`FSI`/`PDI` and `RLM`).
+
+---
+
+## 6. Component Styling Conventions
+
+1. **Surfaces**:
+   - Base canvas: `.studio-ambient` on `#070A14` with soft violet/cyan radial backlighting.
+   - Cards & Panels: `.laqta-card` with `var(--hairline)` border and 1px top highlight.
+   - Stage workbench: `.laqta-stage-grid` with `.laqta-stage-glow` behind the vertical canvas.
+2. **Focus Rings**:
+   - Universal accessible outline: `focus-visible:ring-2 focus-visible:ring-laqta-400 focus-visible:ring-offset-2 focus-visible:ring-offset-obsidian-950`.
+3. **Empty States**:
+   - Powered by `<EmptyState type="projects" | "media" | "clips" | "transcript" />`.
+   - Restrained, informative messaging without artificial clutter.
+4. **Motion & Transitions**:
+   - Subtle entrance animations: `.animate-fadeIn` (160ms), `.animate-fadeUp` (220ms).
+   - All animations strictly respect `@media (prefers-reduced-motion: reduce)`.

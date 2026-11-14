@@ -136,10 +136,15 @@ async def test_missing_api_key_gating(dummy_wav: Path):
 @pytest.mark.asyncio
 async def test_cuda_detection_and_fallback(dummy_wav: Path):
     """Verify faster-whisper gracefully falls back to CPU INT8 when CUDA is missing or fails."""
+    import types
+
     provider = FasterWhisperProvider()
 
+    mock_ct2 = types.ModuleType("ctranslate2")
+    mock_ct2.get_cuda_device_count = MagicMock(return_value=0)
+
     # Mock CTranslate2 reporting 0 CUDA devices
-    with patch("ctranslate2.get_cuda_device_count", return_value=0):
+    with patch.dict("sys.modules", {"ctranslate2": mock_ct2}):
         with patch.object(provider, "_transcribe_stream") as mock_stream:
             mock_stream.return_value = TranscriptionResult(
                 language="en",

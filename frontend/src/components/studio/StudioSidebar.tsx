@@ -57,7 +57,7 @@ export const StudioSidebar: React.FC<StudioSidebarProps> = ({
   const navItemClass = (isActive: boolean) =>
     `group relative w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-laqta-400 ${
       isActive
-        ? "bg-purple-950/60 text-white border border-purple-500/40 shadow-[0_0_14px_rgba(168,85,247,0.18)]"
+        ? "bg-laqta-600/20 text-white border border-laqta-500/40 shadow-[0_0_15px_rgba(86,55,245,0.22)]"
         : "text-slate-400 hover:text-white hover:bg-slate-800/50 border border-transparent"
     }`;
 
@@ -79,7 +79,7 @@ export const StudioSidebar: React.FC<StudioSidebarProps> = ({
       )}
 
       <aside
-        className={`fixed lg:static top-0 bottom-0 left-0 z-50 w-[264px] bg-obsidian-900/90 border-r border-slate-800/80 backdrop-blur-md flex flex-col justify-between transition-transform duration-300 ease-in-out ${
+        className={`fixed lg:static top-0 bottom-0 left-0 z-50 w-[264px] bg-obsidian-900/95 border-r border-slate-800/80 backdrop-blur-md flex flex-col justify-between transition-transform duration-300 ease-in-out ${
           isOpenMobile ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         }`}
         data-testid="studio-sidebar"
@@ -91,7 +91,7 @@ export const StudioSidebar: React.FC<StudioSidebarProps> = ({
           {onCloseMobile && (
             <button
               onClick={onCloseMobile}
-              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-laqta-400"
+              className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-laqta-400 cursor-pointer"
               aria-label="Close menu"
             >
               <X className="h-5 w-5" />
@@ -101,9 +101,7 @@ export const StudioSidebar: React.FC<StudioSidebarProps> = ({
 
         {/* Center: Primary action + Navigation */}
         <div className="flex-1 px-3 py-4 space-y-5 overflow-y-auto">
-          {/* Primary action — creating a workspace is the main thing a user
-              comes here to do, so it gets a filled CTA instead of sitting
-              between two navigation entries. */}
+          {/* Primary action — creating a workspace is the main entry point */}
           <button
             onClick={onCreateProject}
             data-testid="sidebar-create-project-btn"
@@ -149,7 +147,7 @@ export const StudioSidebar: React.FC<StudioSidebarProps> = ({
             >
               <FolderKanban className={navIconClass(activeTab === "projects")} aria-hidden="true" />
               <span className="flex-1 text-left">My Projects</span>
-              <span className="text-[11px] font-mono px-1.5 py-0.5 rounded-md bg-slate-800/80 text-slate-400 border border-slate-700/60">
+              <span className="text-[11px] font-mono px-1.5 py-0.5 rounded-md bg-obsidian-950/80 text-slate-400 border border-slate-700/60">
                 {projectCount}
               </span>
             </button>
@@ -199,7 +197,7 @@ export const StudioSidebar: React.FC<StudioSidebarProps> = ({
                   Built by the community, for creators.
                 </p>
               </div>
-              <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-purple-900/40 text-laqta-200 border border-purple-700/40 shrink-0">
+              <span className="ml-auto text-[10px] px-2 py-0.5 rounded-full bg-laqta-950/80 text-laqta-200 border border-laqta-800/50 shrink-0">
                 v{capabilities?.version ?? "0.1.0"}
               </span>
             </div>
@@ -220,7 +218,7 @@ export const StudioSidebar: React.FC<StudioSidebarProps> = ({
             title="Laqta runs entirely on this device — no accounts, no cloud, no telemetry."
           >
             <div className="flex items-center space-x-2.5 min-w-0">
-              <div className="h-8 w-8 rounded-full bg-linear-to-tr from-laqta-600 to-cyan-400 p-0.5 shrink-0">
+              <div className="h-8 w-8 rounded-full bg-linear-to-tr from-laqta-violet via-laqta-primary to-neon-cyan p-0.5 shrink-0">
                 <div className="h-full w-full rounded-full bg-obsidian-950 flex items-center justify-center">
                   <ShieldCheck className="h-3.5 w-3.5 text-neon-cyan" />
                 </div>

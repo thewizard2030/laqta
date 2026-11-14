@@ -27,6 +27,7 @@ import { YouTubeTargetModal } from "./YouTubeTargetModal";
 import { CapabilitiesResponse } from "../../types/capabilities";
 import { HealthResponse } from "../../types/health";
 import { Project } from "../../types/projects";
+import { BRAND } from "../../lib/brand";
 import {
   formatBytes,
   formatDurationHuman,
@@ -303,9 +304,9 @@ export const DashboardHome: React.FC<DashboardHomeProps> = ({
                 127.0.0.1 · on-device
               </span>
               <span className="inline-flex items-center gap-1.5 rounded-full border border-laqta-800/60 bg-laqta-950/60 px-2.5 py-0.5 text-[10px] font-mono tracking-wider text-laqta-200">
-                <span dir="rtl">لقطّة</span>
+                <span dir="rtl">{BRAND.nameArabic}</span>
                 <span aria-hidden="true">·</span>
-                <span>Laqta</span>
+                <span>{BRAND.name}</span>
               </span>
               {health?.version && (
                 <span className="rounded-full border border-slate-800 bg-obsidian-950/70 px-2.5 py-0.5 text-[10px] font-mono text-slate-400">

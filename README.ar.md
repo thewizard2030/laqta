@@ -7,6 +7,7 @@
 ### **حوّل الفيديوهات الطويلة والبودكاست إلى مقاطع Shorts عمودية ذكية — بالكامل على جهازك الشخصي.**
 
 [![English README](https://img.shields.io/badge/README-English-7c4dff.svg)](README.md)
+[![CircleCI](https://circleci.com/gh/thewizard2030/laqta.svg?style=svg)](https://circleci.com/gh/thewizard2030/laqta)
 [![License: MIT](https://img.shields.io/badge/License-MIT-7c4dff.svg)](LICENSE)
 [![Local first](https://img.shields.io/badge/%D9%85%D8%AD%D9%84%D9%8A%20100%25-%D8%A8%D8%AF%D9%88%D9%86%20%D8%B3%D8%AD%D8%A7%D8%A8%D8%A9-10b981.svg)](docs/POLICY.md)
 [![Arabic RTL](https://img.shields.io/badge/%D8%AF%D8%B9%D9%85%20%D8%B9%D8%B1%D8%A8%D9%8A-%D8%A3%D8%B5%D9%8A%D9%84%20RTL-22d3ee.svg)](README.ar.md)

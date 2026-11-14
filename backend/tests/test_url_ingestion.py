@@ -360,10 +360,20 @@ class TestSubtitleExtraction:
         assert lang is None
 
     def test_execute_url_ingest_creates_transcript_and_manifest(self, monkeypatch, tmp_path):
+        from app.schemas.capabilities import BinaryCapability
         from app.services.media.url_ingest import UrlIngestResult
 
         # URL ingestion is fail-closed: the test opts in explicitly.
         monkeypatch.setattr(settings, "ENABLE_URL_INGESTION", True)
+        monkeypatch.setattr(
+            "app.jobs.manager.detect_yt_dlp",
+            lambda: BinaryCapability(
+                available=True,
+                path="/usr/bin/yt-dlp",
+                version="2024.04.01",
+                details=None,
+            ),
+        )
 
         vtt_sample = (
             "WEBVTT\n\n"
@@ -653,10 +663,20 @@ class TestSubtitleExtraction:
     def test_execute_url_ingest_auto_enqueues_fallback_whisper_when_no_subs(
         self, monkeypatch, tmp_path
     ):
+        from app.schemas.capabilities import BinaryCapability
         from app.services.media.url_ingest import UrlIngestResult
 
         # URL ingestion is fail-closed: the test opts in explicitly.
         monkeypatch.setattr(settings, "ENABLE_URL_INGESTION", True)
+        monkeypatch.setattr(
+            "app.jobs.manager.detect_yt_dlp",
+            lambda: BinaryCapability(
+                available=True,
+                path="/usr/bin/yt-dlp",
+                version="2024.04.01",
+                details=None,
+            ),
+        )
 
         project = job_manager.repo.create_project("Test Auto Whisper Fallback")
         job = job_manager.repo.create_job(

@@ -1,9 +1,11 @@
 """Settings service for local-first configuration persistence and BYOK management."""
 
+import ipaddress
 import json
 import os
 import shutil
 import time
+import urllib.parse
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -37,6 +39,20 @@ def _utc_now_iso() -> str:
     return datetime.now(UTC).isoformat()
 
 
+def _is_loopback_url(url: str) -> bool:
+    """True when the URL host is loopback (127.0.0.1, localhost, ::1)."""
+    host = urllib.parse.urlparse(url).hostname or ""
+    if not host:
+        return False
+    host = host.strip("[]").lower()
+    if host == "localhost":
+        return True
+    try:
+        return ipaddress.ip_address(host).is_loopback
+    except ValueError:
+        return False
+
+
 class SettingsService:
     """Manages application settings, BYOK secrets, and connection probes."""
 
@@ -44,8 +60,63 @@ class SettingsService:
     _initial_env: dict[str, str] = {}
 
     @classmethod
+    def _ensure_secure_permissions(
+        cls, data_dir: Path, db_path: Path | None = None, mirror_path: Path | None = None
+    ) -> None:
+        """Enforce strict POSIX file mode 0600 on files and 0700 on containing directories."""
+        if os.name != "posix":
+            return
+        try:
+            if data_dir.exists():
+                os.chmod(data_dir, 0o700)
+            if db_path and db_path.exists():
+                os.chmod(db_path, 0o600)
+                for aux in (data_dir / f"{db_path.name}-wal", data_dir / f"{db_path.name}-shm"):
+                    if aux.exists():
+                        os.chmod(aux, 0o600)
+            if mirror_path and mirror_path.exists():
+                os.chmod(mirror_path, 0o600)
+        except OSError as e:
+            logger.debug(f"Could not set restrictive filesystem permissions: {e}")
+
+    @classmethod
+    def _atomic_write_mirror(cls, data_dir: Path, data: dict[str, Any]) -> Path:
+        """Write settings mirror atomically to settings.json with mode 0600."""
+        data_dir.mkdir(parents=True, exist_ok=True)
+        cls._ensure_secure_permissions(data_dir)
+        target = data_dir / "settings.json"
+        if target.is_symlink():
+            target.unlink()
+
+        tmp_target = data_dir / f"settings.json.tmp.{os.getpid()}"
+        if tmp_target.is_symlink():
+            tmp_target.unlink()
+
+        try:
+            flags = os.O_WRONLY | os.O_CREAT | os.O_TRUNC
+            fd = os.open(tmp_target, flags, 0o600)
+            with open(fd, "w", encoding="utf-8") as f:
+                json.dump(data, f, indent=2)
+            try:
+                os.chmod(tmp_target, 0o600)
+            except OSError:
+                pass
+            os.replace(tmp_target, target)
+            try:
+                os.chmod(target, 0o600)
+            except OSError:
+                pass
+            return target
+        finally:
+            if tmp_target.exists():
+                try:
+                    tmp_target.unlink()
+                except OSError:
+                    pass
+
+    @classmethod
     def init_and_sync(cls, db_path: Path | None = None) -> None:
-        """Load persisted user overrides from SQLite and apply them to runtime settings."""
+        """Load persisted user overrides from SQLite (or mirror) and apply to runtime settings."""
         if not cls._initial_snapshot:
             cls._initial_snapshot = {
                 k: getattr(settings, k)
@@ -54,6 +125,12 @@ class SettingsService:
             }
             cls._initial_env = dict(os.environ)
 
+        data_dir = settings.get_effective_data_dir()
+        db_file = db_path or settings.get_db_path()
+        mirror_file = data_dir / "settings.json"
+        cls._ensure_secure_permissions(data_dir, db_file, mirror_file)
+
+        loaded_settings: dict[str, Any] = {}
         try:
             with get_connection(db_path) as conn:
                 cursor = conn.execute("SELECT key, value FROM user_settings")
@@ -65,16 +142,44 @@ class SettingsService:
                         val = json.loads(raw_val)
                     except Exception:
                         val = raw_val
+                    loaded_settings[key] = val
 
-                    # Apply to in-memory settings
-                    if hasattr(settings, key):
-                        setattr(settings, key, val)
-                    # Sync to os.environ so qatta core pipeline instances inherit overrides
-                    if val is not None:
-                        os.environ[f"QATTA_{key}"] = str(val).lower() if isinstance(val, bool) else str(val)
-                    else:
-                        os.environ.pop(f"QATTA_{key}", None)
-            logger.info("Loaded persisted user settings overrides from database.")
+            # If SQLite has no rows but settings.json mirror exists, populate from mirror
+            if not loaded_settings and mirror_file.exists():
+                try:
+                    with open(mirror_file, encoding="utf-8") as f:
+                        mirror_data = json.load(f)
+                    if isinstance(mirror_data, dict) and mirror_data:
+                        loaded_settings = mirror_data
+                        now = _utc_now_iso()
+                        with get_connection(db_path) as conn:
+                            for k, v in loaded_settings.items():
+                                conn.execute(
+                                    """
+                                    INSERT INTO user_settings (key, value, updated_at)
+                                    VALUES (?, ?, ?)
+                                    ON CONFLICT(key) DO UPDATE SET
+                                        value = excluded.value, updated_at = excluded.updated_at
+                                    """,
+                                    (k, json.dumps(v), now),
+                                )
+                except Exception as ex:
+                    logger.warning(f"Could not load settings mirror from {mirror_file}: {ex}")
+
+            for key, val in loaded_settings.items():
+                if hasattr(settings, key):
+                    setattr(settings, key, val)
+                if val is not None:
+                    os.environ[f"QATTA_{key}"] = (
+                        str(val).lower() if isinstance(val, bool) else str(val)
+                    )
+                else:
+                    os.environ.pop(f"QATTA_{key}", None)
+
+            if loaded_settings:
+                cls._atomic_write_mirror(data_dir, loaded_settings)
+
+            logger.info("Loaded persisted user settings overrides.")
         except Exception as e:
             logger.warning(f"Could not load user_settings from SQLite (using defaults): {e}")
 
@@ -219,15 +324,27 @@ class SettingsService:
             "transcript_cache_enabled": "TRANSCRIPT_CACHE_ENABLED",
         }
 
+        data_dir = settings.get_effective_data_dir()
+        db_file = db_path or settings.get_db_path()
+        mirror_file = data_dir / "settings.json"
+
         with get_connection(db_path) as conn:
             for field_name, val in fields.items():
                 setting_key = key_map.get(field_name)
                 if not setting_key:
                     continue
 
-                # Handle secret clearing
-                if setting_key in SECRET_FIELDS and val == "":
-                    val = None
+                # Handle secret updates & masked preview protection
+                if setting_key in SECRET_FIELDS:
+                    if val == "":
+                        val = None
+                    elif isinstance(val, str) and (
+                        val in ("<none>", "***")
+                        or val == redact_secret(getattr(settings, setting_key, None))
+                        or ("..." in val and len(val) <= 12)
+                    ):
+                        # Masked preview resubmitted; do not overwrite stored secret with preview
+                        continue
 
                 # Update in-memory settings
                 if hasattr(settings, setting_key):
@@ -238,7 +355,8 @@ class SettingsService:
                     """
                     INSERT INTO user_settings (key, value, updated_at)
                     VALUES (?, ?, ?)
-                    ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+                    ON CONFLICT(key) DO UPDATE SET
+                        value = excluded.value, updated_at = excluded.updated_at
                     """,
                     (setting_key, json.dumps(val), now),
                 )
@@ -251,6 +369,18 @@ class SettingsService:
                 else:
                     os.environ.pop(f"QATTA_{setting_key}", None)
 
+            # Query all current overrides and mirror atomically to settings.json
+            cursor = conn.execute("SELECT key, value FROM user_settings")
+            all_overrides = {}
+            for row in cursor.fetchall():
+                try:
+                    all_overrides[row["key"]] = json.loads(row["value"])
+                except Exception:
+                    all_overrides[row["key"]] = row["value"]
+
+            cls._atomic_write_mirror(data_dir, all_overrides)
+            cls._ensure_secure_permissions(data_dir, db_file, mirror_file)
+
         return cls.get_settings_response(db_path)
 
     @classmethod
@@ -261,11 +391,79 @@ class SettingsService:
         t0 = time.monotonic()
         provider = req.provider.lower().strip()
 
-        # Shared client context
+        # Cloud privacy gating checks
+        if provider in ("openrouter", "groq", "assemblyai", "huggingface", "hf"):
+            if not settings.ALLOW_CLOUD_APIS:
+                return VerifyKeyResponse(
+                    ok=False,
+                    message=(
+                        "Cloud APIs are disabled. "
+                        "Enable 'allow_cloud_apis: true' before testing hosted providers."
+                    ),
+                    latency_ms=0,
+                )
+            if provider == "openrouter" and not settings.LLM_HOSTED_OPT_IN:
+                return VerifyKeyResponse(
+                    ok=False,
+                    message=(
+                        "Hosted LLM opt-in is required. "
+                        "Enable 'llm_hosted_opt_in: true' before testing OpenRouter."
+                    ),
+                    latency_ms=0,
+                )
+
+        # URL validation helper
+        def _validate_url(url_str: str) -> str | None:
+            try:
+                p = urllib.parse.urlparse(url_str)
+                if p.scheme not in ("http", "https"):
+                    return (
+                        f"Invalid URL scheme '{p.scheme}'. Only http:// and https:// are supported."
+                    )
+                if not p.netloc or not p.hostname:
+                    return "Invalid URL: missing host authority."
+                host = p.hostname.strip("[]").lower()
+                # Disallow cloud metadata and link-local addresses
+                if host in ("metadata.google.internal", "instance-data"):
+                    return "Access to cloud metadata endpoints is prohibited."
+                try:
+                    ip = ipaddress.ip_address(host)
+                    if ip.is_link_local or ip.is_reserved or ip.is_multicast:
+                        return (
+                            "Access to link-local, reserved, or multicast addresses is prohibited."
+                        )
+                except ValueError:
+                    pass
+            except Exception as ex:
+                return f"Malformed URL: {ex}"
+            return None
+
+        # Check custom base URL if provided
+        if req.base_url:
+            err = _validate_url(req.base_url)
+            if err:
+                return VerifyKeyResponse(ok=False, message=err, latency_ms=0)
+            if provider in ("openai_compatible", "ollama", "lmstudio") and not _is_loopback_url(
+                req.base_url
+            ):
+                if not settings.ALLOW_CLOUD_APIS or not settings.LLM_HOSTED_OPT_IN:
+                    return VerifyKeyResponse(
+                        ok=False,
+                        message=(
+                            "Remote endpoint requires both 'allow_cloud_apis: true' "
+                            "and 'llm_hosted_opt_in: true'."
+                        ),
+                        latency_ms=0,
+                    )
+
+        # Shared client context with explicit 8.0s timeout and disabled redirects (prevents SSRF)
         client_ctx = (
             http_client
             if http_client is not None
-            else httpx.AsyncClient(timeout=httpx.Timeout(10.0))
+            else httpx.AsyncClient(
+                timeout=httpx.Timeout(8.0),
+                follow_redirects=False,
+            )
         )
 
         try:
@@ -279,9 +477,7 @@ class SettingsService:
                             latency_ms=0,
                         )
 
-                    base_url = (
-                        req.base_url or settings.LLM_OPENROUTER_BASE_URL
-                    ).rstrip("/")
+                    base_url = (req.base_url or settings.LLM_OPENROUTER_BASE_URL).rstrip("/")
                     resp = await client.get(
                         f"{base_url}/models",
                         headers={
@@ -295,11 +491,16 @@ class SettingsService:
                     if resp.status_code == 200:
                         data = resp.json()
                         raw_models = data.get("data", [])
-                        model_ids = [m.get("id") for m in raw_models if isinstance(m, dict) and "id" in m]
+                        model_ids = [
+                            m.get("id") for m in raw_models if isinstance(m, dict) and "id" in m
+                        ]
                         free_models = [m for m in model_ids if m and m.endswith(":free")]
                         return VerifyKeyResponse(
                             ok=True,
-                            message=f"Connected to OpenRouter ({len(model_ids)} models available, {len(free_models)} zero-cost)",
+                            message=(
+                                f"Connected to OpenRouter ({len(model_ids)} models available, "
+                                f"{len(free_models)} zero-cost)"
+                            ),
                             latency_ms=latency,
                             models_found=free_models[:10],
                         )
@@ -334,7 +535,9 @@ class SettingsService:
                     if resp.status_code == 200:
                         data = resp.json()
                         raw_models = data.get("data", [])
-                        model_ids = [m.get("id") for m in raw_models if isinstance(m, dict) and "id" in m]
+                        model_ids = [
+                            m.get("id") for m in raw_models if isinstance(m, dict) and "id" in m
+                        ]
                         return VerifyKeyResponse(
                             ok=True,
                             message=f"Connected to endpoint ({len(model_ids)} models found)",
@@ -365,11 +568,16 @@ class SettingsService:
                     if resp.status_code == 200:
                         data = resp.json()
                         raw_models = data.get("data", [])
-                        model_ids = [m.get("id") for m in raw_models if isinstance(m, dict) and "id" in m]
+                        model_ids = [
+                            m.get("id") for m in raw_models if isinstance(m, dict) and "id" in m
+                        ]
                         whisper_models = [m for m in model_ids if "whisper" in m.lower()]
                         return VerifyKeyResponse(
                             ok=True,
-                            message=f"Connected to Groq Cloud Whisper API ({len(whisper_models)} speech models ready)",
+                            message=(
+                                f"Connected to Groq Cloud Whisper API "
+                                f"({len(whisper_models)} speech models ready)"
+                            ),
                             latency_ms=latency,
                             models_found=whisper_models,
                         )
@@ -418,46 +626,49 @@ class SettingsService:
                         latency_ms=latency,
                     )
 
-                elif provider == "gemini":
-                    key = req.api_key or settings.LLM_API_KEY
+                elif provider in ("huggingface", "hf"):
+                    key = req.api_key or settings.HF_TOKEN
                     if not key:
                         return VerifyKeyResponse(
                             ok=False,
-                            message="No Gemini API key provided or configured.",
+                            message="No Hugging Face token provided or configured.",
                             latency_ms=0,
                         )
 
                     resp = await client.get(
-                        f"https://generativelanguage.googleapis.com/v1beta/models?key={key.strip()}"
+                        "https://huggingface.co/api/whoami-v2",
+                        headers={"Authorization": f"Bearer {key.strip()}"},
                     )
                     latency = int((time.monotonic() - t0) * 1000)
 
                     if resp.status_code == 200:
                         data = resp.json()
-                        raw_models = data.get("models", [])
-                        names = [m.get("displayName", m.get("name")) for m in raw_models if isinstance(m, dict)]
+                        user_name = data.get("name", "account verified")
                         return VerifyKeyResponse(
                             ok=True,
-                            message=f"Connected to Google Gemini API ({len(names)} models available)",
+                            message=f"Connected to Hugging Face API ({user_name})",
                             latency_ms=latency,
-                            models_found=names[:6],
                         )
-                    if resp.status_code in (400, 403):
+                    if resp.status_code == 401:
                         return VerifyKeyResponse(
                             ok=False,
-                            message="API key rejected by Google Gemini API.",
+                            message="401 Unauthorized: Invalid Hugging Face token.",
                             latency_ms=latency,
                         )
                     return VerifyKeyResponse(
                         ok=False,
-                        message=f"Gemini returned HTTP {resp.status_code}: {resp.text[:120]}",
+                        message=f"Hugging Face returned HTTP {resp.status_code}: {resp.text[:120]}",
                         latency_ms=latency,
                     )
 
                 else:
                     return VerifyKeyResponse(
                         ok=False,
-                        message=f"Unknown provider '{provider}'. Supported: openrouter, openai_compatible, groq, assemblyai, gemini",
+                        message=(
+                            f"Unknown provider '{provider}'. "
+                            "Supported: openrouter, openai_compatible, "
+                            "groq, assemblyai, huggingface"
+                        ),
                         latency_ms=0,
                     )
 
@@ -465,7 +676,14 @@ class SettingsService:
             latency = int((time.monotonic() - t0) * 1000)
             return VerifyKeyResponse(
                 ok=False,
-                message="Connection timed out after 10 seconds. Check network or host address.",
+                message="Connection timed out after 8 seconds. Check network or host address.",
+                latency_ms=latency,
+            )
+        except (httpx.ConnectError, httpx.ConnectTimeout):
+            latency = int((time.monotonic() - t0) * 1000)
+            return VerifyKeyResponse(
+                ok=False,
+                message="Connection refused: Target host is unreachable or not running.",
                 latency_ms=latency,
             )
         except (httpx.RequestError, OSError) as e:
@@ -501,6 +719,14 @@ class SettingsService:
     @classmethod
     def reset_to_defaults(cls, db_path: Path | None = None) -> SettingsResponse:
         """Clear user_settings table overrides and reset to code defaults."""
+        data_dir = settings.get_effective_data_dir()
+        mirror_file = data_dir / "settings.json"
+        if mirror_file.exists():
+            try:
+                mirror_file.unlink()
+            except OSError:
+                pass
+
         with get_connection(db_path) as conn:
             cursor = conn.execute("SELECT key FROM user_settings")
             keys = [r["key"] for r in cursor.fetchall()]
@@ -519,6 +745,7 @@ class SettingsService:
                     setattr(settings, k, val)
         else:
             from app.core.config import Settings
+
             fresh = Settings()
             for k in dir(fresh):
                 if k.isupper() and not k.startswith("_"):

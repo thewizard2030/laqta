@@ -1,0 +1,18 @@
+---
+name: backend-tests
+discover: cd backend && find tests -type f -name 'test*.py' | sort
+run: cd backend && python -m pytest -n auto --disable-pytest-warnings --no-header --quiet --tb=short --override-ini=junit_family=legacy --junit-xml="<< outputs.junit >>" << test.atoms >>
+options:
+  store-test-results: true
+---
+name: core-tests
+discover: find tests -type f -name 'test*.py' | sort
+run: python -m pytest --disable-pytest-warnings --no-header --quiet --tb=short --override-ini=junit_family=legacy --junit-xml="<< outputs.junit >>" << test.atoms >>
+options:
+  store-test-results: true
+---
+name: frontend-tests
+discover: cd frontend && npx vitest list --filesOnly
+run: cd frontend && npx vitest run --reporter=junit --outputFile="<< outputs.junit >>" --bail 0 << test.atoms >>
+options:
+  store-test-results: true

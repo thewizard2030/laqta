@@ -10,7 +10,7 @@ describe("BrandLogo Component", () => {
     expect(mark).toBeInTheDocument();
 
     expect(screen.getByText("Laqta")).toBeInTheDocument();
-    expect(screen.getByText("لقطّة")).toBeInTheDocument();
+    expect(screen.getByText("لقطة")).toBeInTheDocument();
     expect(screen.getByText(/Long Videos/i)).toBeInTheDocument();
     expect(screen.getByText(/Viral Shorts/i)).toBeInTheDocument();
   });

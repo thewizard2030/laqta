@@ -234,4 +234,66 @@ describe("SettingsView & BYOK Studio", () => {
       expect(screen.getByText(/Cleared 5 cached transcripts/i)).toBeInTheDocument();
     });
   });
+
+  it("handles discarding unsaved changes and factory reset", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(api, "resetSettings").mockResolvedValue({
+      ...mockSettings,
+      allow_cloud_apis: false,
+    });
+
+    render(<SettingsView capabilities={mockCapabilities} />);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Master Cloud APIs Switch/i)).toBeInTheDocument();
+    });
+
+    // Toggle Cloud APIs to create unsaved changes
+    const cloudToggle = screen.getByTestId("toggle-allow-cloud-apis");
+    await user.click(cloudToggle);
+
+    expect(screen.getByTestId("unsaved-changes-badge")).toBeInTheDocument();
+
+    // Click Discard
+    const discardBtn = screen.getByRole("button", { name: /Discard/i });
+    await user.click(discardBtn);
+
+    expect(screen.queryByTestId("unsaved-changes-badge")).not.toBeInTheDocument();
+
+    // Click Reset Defaults
+    const resetBtn = screen.getByTestId("reset-defaults-btn");
+    await user.click(resetBtn);
+
+    await waitFor(() => {
+      expect(screen.getByText(/Reset All Settings to Defaults\?/i)).toBeInTheDocument();
+    });
+    const confirmBtn = screen.getByRole("button", { name: /Reset to Defaults/i });
+    await user.click(confirmBtn);
+
+    await waitFor(() => {
+      expect(api.resetSettings).toHaveBeenCalled();
+    });
+  });
+
+  it("supports refreshing system capabilities audit", async () => {
+    const user = userEvent.setup();
+    const onRefresh = vi.fn().mockResolvedValue(undefined);
+
+    render(<SettingsView capabilities={mockCapabilities} onRefreshCapabilities={onRefresh} />);
+
+    await waitFor(() => {
+      expect(screen.getByRole("tab", { name: /System Audit/i })).toBeInTheDocument();
+    });
+
+    await user.click(screen.getByRole("tab", { name: /System Audit/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText(/System Runtime & Media Capabilities/i)).toBeInTheDocument();
+    });
+
+    const refreshBtn = screen.getByRole("button", { name: /Refresh Audit/i });
+    await user.click(refreshBtn);
+
+    expect(onRefresh).toHaveBeenCalledTimes(1);
+  });
 });

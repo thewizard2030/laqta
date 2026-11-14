@@ -19,3 +19,8 @@ pytest-xdist>=3.6.0
 ruff>=0.5.0
 # Dependency audit used by scripts/check.sh and the weekly audit workflow.
 pip-audit>=2.7.0
+
+# Optional backend modules exercised by tests (ASR & URL ingestion)
+faster-whisper>=1.1
+ctranslate2
+yt-dlp>=2024.04

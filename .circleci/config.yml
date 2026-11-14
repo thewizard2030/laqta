@@ -1,0 +1,131 @@
+version: 2.1
+
+# -----------------------------------------------------------------------------
+# CircleCI Configuration for Laqta (لقطة)
+# High-performance, concurrent CI pipeline with Smarter Testing & caching.
+# -----------------------------------------------------------------------------
+
+executors:
+  python-executor:
+    docker:
+      - image: cimg/python:3.12
+    resource_class: medium
+    environment:
+      PYTHONPATH: ".:backend"
+
+  node-executor:
+    docker:
+      - image: cimg/node:22.14
+    resource_class: medium
+
+jobs:
+  backend:
+    executor: python-executor
+    steps:
+      - checkout
+
+      - run:
+          name: Install media dependencies
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y ffmpeg libass-dev espeak-ng
+
+      - restore_cache:
+          name: Restore Python pip cache
+          keys:
+            - v1-pip-{{ checksum "backend/requirements-dev.txt" }}-{{ checksum "backend/requirements.txt" }}-{{ checksum "pyproject.toml" }}
+            - v1-pip-
+
+      - run:
+          name: Install Python dependencies
+          command: |
+            python -m pip install --upgrade pip
+            python -m pip install -r backend/requirements-dev.txt
+            python -m pip install -e ".[asr,url]"
+            python -m pip install -e ./backend
+            python -m pip install ruff
+
+      - save_cache:
+          name: Save Python pip cache
+          key: v1-pip-{{ checksum "backend/requirements-dev.txt" }}-{{ checksum "backend/requirements.txt" }}-{{ checksum "pyproject.toml" }}
+          paths:
+            - ~/.cache/pip
+
+      - run:
+          name: Check version consistency across manifests
+          command: python scripts/check_version.py
+
+      - run:
+          name: Lint and format check (ruff)
+          command: |
+            python -m ruff check qatta backend/app backend/tests tests scripts
+            python -m ruff format --check qatta backend/app backend/tests tests scripts
+
+      - run:
+          name: Ensure CircleCI testsuite extension
+          command: circleci extension install testsuite --quiet 2>/dev/null || true
+
+      - run:
+          name: Run backend test suite (Smarter Testing)
+          command: circleci testsuite run "backend-tests"
+
+      - run:
+          name: Run core pipeline test suite (Smarter Testing)
+          command: circleci testsuite run "core-tests"
+
+  frontend:
+    executor: node-executor
+    steps:
+      - checkout
+
+      - restore_cache:
+          name: Restore npm cache
+          keys:
+            - v1-npm-{{ checksum "frontend/package-lock.json" }}
+            - v1-npm-
+
+      - run:
+          name: Install npm dependencies
+          working_directory: frontend
+          command: npm ci
+
+      - save_cache:
+          name: Save npm cache
+          key: v1-npm-{{ checksum "frontend/package-lock.json" }}
+          paths:
+            - ~/.npm
+
+      - run:
+          name: Typecheck (tsc)
+          working_directory: frontend
+          command: npm run typecheck
+
+      - run:
+          name: Lint (eslint)
+          working_directory: frontend
+          command: npm run lint
+
+      - run:
+          name: Check formatting (prettier)
+          working_directory: frontend
+          command: npm run format:check
+
+      - run:
+          name: Ensure CircleCI testsuite extension
+          command: circleci extension install testsuite --quiet 2>/dev/null || true
+
+      - run:
+          name: Run frontend unit tests (Smarter Testing)
+          command: circleci testsuite run "frontend-tests"
+
+      - run:
+          name: Production build (vite)
+          working_directory: frontend
+          command: npm run build
+
+workflows:
+  version: 2
+  ci:
+    jobs:
+      - backend
+      - frontend

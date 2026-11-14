@@ -36,8 +36,18 @@ while [[ $# -gt 0 ]]; do
 done
 
 # --- Python -----------------------------------------------------------------
-PYTHON_BIN="${PYTHON:-python3}"
-command -v "$PYTHON_BIN" >/dev/null 2>&1 || fail "python3 was not found. Install Python 3.11+."
+if [[ -z "${PYTHON:-}" ]]; then
+  if command -v python3.12 >/dev/null 2>&1; then
+    PYTHON_BIN="python3.12"
+  elif command -v python3.11 >/dev/null 2>&1; then
+    PYTHON_BIN="python3.11"
+  else
+    PYTHON_BIN="python3"
+  fi
+else
+  PYTHON_BIN="$PYTHON"
+fi
+command -v "$PYTHON_BIN" >/dev/null 2>&1 || fail "Python binary '$PYTHON_BIN' not found. Install Python 3.11 or 3.12."
 
 PY_VERSION="$("$PYTHON_BIN" -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
 if ! "$PYTHON_BIN" -c 'import sys; raise SystemExit(0 if sys.version_info >= (3, 11) else 1)'; then

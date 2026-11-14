@@ -30,7 +30,7 @@ class SettingsResponse(BaseModel):
     llm_ranker_enabled: bool = Field(..., description="Whether LLM reranker is active")
     llm_provider: str = Field(
         ...,
-        description="Active LLM provider adapter: 'openrouter', 'openai_compatible', 'gemini', 'groq'",
+        description="Active LLM provider adapter: 'openrouter', 'openai_compatible', 'groq'",
     )
     llm_base_url: str = Field(..., description="Base URL for local/custom OpenAI-compatible API")
     llm_model: str = Field(..., description="Model name for OpenAI-compatible endpoint")
@@ -92,7 +92,10 @@ class SettingsResponse(BaseModel):
         description="Whether to include Arablish technical terms in transcription prompt",
     )
     arabish_prompt_text: str = Field(
-        default="محاضرة وبودكاست باللهجة المصرية والعربية مع مصطلحات تقنية مثل AI, API, SaaS, Startup, Deployment, Marketing, ROI.",
+        default=(
+            "محاضرة وبودكاست باللهجة المصرية والعربية مع مصطلحات تقنية مثل "
+            "AI, API, SaaS, Startup, Deployment, Marketing, ROI."
+        ),
         description="Initial prompt injected into Whisper for code-switching",
     )
 
@@ -182,7 +185,9 @@ class VerifyKeyRequest(BaseModel):
 
     provider: str = Field(
         ...,
-        description="Provider name: 'openrouter', 'openai_compatible', 'groq', 'assemblyai', 'gemini'",
+        description=(
+            "Provider name: 'openrouter', 'openai_compatible', 'groq', 'assemblyai', 'huggingface'"
+        ),
     )
     api_key: str | None = Field(
         default=None,

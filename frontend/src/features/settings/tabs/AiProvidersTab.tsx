@@ -162,7 +162,7 @@ export const AiProvidersTab: React.FC<AiProvidersTabProps> = ({ settings, draft,
         {/* Provider Selection */}
         <div className="space-y-3">
           <label className="text-xs font-semibold text-slate-300">Select LLM Adapter</label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             {[
               {
                 id: "openrouter",
@@ -177,13 +177,6 @@ export const AiProvidersTab: React.FC<AiProvidersTabProps> = ({ settings, draft,
                 badge: "100% Local Server",
                 desc: "Loopback OpenAI-compatible inference",
                 icon: <Server className="h-4 w-4 text-emerald-400" />,
-              },
-              {
-                id: "gemini",
-                name: "Google Gemini",
-                badge: "Direct Cloud API",
-                desc: "Gemini 2.5 Flash / Pro reasoning",
-                icon: <Sparkles className="h-4 w-4 text-cyan-400" />,
               },
               {
                 id: "groq",
@@ -651,6 +644,24 @@ export const AiProvidersTab: React.FC<AiProvidersTabProps> = ({ settings, draft,
                 {showHfToken ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
               </button>
             </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              loading={verifying === "huggingface"}
+              onClick={() => handleTestKey("huggingface", draft.hf_token)}
+              className="w-full"
+            >
+              Test Hugging Face
+            </Button>
+            {verifyResult["huggingface"] && (
+              <p
+                className={`text-[11px] ${
+                  verifyResult["huggingface"]?.ok ? "text-emerald-400" : "text-red-400"
+                }`}
+              >
+                {verifyResult["huggingface"]?.message}
+              </p>
+            )}
             <p className="text-[10px] text-slate-500 leading-tight">
               Used when downloading gated or rate-limited Whisper model weights from Hugging Face
               Hub.
