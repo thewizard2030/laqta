@@ -282,7 +282,7 @@ flowchart TD
     Pipeline -.->|Requires Explicit Opt-In| Gate
     Gate -->|Yes| HostedASR
     Gate -->|Yes| HostedLLM
-    Gate -->|No (Default)| Whisper
+    Gate -->|"No (Default)"| Whisper
 ```
 
 ### Subsystems Breakdown

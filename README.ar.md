@@ -284,7 +284,7 @@ flowchart TD
     Pipeline -.->|يتطلب موافقة وتفعيل صريح| Gate
     Gate -->|نعم| HostedASR
     Gate -->|نعم| HostedLLM
-    Gate -->|لا (الافتراضي)| Whisper
+    Gate -->|"لا (الافتراضي)"| Whisper
 ```
 
 ### تقسيم الأنظمة الفرعية
