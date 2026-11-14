@@ -11,7 +11,6 @@ executors:
       - image: cimg/python:3.12
     resource_class: medium
     environment:
-      PATH: "/home/circleci/.local/bin:/usr/local/bin:/usr/bin:/bin"
       PYTHONPATH: ".:backend"
 
   node-executor:
