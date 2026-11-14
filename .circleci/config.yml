@@ -28,7 +28,7 @@ jobs:
           name: Install media dependencies
           command: |
             sudo apt-get update
-            sudo apt-get install -y ffmpeg libass-dev
+            sudo apt-get install -y ffmpeg libass-dev espeak-ng
 
       - restore_cache:
           name: Restore Python pip cache
@@ -41,7 +41,7 @@ jobs:
           command: |
             python -m pip install --upgrade pip
             python -m pip install -r backend/requirements-dev.txt
-            python -m pip install -e .
+            python -m pip install -e ".[asr,url]"
             python -m pip install -e ./backend
             python -m pip install ruff
 
