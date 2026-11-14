@@ -35,20 +35,20 @@ The Smarter Testing configuration defines three clean, isolated test suites:
 ```yaml
 ---
 name: backend-tests
-discover: find backend/tests -type f -name 'test*.py' | sort
-run: PYTHONPATH=".:backend" pytest --disable-pytest-warnings --no-header --quiet --tb=short --override-ini=junit_family=legacy --junit-xml="<< outputs.junit >>" << test.atoms >>
+discover: cd backend && find tests -type f -name 'test*.py' | sort
+run: cd backend && python -m pytest -n auto --disable-pytest-warnings --no-header --quiet --tb=short --override-ini=junit_family=legacy --junit-xml="<< outputs.junit >>" << test.atoms >>
 options:
   store-test-results: true
 ```
 - **Discovery**: Automatically identifies all 26 Python test files in `backend/tests/` (FastAPI routes, SQLite services, BYOK settings, jobs, rendering).
-- **Execution**: Invokes pytest with JUnit XML output directly delivered to CircleCI's test results collector.
+- **Execution**: Runs pytest in parallel (`-n auto`) from the `backend/` directory using `backend/pyproject.toml` configuration, with JUnit XML output directly delivered to CircleCI's test results collector.
 
 ### 2. Core Pipeline Test Suite (`core-tests`)
 ```yaml
 ---
 name: core-tests
 discover: find tests -type f -name 'test*.py' | sort
-run: pytest --disable-pytest-warnings --no-header --quiet --tb=short --override-ini=junit_family=legacy --junit-xml="<< outputs.junit >>" << test.atoms >>
+run: python -m pytest --disable-pytest-warnings --no-header --quiet --tb=short --override-ini=junit_family=legacy --junit-xml="<< outputs.junit >>" << test.atoms >>
 options:
   store-test-results: true
 ```

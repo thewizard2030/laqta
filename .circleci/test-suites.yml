@@ -1,13 +1,13 @@
 ---
 name: backend-tests
-discover: find backend/tests -type f -name 'test*.py' | sort
-run: PYTHONPATH=".:backend" pytest --disable-pytest-warnings --no-header --quiet --tb=short --override-ini=junit_family=legacy --junit-xml="<< outputs.junit >>" << test.atoms >>
+discover: cd backend && find tests -type f -name 'test*.py' | sort
+run: cd backend && python -m pytest -n auto --disable-pytest-warnings --no-header --quiet --tb=short --override-ini=junit_family=legacy --junit-xml="<< outputs.junit >>" << test.atoms >>
 options:
   store-test-results: true
 ---
 name: core-tests
 discover: find tests -type f -name 'test*.py' | sort
-run: pytest --disable-pytest-warnings --no-header --quiet --tb=short --override-ini=junit_family=legacy --junit-xml="<< outputs.junit >>" << test.atoms >>
+run: python -m pytest --disable-pytest-warnings --no-header --quiet --tb=short --override-ini=junit_family=legacy --junit-xml="<< outputs.junit >>" << test.atoms >>
 options:
   store-test-results: true
 ---

@@ -11,6 +11,7 @@ executors:
       - image: cimg/python:3.12
     resource_class: medium
     environment:
+      PATH: "/home/circleci/.local/bin:/usr/local/bin:/usr/bin:/bin"
       PYTHONPATH: ".:backend"
 
   node-executor:
@@ -40,10 +41,10 @@ jobs:
           name: Install Python dependencies
           command: |
             python -m pip install --upgrade pip
-            pip install -r backend/requirements-dev.txt
-            pip install -e .
-            pip install -e ./backend
-            pip install ruff
+            python -m pip install -r backend/requirements-dev.txt
+            python -m pip install -e .
+            python -m pip install -e ./backend
+            python -m pip install ruff
 
       - save_cache:
           name: Save Python pip cache
@@ -58,8 +59,8 @@ jobs:
       - run:
           name: Lint and format check (ruff)
           command: |
-            ruff check qatta backend/app backend/tests tests scripts
-            ruff format --check qatta backend/app backend/tests tests scripts
+            python -m ruff check qatta backend/app backend/tests tests scripts
+            python -m ruff format --check qatta backend/app backend/tests tests scripts
 
       - run:
           name: Ensure CircleCI testsuite extension
