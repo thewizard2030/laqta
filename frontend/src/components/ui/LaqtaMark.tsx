@@ -1,7 +1,9 @@
-import React from "react";
+import React, { useId } from "react";
+
+export type LaqtaMarkVariant = "badge" | "symbol" | "monochrome";
 
 interface LaqtaMarkProps {
-  /** Rendered width/height in pixels. */
+  /** Rendered width/height in pixels. Default is 36. */
   size?: number;
   className?: string;
   /**
@@ -9,55 +11,130 @@ interface LaqtaMarkProps {
    * caller should pass `""` so the logo is not announced twice.
    */
   title?: string;
+  /**
+   * Visual variant:
+   * - "badge": Official square gradient app icon with rounded corners and white elements
+   * - "symbol": Standalone transparent mark with gradient L and accent cues
+   * - "monochrome": Single-color clean vector mark
+   */
+  variant?: LaqtaMarkVariant;
 }
 
 /**
- * The Laqta mark.
+ * Official Laqta Mark.
  *
- * A rounded "L" monogram cut from a violet-to-cyan gradient: the vertical
- * stem is the timeline, the horizontal foot is the cut, and the diagonal
- * notch on the shoulder mirrors the playback wedge of the old Qatta mark.
- * It is inline SVG so it stays crisp at every size and in both themes.
+ * Direct vector implementation of the official Brand Kit geometry:
+ * - Geometric "L" (timeline + cut)
+ * - Play triangle (media playback)
+ * - Three vertical frame cues (story frames)
+ *
+ * Vector source: `Laqta_Brand_Kit/svg/laqta-app-icon.svg` & `laqta-symbol.svg`
  */
 export const LaqtaMark: React.FC<LaqtaMarkProps> = ({
   size = 36,
   className = "",
   title = "Laqta",
+  variant = "badge",
 }) => {
-  const gradientId = `laqta-mark-${size}`;
+  const rawId = useId();
+  const safeId = rawId.replace(/[^a-zA-Z0-9_-]/g, "");
+  const bgGradId = `laqta-bg-${safeId}-${size}`;
+  const markGradId = `laqta-mark-${safeId}-${size}`;
+  const accentGradId = `laqta-accent-${safeId}-${size}`;
 
   return (
     <svg
       width={size}
       height={size}
-      viewBox="0 0 48 48"
+      viewBox="0 0 1024 1024"
       role={title ? "img" : "presentation"}
       aria-label={title || undefined}
       aria-hidden={title ? undefined : true}
       focusable="false"
-      className={className}
+      className={`shrink-0 ${className}`}
       data-testid="laqta-mark"
     >
       {title && <title>{title}</title>}
       <defs>
-        <linearGradient id={gradientId} x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0%" stopColor="#8b5cf6" />
-          <stop offset="55%" stopColor="#7c4dff" />
-          <stop offset="100%" stopColor="#22d3ee" />
+        {/* Official brand gradient for badge background: Violet -> Purple -> Cyan */}
+        <linearGradient id={bgGradId} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#A72BFF" />
+          <stop offset="48%" stopColor="#5637F5" />
+          <stop offset="100%" stopColor="#00C9E8" />
+        </linearGradient>
+
+        {/* Gradient for standalone mark */}
+        <linearGradient id={markGradId} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="#B34CFF" />
+          <stop offset="52%" stopColor="#6544F5" />
+          <stop offset="100%" stopColor="#00CBEA" />
+        </linearGradient>
+
+        {/* Gradient for accent cues */}
+        <linearGradient id={accentGradId} x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor="#9B35FF" />
+          <stop offset="100%" stopColor="#00CDEB" />
         </linearGradient>
       </defs>
 
-      {/* Badge */}
-      <rect width="48" height="48" rx="14" fill={`url(#${gradientId})`} />
+      {variant === "badge" && (
+        <>
+          {/* Rounded gradient badge */}
+          <rect width="1024" height="1024" rx="220" fill={`url(#${bgGradId})`} />
+          {/* Diagonal cut shadow */}
+          <path d="M560 0 H1024 V620 Z" fill="#09102E" opacity="0.12" />
+          {/* Geometric L shape */}
+          <path d="M270 240 H408 V648 H750 V786 H338 C300 786 270 756 270 718 Z" fill="#FFFFFF" />
+          {/* Play triangle */}
+          <path d="M492 350 L680 470 L492 590 Z" fill="#FFFFFF" />
+          {/* Three frame cues */}
+          <rect x="742" y="242" width="70" height="70" rx="15" fill="#FFFFFF" />
+          <rect x="742" y="352" width="70" height="70" rx="15" fill="#FFFFFF" opacity="0.82" />
+          <rect x="742" y="462" width="70" height="70" rx="15" fill="#FFFFFF" opacity="0.64" />
+        </>
+      )}
 
-      {/* Diagonal "cut" notch on the shoulder */}
-      <path d="M48 12 L36 12 L48 26 Z" fill="#070A11" fillOpacity="0.28" />
+      {variant === "symbol" && (
+        <g>
+          {/* Gradient L mark */}
+          <path
+            d="M270 240 H408 V648 H750 V786 H338 C300 786 270 756 270 718 Z"
+            fill={`url(#${markGradId})`}
+          />
+          {/* Play triangle */}
+          <path d="M492 350 L680 470 L492 590 Z" fill="#FFFFFF" />
+          {/* Three accent frame cues */}
+          <rect x="742" y="242" width="70" height="70" rx="15" fill={`url(#${accentGradId})`} />
+          <rect
+            x="742"
+            y="352"
+            width="70"
+            height="70"
+            rx="15"
+            fill={`url(#${accentGradId})`}
+            opacity="0.82"
+          />
+          <rect
+            x="742"
+            y="462"
+            width="70"
+            height="70"
+            rx="15"
+            fill={`url(#${accentGradId})`}
+            opacity="0.64"
+          />
+        </g>
+      )}
 
-      {/* L monogram: the stem is the timeline, the foot is the cut. */}
-      <path d="M13 11 H21 V27 H35 V35 H13 Z" fill="#FFFFFF" />
-
-      {/* Playback wedge in the counter of the L */}
-      <path d="M25 12.5 L33 17 L25 21.5 Z" fill="#FFFFFF" fillOpacity="0.92" />
+      {variant === "monochrome" && (
+        <g fill="currentColor">
+          <path d="M270 240 H408 V648 H750 V786 H338 C300 786 270 756 270 718 Z" />
+          <path d="M492 350 L680 470 L492 590 Z" />
+          <rect x="742" y="242" width="70" height="70" rx="15" />
+          <rect x="742" y="352" width="70" height="70" rx="15" opacity="0.82" />
+          <rect x="742" y="462" width="70" height="70" rx="15" opacity="0.64" />
+        </g>
+      )}
     </svg>
   );
 };

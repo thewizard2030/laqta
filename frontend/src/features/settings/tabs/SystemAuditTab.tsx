@@ -54,9 +54,10 @@ export const SystemAuditTab: React.FC<SystemAuditTabProps> = ({
               loading={refreshing}
               onClick={handleRefresh}
               className="gap-1.5"
+              aria-label="Refresh Audit"
             >
               <RefreshCw className="h-3.5 w-3.5" />
-              <span>Re-probe Engine</span>
+              <span>Refresh Audit</span>
             </Button>
           )}
         </div>

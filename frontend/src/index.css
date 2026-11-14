@@ -1,45 +1,63 @@
 @import "tailwindcss";
 
 /* ───────────────────────────────────────────────────────────────────────────
-   Laqta design tokens (Tailwind v4 is CSS-first: the theme lives here).
+   Laqta official brand system (Tailwind v4 is CSS-first: the theme lives here).
 
-   Every custom colour, shadow, radius and easing is declared in @theme, so
-   the same utility names work as in v3 (`bg-laqta-600`, `shadow-neon-purple`,
-   `rounded-card`, `ease-out-expo`).
+   Official Brand Kit Colors:
+   - Ink:        #070A14 (Main dark background)
+   - Deep Navy:  #10162B (Elevated surfaces / dark navy)
+   - Violet:     #A72BFF (Gradient start / primary accent)
+   - Purple:     #5637F5 (Gradient middle / brand primary)
+   - Electric Blue: #4F46E5 / #3B82F6 (Interface blue)
+   - Cyan:       #00C9E8 (Gradient end / live status accent)
+   - White:      #F8FAFF (Dark-mode primary text / logo white)
+   - Muted:      #AAB6CC (Secondary & muted typography)
    ─────────────────────────────────────────────────────────────────────────── */
 @theme {
-  /* Laqta identity ramp — the single violet scale every brand surface
-     (logo, dashboard, studio accents) draws from. */
-  --color-laqta-50: #f5f3ff;
-  --color-laqta-100: #ede9fe;
-  --color-laqta-200: #ddd6fe;
-  --color-laqta-300: #c4b5fd;
-  --color-laqta-400: #a78bfa;
-  --color-laqta-500: #8b5cf6;
-  --color-laqta-600: #7c4dff;
-  --color-laqta-700: #6d28d9;
-  --color-laqta-800: #5b21b6;
-  --color-laqta-900: #4c1d95;
-  --color-laqta-950: #2e1065;
+  /* Official Laqta identity tokens */
+  --color-laqta-primary: #5637f5;
+  --color-laqta-violet: #a72bff;
+  --color-laqta-blue: #4f46e5;
+  --color-laqta-cyan: #00c9e8;
+  --color-laqta-background: #070a14;
+  --color-laqta-surface: #0e1424;
+  --color-laqta-border: rgba(148, 163, 184, 0.14);
+  --color-laqta-text: #f8faff;
+  --color-laqta-muted: #aab6cc;
 
-  --color-brand-50: #f5f3ff;
-  --color-brand-100: #ede9fe;
-  --color-brand-500: #8b5cf6;
-  --color-brand-600: #7c4dff;
-  --color-brand-700: #6d28d9;
+  /* Laqta identity ramp — violet to purple */
+  --color-laqta-50: #fbf8ff;
+  --color-laqta-100: #f3ecfe;
+  --color-laqta-200: #e5d8fd;
+  --color-laqta-300: #cfb8fc;
+  --color-laqta-400: #a72bff;
+  --color-laqta-500: #7c3aed;
+  --color-laqta-600: #5637f5;
+  --color-laqta-700: #4625de;
+  --color-laqta-800: #3718b5;
+  --color-laqta-900: #250b86;
+  --color-laqta-950: #140450;
 
-  /* The obsidian surface ramp. */
-  --color-obsidian-950: #070a11;
+  --color-brand-50: #fbf8ff;
+  --color-brand-100: #f3ecfe;
+  --color-brand-500: #7c3aed;
+  --color-brand-600: #5637f5;
+  --color-brand-700: #4625de;
+
+  /* The obsidian surface ramp, anchored on Brand Kit Ink (#070A14) */
+  --color-obsidian-950: #070a14;
   --color-obsidian-900: #0b0f19;
   --color-obsidian-850: #0e1424;
   --color-obsidian-800: #141c30;
+  --color-obsidian-750: #10162b;
   --color-obsidian-700: #1e293b;
 
-  /* Accents — cyan is reserved for live state, violet for brand/selection. */
-  --color-neon-cyan: #22d3ee;
-  --color-neon-cyanGlow: #67e8f9;
-  --color-neon-purple: #7c4dff;
-  --color-neon-purpleGlow: #a78bfa;
+  /* Accents — cyan is reserved for live state, violet/purple for brand */
+  --color-neon-cyan: #00c9e8;
+  --color-neon-cyanGlow: #38e1fa;
+  --color-neon-purple: #5637f5;
+  --color-neon-purpleGlow: #a72bff;
+  --color-neon-violet: #a72bff;
   --color-neon-magenta: #d946ef;
   --color-neon-emerald: #10b981;
   --color-neon-amber: #f59e0b;
@@ -48,10 +66,10 @@
   --color-hairline-strong: rgba(148, 163, 184, 0.24);
 
   /* Shadows */
-  --shadow-neon-cyan: 0 0 15px -2px rgba(34, 211, 238, 0.45),
-    0 0 6px -1px rgba(8, 145, 178, 0.6);
-  --shadow-neon-purple: 0 0 18px -2px rgba(124, 77, 255, 0.45),
-    0 0 6px -1px rgba(167, 139, 250, 0.6);
+  --shadow-neon-cyan: 0 0 15px -2px rgba(0, 201, 232, 0.45),
+    0 0 6px -1px rgba(0, 201, 232, 0.6);
+  --shadow-neon-purple: 0 0 18px -2px rgba(86, 55, 245, 0.45),
+    0 0 6px -1px rgba(167, 43, 255, 0.6);
   --shadow-neon-emerald: 0 0 15px -2px rgba(16, 185, 129, 0.45),
     0 0 6px -1px rgba(52, 211, 153, 0.6);
   --shadow-neon-card: 0 4px 20px -2px rgba(0, 0, 0, 0.7),
@@ -62,16 +80,16 @@
     inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
   --shadow-panel-lg: 0 30px 70px -30px rgba(0, 0, 0, 0.95),
     inset 0 1px 0 0 rgba(255, 255, 255, 0.05);
-  --shadow-laqta-glow: 0 10px 30px -12px rgba(124, 77, 255, 0.55);
-  --shadow-focus: 0 0 0 2px #070a11, 0 0 0 4px rgba(124, 77, 255, 0.9);
+  --shadow-laqta-glow: 0 10px 30px -10px rgba(86, 55, 245, 0.55);
+  --shadow-focus: 0 0 0 2px #070a14, 0 0 0 4px rgba(86, 55, 245, 0.9);
 
   /* Radii */
   --radius-card: 1rem;
   --radius-control: 0.75rem;
 
-  /* Typography — the system stack, because Laqta must work offline. */
+  /* Typography — system stack with Manrope & Inter support when available */
   --font-sans:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Manrope, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
     Arial, sans-serif;
   --font-mono:
     ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
@@ -84,45 +102,69 @@
 :root {
   color-scheme: dark;
 
-  /* --- Design tokens -------------------------------------------------
-     A single source of truth for the obsidian surface ramp, the hairline
-     border colour and the text ramp. Components read these through the
-     Tailwind theme so a re-skin only has to touch one place.            */
-  --surface-0: #070a11; /* obsidian-950 — app background */
-  --surface-1: #0b0f19; /* obsidian-900 — panels            */
-  --surface-2: #0e1424; /* obsidian-850 — raised surfaces   */
-  --surface-3: #141c30; /* obsidian-800 — inputs            */
+  /* --- Semantic Brand Tokens -------------------------------------------
+     Declared according to the Laqta Brand Identity specification.
+     Exact colors extracted from Laqta Brand Kit source vector definitions. */
+  --laqta-primary: #5637f5;
+  --laqta-violet: #a72bff;
+  --laqta-blue: #4f46e5;
+  --laqta-cyan: #00c9e8;
+  --laqta-background: #070a14;
+  --laqta-surface: #0e1424;
+  --laqta-surface-panel: #0b0f19;
+  --laqta-surface-elevated: #10162b;
+  --laqta-border: rgba(148, 163, 184, 0.14);
+  --laqta-text: #f8faff;
+  --laqta-muted: #aab6cc;
+
+  /* Surface ramp */
+  --surface-0: #070a14; /* Ink — app background */
+  --surface-1: #0b0f19; /* panels */
+  --surface-2: #0e1424; /* raised surfaces */
+  --surface-3: #141c30; /* inputs */
+  --surface-elevated: #10162b; /* deep navy elevated */
+
+  /* Hairlines and dividers */
   --hairline: rgba(148, 163, 184, 0.14);
   --hairline-strong: rgba(148, 163, 184, 0.24);
-  --text-strong: #f8fafc;
+
+  /* Text ramp */
+  --text-strong: #f8faff;
   --text-body: #cbd5e1;
-  --text-muted: #94a3b8;
+  --text-muted: #aab6cc;
   --text-faint: #64748b;
-  --accent-cyan: #22d3ee;
-  --accent-purple: #a78bfa;
-  --accent-violet: #7c4dff;
+
+  /* Accent tokens */
+  --accent-cyan: #00c9e8;
+  --accent-purple: #5637f5;
+  --accent-violet: #a72bff;
   --accent-magenta: #d946ef;
+
+  /* State tokens */
   --danger: #f87171;
   --success: #34d399;
   --warning: #fbbf24;
 
   --radius-card: 1rem;
   --radius-control: 0.75rem;
-  --ring-offset: #070a11;
+  --ring-offset: #070a14;
 
-  /* Laqta brand gradient — used by the primary CTA, the wordmark and the
-     gradient headline on the dashboard. */
+  /* Official Laqta brand gradient (Violet → Purple → Cyan) */
   --laqta-gradient: linear-gradient(
     120deg,
-    #7c4dff 0%,
-    #8b5cf6 45%,
-    #22d3ee 100%
+    #a72bff 0%,
+    #5637f5 48%,
+    #00c9e8 100%
+  );
+  --laqta-gradient-subtle: linear-gradient(
+    135deg,
+    rgba(167, 43, 255, 0.15) 0%,
+    rgba(86, 55, 245, 0.12) 50%,
+    rgba(0, 201, 232, 0.08) 100%
   );
 }
 
 * {
-  /* Keeps the focus ring crisp on every surface without fighting the
-     per-component `focus:outline-none` utilities. */
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -142,7 +184,7 @@ body {
 }
 
 ::selection {
-  background: rgba(124, 77, 255, 0.35);
+  background: rgba(86, 55, 245, 0.4);
   color: #fff;
 }
 
@@ -164,7 +206,7 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(34, 211, 238, 0.45);
+  background: rgba(0, 201, 232, 0.5);
   background-clip: content-box;
 }
 
@@ -172,7 +214,7 @@ body {
   background: transparent;
 }
 
-/* Studio Glass & Neon Utilities -------------------------------------- */
+/* Studio Glass & Brand Utilities ------------------------------------- */
 @layer utilities {
   @keyframes fadeIn {
     from {
@@ -209,11 +251,11 @@ body {
     0%,
     100% {
       opacity: 1;
-      box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.5);
+      box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
     }
     50% {
       opacity: 0.75;
-      box-shadow: 0 0 0 4px rgba(52, 211, 153, 0);
+      box-shadow: 0 0 0 4px rgba(16, 185, 129, 0);
     }
   }
 
@@ -229,7 +271,7 @@ body {
     animation: pulseGlow 2.4s ease-in-out infinite;
   }
 
-  /* Skeleton shimmer used by the loading states. */
+  /* Skeleton shimmer used by the loading states */
   .shimmer {
     position: relative;
     overflow: hidden;
@@ -249,40 +291,38 @@ body {
   }
 
   .glass-panel {
-    background-color: rgba(11, 15, 25, 0.75);
-    backdrop-filter: blur(12px);
+    background-color: rgba(11, 15, 25, 0.85);
+    backdrop-filter: blur(14px);
     border: 1px solid rgba(255, 255, 255, 0.08);
   }
 
   .glass-card {
-    background-color: rgba(15, 23, 42, 0.6);
-    backdrop-filter: blur(8px);
+    background-color: rgba(14, 20, 36, 0.75);
+    backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .neon-border-cyan {
-    border-color: #22d3ee;
-    box-shadow: 0 0 15px -2px rgba(34, 211, 238, 0.45), 0 0 6px -1px rgba(8, 145, 178, 0.6);
+    border-color: #00c9e8;
+    box-shadow: 0 0 15px -2px rgba(0, 201, 232, 0.45), 0 0 6px -1px rgba(0, 201, 232, 0.6);
   }
 
   .neon-border-purple {
-    border-color: #7c4dff;
-    box-shadow: 0 0 18px -2px rgba(124, 77, 255, 0.45), 0 0 6px -1px rgba(167, 139, 250, 0.6);
+    border-color: #5637f5;
+    box-shadow: 0 0 18px -2px rgba(86, 55, 245, 0.45), 0 0 6px -1px rgba(167, 43, 255, 0.6);
   }
 
   .neon-text-cyan {
-    color: #22d3ee;
-    text-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
+    color: #00c9e8;
+    text-shadow: 0 0 10px rgba(0, 201, 232, 0.5);
   }
 
   .neon-text-purple {
-    color: #a78bfa;
-    text-shadow: 0 0 10px rgba(167, 139, 250, 0.5);
+    color: #a72bff;
+    text-shadow: 0 0 10px rgba(167, 43, 255, 0.5);
   }
 
-  /* --- Laqta brand utilities -----------------------------------------
-     The wordmark, the primary CTA and the dashboard headline all share
-     one gradient so the identity reads consistently across the app.   */
+  /* Brand gradient text, surface and borders */
   .laqta-gradient-text {
     background-image: var(--laqta-gradient);
     -webkit-background-clip: text;
@@ -294,34 +334,31 @@ body {
     background-image: var(--laqta-gradient);
   }
 
-  /* Hairline card used across the dashboard: a soft surface with a
-     one-pixel top highlight, never a heavy drop shadow. */
+  /* Hairline card with 1px highlight and soft border */
   .laqta-card {
-    background-color: rgba(14, 20, 36, 0.72);
+    background-color: rgba(14, 20, 36, 0.75);
     border: 1px solid var(--hairline);
     box-shadow:
       0 18px 40px -28px rgba(0, 0, 0, 0.95),
       inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
   }
 
-  /* Ambient depth behind the workbench — two soft brand pools that read as
-     stage lighting rather than a flat black wall. */
+  /* Ambient brand lighting behind workbench */
   .studio-ambient {
     background-image:
       radial-gradient(
         60rem 32rem at 12% -8%,
-        rgba(124, 77, 255, 0.14),
+        rgba(167, 43, 255, 0.12),
         transparent 62%
       ),
       radial-gradient(
         48rem 28rem at 96% 4%,
-        rgba(34, 211, 238, 0.08),
+        rgba(0, 201, 232, 0.08),
         transparent 60%
       );
   }
 
-  /* Preview stage: a faint measuring grid under the vertical canvas so the
-     area around the frame reads as a workbench, not an empty void. */
+  /* Preview stage grid */
   .laqta-stage-grid {
     background-image:
       linear-gradient(rgba(148, 163, 184, 0.055) 1px, transparent 1px),
@@ -339,17 +376,17 @@ body {
     );
   }
 
-  /* Soft brand light pooled behind the preview frame. */
+  /* Soft brand light pooled behind preview frame */
   .laqta-stage-glow {
     background-image: radial-gradient(
       55% 55% at 50% 42%,
-      rgba(124, 77, 255, 0.16),
-      rgba(34, 211, 238, 0.05) 55%,
+      rgba(86, 55, 245, 0.16),
+      rgba(0, 201, 232, 0.06) 55%,
       transparent 75%
     );
   }
 
-  /* Hairline divider that fades out at both ends. */
+  /* Hairline divider that fades out at both ends */
   .rule-fade {
     background-image: linear-gradient(
       90deg,
@@ -361,15 +398,12 @@ body {
   }
 }
 
-/* Global keyboard-focus affordance: any interactive element that does not
-   provide its own focus-visible ring still shows a visible outline. */
+/* Global keyboard-focus affordance */
 :focus-visible {
-  outline: 2px solid rgba(124, 77, 255, 0.85);
+  outline: 2px solid rgba(167, 43, 255, 0.85);
   outline-offset: 2px;
 }
 
-/* Consistent, high-contrast focus ring for the controls that opt into the
-   shared ring utility. */
 @layer components {
   .ring-focus {
     outline: none;
@@ -379,13 +413,12 @@ body {
     outline: none;
     box-shadow:
       0 0 0 2px var(--ring-offset),
-      0 0 0 4px rgba(124, 77, 255, 0.9);
+      0 0 0 4px rgba(86, 55, 245, 0.9);
   }
 }
 
 /* Range inputs ---------------------------------------------------------
-   A consistent neon thumb for every slider in the studio (timeline zoom,
-   camera smoothing, playback scrubber). */
+   Consistent brand thumb for sliders */
 input[type="range"] {
   -webkit-appearance: none;
   appearance: none;
@@ -413,9 +446,9 @@ input[type="range"]::-webkit-slider-thumb {
   width: 16px;
   margin-top: -5px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, #7c4dff, #22d3ee);
+  background: linear-gradient(135deg, #a72bff, #00c9e8);
   border: 2px solid #0b0f19;
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.45);
+  box-shadow: 0 0 10px rgba(0, 201, 232, 0.45);
   cursor: pointer;
   transition: transform 120ms ease, box-shadow 120ms ease;
 }
@@ -424,34 +457,31 @@ input[type="range"]::-moz-range-thumb {
   height: 16px;
   width: 16px;
   border-radius: 9999px;
-  background: linear-gradient(135deg, #7c4dff, #22d3ee);
+  background: linear-gradient(135deg, #a72bff, #00c9e8);
   border: 2px solid #0b0f19;
-  box-shadow: 0 0 10px rgba(34, 211, 238, 0.45);
+  box-shadow: 0 0 10px rgba(0, 201, 232, 0.45);
   cursor: pointer;
 }
 
 input[type="range"]:hover::-webkit-slider-thumb {
   transform: scale(1.12);
-  box-shadow: 0 0 14px rgba(34, 211, 238, 0.7);
+  box-shadow: 0 0 14px rgba(0, 201, 232, 0.7);
 }
 
 input[type="range"]:focus-visible::-webkit-slider-thumb {
   box-shadow:
     0 0 0 3px var(--ring-offset),
-    0 0 0 5px rgba(124, 77, 255, 0.9),
-    0 0 12px rgba(34, 211, 238, 0.6);
+    0 0 0 5px rgba(86, 55, 245, 0.9),
+    0 0 12px rgba(0, 201, 232, 0.6);
 }
 
 input[type="range"]:focus-visible::-moz-range-thumb {
   box-shadow:
     0 0 0 3px var(--ring-offset),
-    0 0 0 5px rgba(124, 77, 255, 0.9),
-    0 0 12px rgba(34, 211, 238, 0.6);
+    0 0 0 5px rgba(86, 55, 245, 0.9),
+    0 0 12px rgba(0, 201, 232, 0.6);
 }
 
-/* Bare variant: the track is drawn by the component (e.g. the playback
-   scrubber paints its own progress fill) so the native track stays
-   transparent while keeping the shared neon thumb. */
 input[type="range"].range-bare::-webkit-slider-runnable-track {
   height: 100%;
   background: transparent;
@@ -464,7 +494,7 @@ input[type="range"].range-bare::-moz-range-track {
   border: none;
 }
 
-/* Respect users who opt out of motion. */
+/* Respect reduced motion preferences */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -476,7 +506,7 @@ input[type="range"].range-bare::-moz-range-track {
   }
 }
 
-/* Dark native select dropdowns. */
+/* Dark native select dropdowns */
 select {
   color-scheme: dark;
 }

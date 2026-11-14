@@ -147,7 +147,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const handleDiscard = () => {
     setDraft({});
     setToast({
-      message: "Discarded unsaved changes.",
+      message: "Changes discarded.",
       type: "success",
     });
   };
@@ -229,7 +229,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         {/* Action Controls */}
         <div className="flex items-center gap-2.5">
           {hasChanges && (
-            <span className="text-[11px] text-amber-400 bg-amber-950/60 border border-amber-800/40 px-2.5 py-1 rounded-lg flex items-center gap-1.5 animate-pulse">
+            <span
+              data-testid="unsaved-changes-badge"
+              className="text-[11px] text-amber-400 bg-amber-950/60 border border-amber-800/40 px-2.5 py-1 rounded-lg flex items-center gap-1.5 animate-pulse"
+            >
               <AlertCircle className="h-3 w-3" />
               <span>Unsaved changes</span>
             </span>
@@ -248,6 +251,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             disabled={isSaving}
             className="text-slate-400 hover:text-red-400"
             title="Reset all settings to defaults"
+            aria-label="Reset Defaults"
+            data-testid="reset-defaults-btn"
           >
             <RotateCcw className="h-3.5 w-3.5" />
             <span className="hidden sm:inline">Reset Defaults</span>

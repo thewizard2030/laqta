@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Nothing yet.
 
+## [0.2.0] — 2026-11-14
+
+Bring Your Own Keys (BYOK) and the Advanced Settings Studio — local-first credentials and studio configuration without editing config files.
+
+### Added
+
+- **Bring Your Own Keys (BYOK) credential management**:
+  - Secure local credential storage via SQLite `user_settings` table in `qatta.db` with atomic `settings.json` mirror.
+  - POSIX filesystem isolation: directory mode `0700` and file mode `0600` enforced for database and mirror files, preventing unauthorized local user access without external keyring service dependencies.
+  - Secret redaction and privacy: API credentials are never logged, serialized in plaintext error responses, or exposed through API reads. Previews use fixed masked prefixes/suffixes (`sk-or-...a1b2`).
+  - Safe candidate key testing: `POST /api/settings/verify` performs lightweight connection probes in-memory with strict 8-second timeouts and redirect bounds, never persisting unconfirmed keys.
+  - Fail-closed cloud privacy: remote API probes and execution strictly enforce `ALLOW_CLOUD_APIS=true` and `LLM_HOSTED_OPT_IN=true`.
+- **5-Tab Advanced Settings Studio in the frontend**:
+  - **AI & LLM Providers**: configure OpenRouter, local OpenAI-compatible endpoints (Ollama, LM Studio), Groq, and Hugging Face with connection testing.
+  - **Speech Recognition**: configure Whisper model engines, VAD silence thresholds, and bilingual Arablish code-switching prompt text.
+  - **Ingestion & Subtitles**: configure yt-dlp client profiles, subtitle language preferences, and cookie paths.
+  - **Storage & Cache**: live disk usage breakdown with safe cache clearance that preserves source media and exported vertical shorts.
+  - **System & Capabilities Audit**: inspect CPU cores, memory footprint, hardware acceleration status, and system dependency health.
+  - Unsaved change tracking, discard controls, and factory reset dialog restoring boot-time snapshot defaults.
+- **Continuous Integration & Infrastructure**:
+  - CircleCI 2.1 pipeline with Smarter Testing (`.circleci/config.yml` and `.circleci/test-suites.yml`).
+  - Concurrent `backend` (Python 3.12) and `frontend` (Node 22.14) test runners with deterministic checksum caching.
+  - Smarter Testing test discovery covering all 42 backend test files and 18 frontend test suites with JUnit report generation.
+- Automated API test suite in `backend/tests/test_settings_api.py` and frontend test suite in `frontend/src/tests/SettingsView.test.tsx`.
+
 ## [0.1.3] — 2026-10-22
 
 The release that proves the ranking instead of asserting it.

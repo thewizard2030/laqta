@@ -1,0 +1,17 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Laqta
+GenericName=Video to Shorts Studio
+Comment=Local-first studio that turns long videos into vertical Shorts on your own machine
+Exec=sh -c "cd \\$(dirname \\$(readlink -f %k))/.. && ./scripts/dev.sh"
+Icon=laqta
+Terminal=false
+Categories=AudioVideo;Video;AudioVideoEditing;Recorder;
+Keywords=video;shorts;editing;transcription;local;ai;arabic;
+StartupWMClass=laqta
+Actions=NewProject;
+
+[Desktop Action NewProject]
+Name=New Project
+Exec=sh -c "cd \\$(dirname \\$(readlink -f %k))/.. && ./scripts/dev.sh --new"

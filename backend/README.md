@@ -1,42 +1,24 @@
-# Laqta backend
+# Laqta Backend
 
-The FastAPI service behind the [Laqta](https://github.com/thewizard2030/laqta)
-studio. It binds to `127.0.0.1` by default, never uploads media, and keeps
-every artefact (projects, media, transcripts, renders) in the local data
-directory.
+## Overview
+The Laqta backend subsystem providing the local FastAPI application, REST endpoints, SQLite persistence, and background job queue.
 
-This directory holds the HTTP layer only. The manifest-based pipeline lives in
-the [`qatta/`](../qatta) core package at the repository root.
+## Interface
+- [App](./app/README.md): FastAPI application core, API routes, database repositories, domain services, and schemas
+- [Tools](./tools/README.md): Developer tooling and local maintenance scripts
+- pyproject.toml: Python project configuration and dependencies
+- requirements*.txt: Runtime, development, and ASR dependency specifications
+- uvicorn app.main:app --host 127.0.0.1 --port 8000: Backend server execution command
 
-## Run it
+## Invariants
+- Local-first guarantee: binds strictly to 127.0.0.1; zero required cloud API keys; no user telemetry [README.md, app/core/config.py]
+- Fail-closed cloud policy: all hosted cloud APIs (Groq, OpenRouter, AssemblyAI) and URL ingestion stay disabled until explicit operator opt-in [README.md, app/core/config.py]
+- Subprocess safety: explicit argument arrays only, no shell=True, finite deadlines, and bounded memory limits [README.md, AGENTS.md]
 
-```bash
-cd backend
-python -m venv .venv && source .venv/bin/activate
-pip install -r requirements-dev.txt
-uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
-```
+## Side Effects
+- Runs FastAPI HTTP web server on local loopback interface
+- Creates local SQLite database and file hierarchy under DATA_DIR (~/.local/share/qatta)
+- Spawns local FFmpeg and FFprobe worker subprocesses
 
-- API root: <http://127.0.0.1:8000/>
-- Health: <http://127.0.0.1:8000/api/health>
-- Capabilities: <http://127.0.0.1:8000/api/capabilities>
-- OpenAPI docs: <http://127.0.0.1:8000/docs>
-
-## Tests
-
-```bash
-cd backend
-pytest            # this directory only
-pytest ../tests   # the core pipeline suite
-```
-
-## Configuration
-
-Every setting is read from the environment with the `QATTA_` prefix — see
-[`.env.example`](../.env.example) for the full list. The hosted providers
-(OpenRouter, Groq, AssemblyAI) are **fail-closed**: they stay disabled until
-their explicit opt-in flag *and* an API key are both present.
-
-## License
-
-MIT — see [LICENSE](../LICENSE).
+## Verification
+- Run: `pytest backend/tests`

@@ -49,14 +49,14 @@ export const StudioTopHeader: React.FC<StudioTopHeaderProps> = ({
 
   return (
     <header
-      className="h-14 shrink-0 border-b border-slate-800/80 bg-obsidian-900/80 backdrop-blur-md px-3 sm:px-4 flex items-center justify-between gap-3 z-20"
+      className="h-14 shrink-0 border-b border-slate-800/80 bg-obsidian-900/85 backdrop-blur-md px-3 sm:px-4 flex items-center justify-between gap-3 z-20"
       data-testid="studio-top-header"
     >
       {/* Left: Mobile Menu Trigger & Project Breadcrumb */}
       <div className="flex items-center gap-2 min-w-0">
         <button
           onClick={onOpenMobileMenu}
-          className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-laqta-400"
+          className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-laqta-400 cursor-pointer"
           aria-label="Open sidebar"
         >
           <Menu className="h-5 w-5" />
@@ -105,7 +105,7 @@ export const StudioTopHeader: React.FC<StudioTopHeaderProps> = ({
             onChange={(e) => onSearchChange(e.target.value)}
             placeholder="Search projects, clips, transcripts..."
             aria-label="Search projects, clips, transcripts"
-            className="w-full h-9 pl-9 pr-20 rounded-xl bg-obsidian-950/80 border border-slate-800/80 text-sm text-slate-200 placeholder-slate-500 transition focus:outline-none focus:border-laqta-500/60 focus:ring-1 focus:ring-purple-500/40 hover:border-slate-700"
+            className="w-full h-9 pl-9 pr-20 rounded-xl bg-obsidian-950/80 border border-slate-800/80 text-sm text-slate-200 placeholder-slate-500 transition focus:outline-none focus:border-laqta-400 focus:ring-1 focus:ring-laqta-400/50 hover:border-slate-700"
             data-testid="studio-search-input"
           />
 
@@ -134,11 +134,8 @@ export const StudioTopHeader: React.FC<StudioTopHeaderProps> = ({
         </div>
       </div>
 
-      {/* Right: Hardware Telemetry Pill & Action Icons */}
+      {/* Right: Hardware Telemetry Pill & Fullscreen Toggle */}
       <div className="flex items-center gap-2 shrink-0">
-        {/* Hardware Status Pill — the dot reflects the *reported* state.
-            A stopped job worker means queued jobs would never run, so the
-            studio must not show a healthy green dot in that case. */}
         <div
           className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-obsidian-950/80 border border-slate-800 text-xs text-slate-300 shadow-sm"
           title={`Status: ${health?.status || "unknown"} • Worker: ${health?.worker || "unknown"} • Storage: ${capabilities?.storage.data_dir || "local"}`}
@@ -157,7 +154,7 @@ export const StudioTopHeader: React.FC<StudioTopHeaderProps> = ({
             •
           </span>
           <span
-            className={`text-[11px] ${
+            className={`text-[11px] font-mono ${
               health?.status === "degraded" ? "text-amber-300" : "text-neon-cyan"
             }`}
           >
@@ -165,7 +162,6 @@ export const StudioTopHeader: React.FC<StudioTopHeaderProps> = ({
           </span>
         </div>
 
-        {/* Fullscreen Button */}
         <button
           onClick={toggleFullscreen}
           className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 transition hidden sm:flex items-center focus:outline-none focus-visible:ring-2 focus-visible:ring-laqta-400 cursor-pointer"

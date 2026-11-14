@@ -179,7 +179,7 @@ export const VideoImportHero: React.FC<VideoImportHeroProps> = ({
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploading}
-              className="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white bg-linear-to-r from-purple-600 via-laqta-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 shadow-neon-purple hover:shadow-neon-cyan transition-all active:scale-[0.98] disabled:opacity-50"
+              className="flex items-center space-x-2 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white laqta-gradient-surface shadow-laqta-glow hover:brightness-110 transition-all active:scale-[0.98] disabled:opacity-50 cursor-pointer"
               data-testid="import-upload-btn"
             >
               <Upload className="h-4 w-4" />

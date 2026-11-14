@@ -245,11 +245,14 @@ async def _maybe_llm_rank(
     # ``endpoint`` is optional on the provider interface (test doubles and
     # custom adapters may not expose it), so fall back to the configured URL.
     endpoint = getattr(provider, "endpoint", None) or settings.LLM_BASE_URL
-    if not _endpoint_is_loopback(endpoint) and not settings.LLM_HOSTED_OPT_IN:
+    if not _endpoint_is_loopback(endpoint) and (
+        not settings.LLM_HOSTED_OPT_IN or not settings.ALLOW_CLOUD_APIS
+    ):
         ranked = await BaselineClipRanker().rank(rank_inputs)
         return ranked, [
-            "LLM ranker skipped: endpoint is remote and transcript text would "
-            f"leave the device. {TRANSCRIPT_LEAVES_DEVICE_NOTICE}",
+            "LLM ranker skipped: remote endpoint requires both "
+            "QATTA_ALLOW_CLOUD_APIS=true and QATTA_LLM_HOSTED_OPT_IN=true. "
+            f"{TRANSCRIPT_LEAVES_DEVICE_NOTICE}",
         ]
 
     ranker = LLMClipRanker(

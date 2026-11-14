@@ -1,6 +1,6 @@
 # Laqta — Product Requirements Document (PRD)
 
-**Status:** Draft v1.0 — implementation-ready scope  
+**Status:** Implemented v0.2.0 — BYOK & Advanced Settings Studio  
 **Product:** Laqta  
 **Positioning:** Local-first, open-source long-video-to-Shorts studio, with Arabic-first UX and explainable clip selection.  
 **Primary environment:** Fedora Linux, CPU-first, 8 GB RAM.  
@@ -366,7 +366,8 @@ On a reference CPU-only Fedora machine with 8 GB RAM:
 **P4 — Better framing:** optional face detection, crop smoothing, experimental split-screen.  
 **P5 — Research/evaluation:** benchmark set, editor-feedback import, score calibration experiments.  
 **P6 — Optional source adapters:** yt-dlp with rights-aware UX; optional heatmap only if data is available.  
-**P7 — Performance analytics:** CSV import/export for published clip metrics.
+**P7 — Performance analytics:** CSV import/export for published clip metrics.  
+**P8 — BYOK & Advanced Settings Studio (v0.2.0):** Local-first credential management (SQLite `user_settings` with `0600`/`0700` filesystem isolation), raw key redaction and masking, live provider connection verification probes, 5-tab settings studio, safe cache clearance, and factory reset.
 
 ## 13. Acceptance criteria for the first usable release
 
