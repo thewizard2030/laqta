@@ -123,9 +123,80 @@ jobs:
           working_directory: frontend
           command: npm run build
 
+  publish-release:
+    executor: python-executor
+    steps:
+      - checkout
+
+      - run:
+          name: Verify release prerequisites, tag alignment, and changelog
+          command: |
+            if [ -z "${CIRCLE_TAG:-}" ]; then
+              echo "ERROR: CIRCLE_TAG is unset. This job only runs on semantic version tags." >&2
+              exit 1
+            fi
+            if [ -z "${GITHUB_TOKEN:-}" ]; then
+              echo "ERROR: GITHUB_TOKEN is not set in CircleCI Context 'laqta-release-publishing'." >&2
+              echo "Configure a fine-grained GitHub PAT for thewizard2030/laqta with Contents: Read and write (and Workflows: Read and write when workflow files are updated)." >&2
+              exit 1
+            fi
+            python scripts/check_version.py
+            python scripts/release_notes.py "$CIRCLE_TAG" --check
+            mkdir -p dist
+            python scripts/release_notes.py "$CIRCLE_TAG" > dist/release-notes.md
+
+      - run:
+          name: Build immutable source archive
+          command: |
+            mkdir -p dist
+            git archive \
+              --format=tar.gz \
+              --prefix="laqta-${CIRCLE_TAG}/" \
+              -o "dist/laqta-${CIRCLE_TAG}.tar.gz" \
+              "$CIRCLE_TAG"
+
+      - run:
+          name: Validate archive and publish GitHub Release
+          command: |
+            python scripts/publish_github_release.py \
+              --tag "$CIRCLE_TAG" \
+              --repo "thewizard2030/laqta" \
+              --archive "dist/laqta-${CIRCLE_TAG}.tar.gz" \
+              --notes-file "dist/release-notes.md" \
+              --verify-git-tag
+
+      - store_artifacts:
+          path: dist
+          destination: release-artifacts
+
 workflows:
   version: 2
   ci:
     jobs:
       - backend
       - frontend
+  release:
+    jobs:
+      - backend:
+          filters:
+            tags:
+              only: /^v\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
+      - frontend:
+          filters:
+            tags:
+              only: /^v\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/
+      - publish-release:
+          context:
+            - laqta-release-publishing
+          requires:
+            - backend
+            - frontend
+          filters:
+            tags:
+              only: /^v\d+\.\d+\.\d+$/
+            branches:
+              ignore: /.*/

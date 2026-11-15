@@ -1,18 +1,11 @@
-name: Evaluation
+name: Evaluation (Manual Dispatch Only)
 
 # Measures the clip ranking against the labelled benchmark and fails when a
 # metric regresses. The numbers are published in docs/EVALUATION.md.
+# Automatic `schedule` and `pull_request` triggers disabled until migrated to
+# CircleCI; GitHub Actions runner availability is also billing-locked.
 on:
-  schedule:
-    # Mondays at 06:00 UTC.
-    - cron: "0 6 * * 1"
   workflow_dispatch:
-  pull_request:
-    paths:
-      - "qatta/stages/s05_ranking/**"
-      - "qatta/stages/s04_candidates/**"
-      - "benchmarks/**"
-      - "scripts/evaluate_ranking.py"
 
 permissions:
   contents: read

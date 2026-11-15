@@ -3,6 +3,7 @@
 Laqta uses and integrates with several open-source libraries and tools.
 
 ## System Tools
+
 - **FFmpeg / FFprobe**: LGPL 2.1+ / GPL 2.0+ depending on build configuration. Used via subprocess execution without linking proprietary wrappers.
 - **libass**: ISC license. Used for high-quality subtitle rendering.
 
@@ -16,6 +17,7 @@ Declared in the root `pyproject.toml` for the manifest-based core pipeline.
 None are AGPL-3.0; `ultralytics`/YOLOv8 and any AGPL dependency remain
 forbidden. Heavy analysis libraries are imported lazily by the stages that
 need them:
+
 - **pydantic-settings**: MIT License. Core pipeline configuration
   (`QATTA_`-prefixed env vars).
 - **typer / rich**: MIT License (Sebastián Ramírez / Will McGugan).
@@ -38,6 +40,7 @@ need them:
   cloud ASR keys remain optional and fail-closed.
 
 ## Backend Libraries
+
 - **FastAPI**: MIT License (Sebastián Ramírez).
 - **Pydantic**: MIT License (Samuel Colvin and contributors).
 - **Uvicorn**: BSD 3-Clause License.
@@ -47,13 +50,16 @@ need them:
   via CTranslate2. Model weights downloaded at runtime are OpenAI Whisper
   model weights (MIT License) converted by SYSTRAN to CTranslate2 format.
 - **CTranslate2 / CTranslate2 runtime libs**: MIT License (OpenNMT).
-- **PyAV**: BSD 2-Clause License. Fallback audio decoding (bundled FFmpeg
-  shared libraries remain LGPL/GPL as above).
+- **PyAV**: BSD 3-Clause License (locked `av==18.1.0` uses `BSD-3-Clause`; pre-built PyPI wheels bundle FFmpeg shared libraries under LGPL/GPL — see [docs/LICENSING_DECISIONS.md](docs/LICENSING_DECISIONS.md) §3).
+- **typing-extensions**: PSF-2.0 License (Python Software Foundation License v2; transitive FastAPI/Pydantic dependency in `backend/requirements-lock.txt`).
+- **certifi**: MPL-2.0 License (CA bundle packaged for HTTP clients in `backend/requirements-lock.txt`; governs `certifi` files only).
+- **tqdm**: MPL-2.0 AND MIT License (`MPL-2.0` for main package files, `MIT` for legacy module files; transitive `faster-whisper`/`huggingface-hub` dependency).
 - **espeak-ng (dev/benchmark only)**: GPL 3.0. Used ONLY by the optional
   `tools/benchmark_transcription.py --make-samples` helper to synthesize
   timing test samples; never linked into the application runtime.
 
 ## Frontend Libraries
+
 - **React / React DOM 19**: MIT License (Meta Platforms, Inc.).
 - **Vite 8**: MIT License (Yuxi (Evan) You and Vite contributors).
 - **Tailwind CSS 4**: MIT License (Tailwind Labs, Inc.).
@@ -64,7 +70,15 @@ need them:
   platform a link points to.
 - **Lucide Icons**: ISC License.
 
+### Build / Dev-Only Frontend Tooling (not bundled in `frontend/dist/`)
+
+- **lightningcss**: MPL-2.0 License (`lightningcss@1.33.0` / nested `@1.32.0`, CSS bundler used strictly at Vite/Tailwind build time).
+- **minimatch**: BlueOak-1.0.0 License (dev/test/lint glob utility).
+- **caniuse-lite**: CC-BY-4.0 License (build-time Browserslist database).
+- **@csstools/color-helpers**: MIT-0 License (build-time CSS color helper).
+
 ## Optional Hosted Services (not libraries, no code is vendored)
+
 - **OpenRouter** (`https://openrouter.ai/api/v1`): an optional HOSTED
   LLM gateway used by the `openrouter` provider in
   `qatta/stages/s04_candidates/llm.py` and

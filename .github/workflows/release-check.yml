@@ -1,20 +1,11 @@
-name: Release check
+name: Release check (Manual Dispatch Only)
 
-# Proves that the repository actually works: a clean clone, a real install
-# and the whole pipeline (import → transcribe → rank → render) with a
-# synthetic video. It is the check that catches packaging and release-mode
-# regressions before a user does.
+# Proves that the repository actually works: a clean clone, a real install,
+# and the whole pipeline (import -> transcribe -> rank -> render) with a
+# synthetic video. Automatic `schedule` and `pull_request` triggers disabled
+# until migrated to CircleCI; GitHub Actions runner availability is billing-locked.
 on:
-  schedule:
-    # Sundays at 05:00 UTC.
-    - cron: "0 5 * * 0"
   workflow_dispatch:
-  pull_request:
-    paths:
-      - "backend/**"
-      - "qatta/**"
-      - "scripts/**"
-      - ".github/workflows/release-check.yml"
 
 permissions:
   contents: read
