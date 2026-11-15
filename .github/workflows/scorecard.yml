@@ -1,16 +1,11 @@
-name: Scorecard
+name: Scorecard (Manual Dispatch Only)
 
-# The OpenSSF Scorecard grades the repository's security posture. The
-# "Pinned-Dependencies" check only reaches 10/10 when every action is pinned
-# to a full commit SHA — which is how the workflows in this repository are
-# written.
+# Preserved GitHub-native OpenSSF Scorecard security posture analysis (not
+# covered by CircleCI). Automatic `branch_protection_rule`, `schedule`, and
+# `push` triggers disabled while GitHub Actions is billing-locked; can be
+# restored once GitHub Actions billing is active.
 on:
-  branch_protection_rule:
-  schedule:
-    # Mondays at 08:00 UTC.
-    - cron: "0 8 * * 1"
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 permissions: read-all
 

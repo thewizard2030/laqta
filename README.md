@@ -3,11 +3,12 @@
 <img src="docs/assets/laqta-logo.png" alt="Laqta — لقطة" width="480" />
 
 # Laqta (لقطة)
-### *Long Videos to Viral Shorts*
+
+### _Long Videos to Viral Shorts_
 
 **An open-source, local-first AI-assisted video repurposing studio that helps creators discover, edit, and export vertical short-form clips from long videos.**
 
-[![CircleCI](https://img.shields.io/badge/CircleCI-2.1%20Verified-success?logo=circleci&logoColor=white)](https://app.circleci.com/pipelines/github/thewizard2030/laqta)
+[![CircleCI](https://dl.circleci.com/status-badge/img/gh/thewizard2030/laqta/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/thewizard2030/laqta/tree/main)
 [![Release](https://img.shields.io/github/v/release/thewizard2030/laqta?label=release&color=7c4dff)](https://github.com/thewizard2030/laqta/releases/latest)
 [![License: MIT](https://img.shields.io/badge/License-MIT-7c4dff.svg)](LICENSE)
 [![Platform](https://img.shields.io/badge/Platform-Fedora%20%7C%20Linux-10b981.svg)](docs/POLICY.md)
@@ -21,7 +22,7 @@
 
 ## 💡 Overview
 
-Laqta (**لقطة** — *"a take, a shot, or a cut"*) is a desktop-grade, privacy-respecting studio that transforms long-form videos, interviews, and podcasts into engaging 9:16 vertical Shorts, Reels, and TikTok clips.
+Laqta (**لقطة** — _"a take, a shot, or a cut"_) is a desktop-grade, privacy-respecting studio that transforms long-form videos, interviews, and podcasts into engaging 9:16 vertical Shorts, Reels, and TikTok clips.
 
 Most video repurposing tools require uploading gigabytes of private footage to proprietary cloud servers, lock essential features behind recurring monthly fees, or produce broken, reversed Arabic subtitles. Laqta changes this:
 
@@ -38,14 +39,16 @@ Most video repurposing tools require uploading gigabytes of private footage to p
 <div align="center">
 
 ### Studio Workbench
+
 ![Laqta Studio Workbench](docs/assets/laqta-studio.png)
-*Interactive multi-track timeline, vertical 9:16 Shorts player with title-safe area guides, karaoke subtitle editor, and explainable clip candidate selection.*
+_Interactive multi-track timeline, vertical 9:16 Shorts player with title-safe area guides, karaoke subtitle editor, and explainable clip candidate selection._
 
 <br/>
 
 ### Home Dashboard & Capabilities Monitor
+
 ![Laqta Dashboard](docs/assets/laqta-dashboard.png)
-*Project manager, local media import workspace, system hardware detection, and real-time processing status.*
+_Project manager, local media import workspace, system hardware detection, and real-time processing status._
 
 </div>
 
@@ -70,23 +73,24 @@ Laqta processes videos through an atomic, resumable manifest pipeline (`qatta_ma
 
 ## ⚖️ What Makes Laqta Different
 
-| Dimension | Laqta (Open Source) | Commercial SaaS Tools | Generic Open-Source Scripts |
-| :--- | :--- | :--- | :--- |
-| **Data Privacy** | **100% Local by Default**; media never leaves your device | Mandatory video upload to third-party cloud servers | Varies; often requires cloud API keys |
-| **Software License** | **MIT License**; completely free and open source | \$19 to \$49+ recurring monthly subscription | Often GPL/AGPL with restrictive terms |
-| **Arabic & RTL Subtitles** | **Native BiDi & FSI/PDI isolates**; mixed Arablish preservation | Frequently reversed letters, detached glyphs, or broken punctuation | Basic SRT without complex script shaping |
-| **Clip Scoring** | **Explainable CPS (0–100)** with signal-by-signal rationale | Black-box "viral score" percentage without technical explanation | Fixed arbitrary time cuts (e.g. 30s intervals) |
-| **Hardware Baseline** | **CPU-First (8 GB RAM)**; GPU acceleration optional | Cloud servers only | Heavy CUDA/VRAM requirements (12 GB+ VRAM) |
-| **User Control** | **BYOK Studio** with local key storage and live health probes | Proprietary vendor lock-in | Hardcoded environment variables |
-| **Telemetry & Tracking** | **Zero Telemetry**; binds strictly to `127.0.0.1` | Behavioral tracking and analytics | Varies |
+| Dimension                  | Laqta (Open Source)                                             | Commercial SaaS Tools                                               | Generic Open-Source Scripts                    |
+| :------------------------- | :-------------------------------------------------------------- | :------------------------------------------------------------------ | :--------------------------------------------- |
+| **Data Privacy**           | **100% Local by Default**; media never leaves your device       | Mandatory video upload to third-party cloud servers                 | Varies; often requires cloud API keys          |
+| **Software License**       | **MIT License**; completely free and open source                | \$19 to \$49+ recurring monthly subscription                        | Often GPL/AGPL with restrictive terms          |
+| **Arabic & RTL Subtitles** | **Native BiDi & FSI/PDI isolates**; mixed Arablish preservation | Frequently reversed letters, detached glyphs, or broken punctuation | Basic SRT without complex script shaping       |
+| **Clip Scoring**           | **Explainable CPS (0–100)** with signal-by-signal rationale     | Black-box "viral score" percentage without technical explanation    | Fixed arbitrary time cuts (e.g. 30s intervals) |
+| **Hardware Baseline**      | **CPU-First (8 GB RAM)**; GPU acceleration optional             | Cloud servers only                                                  | Heavy CUDA/VRAM requirements (12 GB+ VRAM)     |
+| **User Control**           | **BYOK Studio** with local key storage and live health probes   | Proprietary vendor lock-in                                          | Hardcoded environment variables                |
+| **Telemetry & Tracking**   | **Zero Telemetry**; binds strictly to `127.0.0.1`               | Behavioral tracking and analytics                                   | Varies                                         |
 
 > **Note on Clip Potential Score (CPS):** CPS is an editorial quality heuristic based on acoustic variation, speech rate, and semantic completeness. It is designed to surface compelling video segments for human editors, not to guarantee viral views or social media engagement.
 
 ---
 
-## 🧩 Product Feature Matrix (v0.2.0)
+## 🧩 Product Feature Matrix (v0.2.5)
 
 ### 🎬 Video Workflow & Editing
+
 - **Local Import:** Drag-and-drop video upload supporting MP4, MOV, MKV, and WebM. `[Supported]`
 - **Project Workspaces:** Persistent SQLite-backed project management in `~/.local/share/qatta/`. `[Supported]`
 - **Multi-Track Timeline:** Interactive audio waveform scrubbing, playback controls, and clip trimming. `[Supported]`
@@ -95,6 +99,7 @@ Laqta processes videos through an atomic, resumable manifest pipeline (`qatta_ma
 - **URL Ingestion:** Optional YouTube caption-first importing via `yt-dlp` (fail-closed, requires operator enablement and per-import rights confirmation). `[Optional / Opt-In]`
 
 ### 🎙️ AI & Speech Recognition
+
 - **Local Faster-Whisper:** CPU-optimized CTranslate2 speech recognition running 100% offline. `[Supported]`
 - **Three Performance Profiles:**
   - `fast` (default): `base` model, `int8` quantization, beam size 1. Best for quick turnaround on 8 GB RAM.
@@ -105,6 +110,7 @@ Laqta processes videos through an atomic, resumable manifest pipeline (`qatta_ma
 - **OpenAI-Compatible LLMs:** Integration with local inference servers (Ollama, LM Studio) or hosted providers (OpenRouter) for candidate evaluation. `[Optional / Opt-In]`
 
 ### 🔐 Privacy, Security & BYOK
+
 - **Local-First Guarantee:** Zero background telemetry, analytics, or phone-home requests. `[Supported]`
 - **Bring Your Own Keys (BYOK):** Dedicated 5-tab settings studio for credential configuration. `[Supported]`
 - **Filesystem Permission Boundary:** Database directory enforces POSIX `0700` and files enforce `0600` (`-rw-------`). `[Supported]`
@@ -112,6 +118,7 @@ Laqta processes videos through an atomic, resumable manifest pipeline (`qatta_ma
 - **SSRF Defense:** Connection probes block private IP ranges, link-local addresses, and cloud metadata endpoints (`169.254.169.254`, `metadata.google.internal`). `[Supported]`
 
 ### 🐧 Linux & Desktop Integration
+
 - **Fedora/Linux Primary Support:** Tested on modern Fedora and Linux distributions. `[Supported]`
 - **System Doctor CLI (`laqta doctor`):** Built-in diagnostic tool checking Python, FFmpeg, FFprobe, and disk permissions. `[Supported]`
 - **XDG Desktop Launcher:** Desktop entry (`laqta.desktop`) and scalable application icons for application menus. `[Supported]`
@@ -123,12 +130,14 @@ Laqta processes videos through an atomic, resumable manifest pipeline (`qatta_ma
 > **Core Commitment:** Laqta is local-first by default. Local media processing and transcription stay on your device. Optional hosted providers can receive the specific transcript or audio data required for an operation only when the corresponding cloud permissions and user opt-in are enabled.
 
 To review our complete privacy and security contracts:
+
 - [docs/POLICY.md](docs/POLICY.md) — What leaves your machine, when it leaves, and rights responsibilities.
 - [docs/BYOK_DESIGN.md](docs/BYOK_DESIGN.md) — BYOK credential architecture and threat model.
 - [SECURITY.md](SECURITY.md) — Vulnerability reporting and private security disclosure process.
 
 ### Transparent Credential Storage Disclosure
-In v0.2.0, user-configured API keys are stored locally in SQLite (`~/.local/share/qatta/qatta.db`) and an atomic file mirror (`settings.json`). **Secrets are stored unencrypted at rest** on your local drive and are protected strictly by operating system user permission boundaries (`0600` for files, `0700` for directories). If you share a physical machine account with other users, avoid storing sensitive production API keys.
+
+In v0.2.5, user-configured API keys are stored locally in SQLite (`~/.local/share/qatta/qatta.db`) and an atomic file mirror (`settings.json`). **Secrets are stored unencrypted at rest** on your local drive and are protected strictly by operating system user permission boundaries (`0600` for files, `0700` for directories). If you share a physical machine account with other users, avoid storing sensitive production API keys.
 
 ---
 
@@ -139,11 +148,13 @@ In v0.2.0, user-configured API keys are stored locally in SQLite (`~/.local/shar
 #### 1. Install System Dependencies
 
 **Fedora / RHEL:**
+
 ```bash
 sudo dnf install -y ffmpeg libass python3 python3-devel nodejs npm
 ```
 
 **Ubuntu / Debian:**
+
 ```bash
 sudo apt update && sudo apt install -y ffmpeg libass-dev python3 python3-venv nodejs npm
 ```
@@ -178,16 +189,20 @@ laqta doctor
 #### 4. Launch the Studio
 
 For active development with hot-reloading:
+
 ```bash
 ./scripts/dev.sh
 ```
+
 - **Backend API:** `http://127.0.0.1:8000`
 - **Studio Workbench:** `http://127.0.0.1:5173`
 
 For standalone local production mode:
+
 ```bash
 laqta studio --production
 ```
+
 - Access the unified studio at `http://127.0.0.1:8000`.
 
 ---
@@ -212,27 +227,33 @@ Open your browser at **`http://localhost:8000`**.
 <summary><b>1. <code>ModuleNotFoundError: No module named 'uvicorn'</code></b></summary>
 
 Ensure you have run `./scripts/setup.sh` to initialize the Python virtual environment under `backend/.venv`. If running commands manually, activate the virtual environment first:
+
 ```bash
 source backend/.venv/bin/activate
 ```
+
 </details>
 
 <details>
 <summary><b>2. FFmpeg missing <code>libass</code> support</b></summary>
 
 Burning captions directly into video requires FFmpeg built with `libass`. On Fedora, ensure you install `ffmpeg` and `libass` from standard or RPM Fusion repositories. Verify via:
+
 ```bash
 ffmpeg -version | grep -- --enable-libass
 ```
+
 </details>
 
 <details>
 <summary><b>3. Port 8000 or 5173 already in use</b></summary>
 
 You can configure alternate port bindings by specifying environment variables before launching:
+
 ```bash
 QATTA_PORT=8080 ./scripts/dev.sh
 ```
+
 </details>
 
 ---
@@ -286,10 +307,12 @@ flowchart TD
 ```
 
 ### Subsystems Breakdown
+
 - **`qatta/`**: Core manifest-based pipeline engine. Strictly modular, Pydantic v2 serialized, license-safe (MIT), and independent of web frameworks.
 - **`backend/`**: Local FastAPI service (`backend/app/main.py`), SQLite repository, job manager, and settings API.
 - **`frontend/`**: React 19 + Vite studio workbench, multi-track audio scrub bar, vertical 9:16 canvas, and settings tabs.
-- **`scripts/`**: Development automation (`dev.sh`, `setup.sh`), CI testing gates, and ranking benchmark harness.
+- **`scripts/`**: Development automation (`dev.sh`, `setup.sh`), CI testing gates, release validation/publishing (`publish_github_release.py`), and ranking benchmark harness.
+- **`.circleci/`**: Primary automated CI (`ci` branch/PR workflow) and tag-triggered GitHub Release pipeline (`release` workflow with isolated `laqta-release-publishing` context); GitHub Actions workflows remain manual `workflow_dispatch` fallbacks/auxiliaries (`v0.2.5` awaits remote CircleCI validation after push).
 - **`docs/`**: Technical documentation center, specifications, benchmarks, and policy manuals.
 
 ---
@@ -298,15 +321,15 @@ flowchart TD
 
 For comprehensive architectural specifications, benchmarks, and contributor guides, visit the **[Laqta Documentation Center](docs/README.md)**:
 
-| Document | Description |
-| :--- | :--- |
-| **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** | Deep-dive into manifest lifecycle, stage synchronization, and IPC boundaries |
-| **[docs/POLICY.md](docs/POLICY.md)** | Public privacy contract, telemetry policy, and model license documentation |
-| **[docs/BYOK_DESIGN.md](docs/BYOK_DESIGN.md)** | Bring Your Own Keys specification, SQLite schema, and security threat model |
-| **[docs/EVALUATION.md](docs/EVALUATION.md)** | Measured clip-selection precision, recall, and F1 ranking benchmarks |
-| **[docs/PERFORMANCE.md](docs/PERFORMANCE.md)** | Two-pass transcription profiles and 8 GB RAM memory constraints |
-| **[docs/BRANDING.md](docs/BRANDING.md)** | Official brand identity, color tokens, and asset usage guidelines |
-| **[docs/RELEASE_NOTES_v0.2.0.md](docs/RELEASE_NOTES_v0.2.0.md)** | Official v0.2.0 release notes and feature highlights |
+| Document                                                         | Description                                                                  |
+| :--------------------------------------------------------------- | :--------------------------------------------------------------------------- |
+| **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**                 | Deep-dive into manifest lifecycle, stage synchronization, and IPC boundaries |
+| **[docs/POLICY.md](docs/POLICY.md)**                             | Public privacy contract, telemetry policy, and model license documentation   |
+| **[docs/BYOK_DESIGN.md](docs/BYOK_DESIGN.md)**                   | Bring Your Own Keys specification, SQLite schema, and security threat model  |
+| **[docs/EVALUATION.md](docs/EVALUATION.md)**                     | Measured clip-selection precision, recall, and F1 ranking benchmarks         |
+| **[docs/PERFORMANCE.md](docs/PERFORMANCE.md)**                   | Two-pass transcription profiles and 8 GB RAM memory constraints              |
+| **[docs/BRANDING.md](docs/BRANDING.md)**                         | Official brand identity, color tokens, and asset usage guidelines            |
+| **[docs/RELEASE_NOTES_v0.2.0.md](docs/RELEASE_NOTES_v0.2.0.md)** | Official v0.2.0 release notes and feature highlights                         |
 
 ---
 

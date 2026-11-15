@@ -1,23 +1,30 @@
-name: Release
+name: Release (Legacy Manual Fallback)
 
-# A tag in the form `vX.Y.Z` publishes a GitHub Release. The release notes
-# are taken from the matching section of CHANGELOG.md.
+# DEPRECATED as an automatic release publisher: superseded by CircleCI
+# (.circleci/config.yml `release` workflow on `vMAJOR.MINOR.PATCH` tags).
+# Automatic `push: tags` triggering is intentionally disabled to avoid competing
+# releases. Currently DORMANT while the repository GitHub Actions account is
+# under a billing lock — do not claim dormant workflows are passing.
 on:
-  push:
-    tags: ["v*"]
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing tag to publish (e.g. v0.1.0)"
+        description: "Existing stable tag to publish (e.g. v0.2.5)"
         required: true
         type: string
+      confirm_manual_fallback:
+        description: "Confirm CircleCI release publishing failed/did not run for this tag"
+        required: true
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
 jobs:
   release:
-    name: Publish the release
+    name: Manual release fallback
+    if: github.event.inputs.confirm_manual_fallback == 'true'
     runs-on: ubuntu-24.04
     permissions:
       contents: write
@@ -26,46 +33,37 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Resolve the tag
+      - name: Resolve and validate tag
         id: tag
         run: |
-          TAG="${{ inputs.tag || github.ref_name }}"
+          TAG="${{ inputs.tag }}"
           echo "value=$TAG" >> "$GITHUB_OUTPUT"
-          if ! git rev-parse "$TAG" >/dev/null 2>&1; then
+          if ! git rev-parse --verify "refs/tags/$TAG^{commit}" >/dev/null 2>&1; then
             echo "::error::Tag $TAG does not exist in this repository."
             exit 1
           fi
+          git checkout "$TAG"
 
-      - name: Verify the tag matches the manifests
+      - name: Check manifests and changelog notes
         run: |
-          python scripts/check_version.py
-          VERSION="$(python -c 'import qatta; print(qatta.__version__)')"
-          TAG="${{ steps.tag.outputs.value }}"
-          if [ "$TAG" != "v$VERSION" ]; then
-            echo "::error::Tag $TAG does not match the package version $VERSION."
-            exit 1
-          fi
+          python3 scripts/check_version.py
+          python3 scripts/release_notes.py "${{ steps.tag.outputs.value }}" --check
+          mkdir -p dist
+          python3 scripts/release_notes.py "${{ steps.tag.outputs.value }}" > dist/release-notes.md
 
-      - name: Write the release notes from the changelog
-        run: |
-          python scripts/release_notes.py "${{ steps.tag.outputs.value }}" > release-notes.md
-          if [ ! -s release-notes.md ]; then
-            echo "::error::The release notes are empty."
-            exit 1
-          fi
-          cat release-notes.md
-
-      - name: Build the source archive
+      - name: Build immutable source archive
         run: |
           mkdir -p dist
           git archive --format=tar.gz --prefix="laqta-${{ steps.tag.outputs.value }}/" \
             -o "dist/laqta-${{ steps.tag.outputs.value }}.tar.gz" "${{ steps.tag.outputs.value }}"
 
-      - name: Publish the GitHub Release
-        uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
-        with:
-          tag_name: ${{ steps.tag.outputs.value }}
-          name: Laqta ${{ steps.tag.outputs.value }}
-          body_path: release-notes.md
-          files: dist/*.tar.gz
-          fail_on_unmatched_files: true
+      - name: Publish GitHub Release idempotently
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          python3 scripts/publish_github_release.py \
+            --tag "${{ steps.tag.outputs.value }}" \
+            --repo "${{ github.repository }}" \
+            --archive "dist/laqta-${{ steps.tag.outputs.value }}.tar.gz" \
+            --notes-file "dist/release-notes.md" \
+            --verify-git-tag

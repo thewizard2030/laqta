@@ -9,6 +9,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Nothing yet.
 
+## [0.2.5] — 2026-11-15
+
+Maintenance, licensing continuity, fixture remediation, and release-hardening update — permanently retaining the MIT License.
+
+### Added
+
+- Original synthetic Arabic technical WebVTT caption fixture ([`tests/fixtures/sample_captions_synthetic.ar.vtt`](tests/fixtures/sample_captions_synthetic.ar.vtt)) with `align:start position:100%` cue settings, mixed Arabic/English technical terminology, digits, and rolling-caption overlap.
+- CircleCI 2.1 tag-triggered `release` workflow (`.circleci/config.yml`) with isolated release context `laqta-release-publishing` and stdlib HTTPS GitHub Release publisher ([`scripts/publish_github_release.py`](scripts/publish_github_release.py)) featuring SHA-256 digest / redirect-safe download verification, concurrency handling, archive hygiene validation, and unit tests ([`tests/test_publish_github_release.py`](tests/test_publish_github_release.py)).
+- Copyright provenance, licensing continuity, dependency policy, and visual-asset governance documentation (`docs/PROVENANCE_AUDIT.md`, `docs/LICENSING.md`, `docs/LICENSING_DECISIONS.md`, `docs/DEPENDENCY_POLICY_PROPOSAL.md`, `docs/ASSET_COPYRIGHT_POLICY_PROPOSAL.md`, `docs/TRADEMARKS.md`, and historical audit record `docs/LICENSING_TRANSITION_AUDIT.md`).
+
+### Changed
+
+- Confirmed **MIT License** continuity across root `LICENSE`, `pyproject.toml`, `backend/pyproject.toml`, `frontend/package.json`, and documentation; explicitly rejected and superseded the previously evaluated MPL-2.0 transition proposal.
+- Synchronized package and application manifests (`qatta`, `laqta-backend`, `laqta-frontend`) cleanly from `0.2.0` to `0.2.5`.
+- Promoted CircleCI 2.1 as the authoritative CI and GitHub Release publishing pipeline; disabled automatic push/tag triggers in `.github/workflows/ci.yml` and `.github/workflows/release.yml` (retaining explicit `workflow_dispatch` fallback only) and updated `docs/CIRCLECI_MIGRATION.md`, `docs/RELEASING.md`, and dynamic CircleCI badges in `README.md` / `README.ar.md`.
+- Updated `THIRD_PARTY_NOTICES.md` to correct PyAV lockfile licensing metadata (`av==18.1.0`, `BSD-3-Clause`), document transitive runtime dependencies (`typing-extensions`, `certifi`, `tqdm`), and distinguish dev/build-only frontend packages (`lightningcss`, `minimatch`, `caniuse-lite`, `@csstools/color-helpers`).
+
+### Fixed
+
+- Removed the unverified Arabic broadcast caption fixture (`tests/fixtures/sample_captions.ar.vtt`) from the active working tree and updated `tests/test_fixtures.py` and `tests/fixtures/README.md` to validate the synthetic caption track exclusively.
+- Updated `docs/OPEN_SOURCE_BUSINESS_MODEL.md` and licensing documentation to remove stale MPL-2.0 transition assertions and separate third-party package licenses from Laqta first-party MIT code.
+
+### Security
+
+- Verified zero known high/critical production npm vulnerabilities (`npm audit --omit=dev --audit-level=high`) and zero known Python dependency vulnerabilities in the isolated Python 3.11 verification environment (`pip-audit --local`).
+- Confirmed BYOK settings storage (`0700`/`0600` permissions), secret redaction, URL ingestion fail-closed gating, and cloud opt-in guards pass test verification.
+
+### Known limitations
+
+- **Historical archive erratum (`v0.1.0`–`v0.2.0`):** Immutable historical Git tags `v0.1.0` through `v0.2.0` and their corresponding source archives still contain the removed prior caption fixture (`sample_captions.ar.vtt`) without a recorded upstream source URL; historical tags were not rewritten.
+- **Dependency lockfile & policy alignment:** Optional `[analysis]` and `[url]` extras remain unpinned in `backend/requirements-lock.txt`, and `docs/DEPENDENCY_POLICY_PROPOSAL.md` / `docs/ASSET_COPYRIGHT_POLICY_PROPOSAL.md` (covering `MPL-2.0`/`PSF-2.0`/`CC-BY-4.0`/`BlueOak-1.0.0`/`MIT-0` dependencies, `generated-brand-direction-reference.png`, and `BrandIcons.tsx` paths) await final maintainer approval alongside `docs/POLICY.md`.
+- **CircleCI release context & manual-only GitHub Actions:** CircleCI (`backend`, `frontend`) passed on `main` (`b0ede9e`), whereas the `v0.2.5` candidate awaits remote CircleCI verification on push/tag; automated tag release publishing (`publish-release`) requires configuring `GITHUB_TOKEN` (`Contents: Read and write` and `Workflows: Read and write`) inside restricted CircleCI Context `laqta-release-publishing`. All six `.github/workflows/` files now use explicit `workflow_dispatch` only (GitHub Actions runners are also currently unavailable under the account billing lock).
+
 ## [0.2.0] — 2026-11-14
 
 Bring Your Own Keys (BYOK) and the Advanced Settings Studio — local-first credentials and studio configuration without editing config files.
@@ -45,9 +78,9 @@ The release that proves the ranking instead of asserting it.
   dataset whose labels are exact. It runs weekly in CI and fails when a
   metric regresses. The method, the results and the limits are in
   [docs/EVALUATION.md](docs/EVALUATION.md).
-  *Measured: precision 0.92, recall 1.00, F1 0.96, coverage 0.96, bad
+  _Measured: precision 0.92, recall 1.00, F1 0.96, coverage 0.96, bad
   coverage 0.11 — the ranking finds every labelled highlight and
-  over-selects.*
+  over-selects._
 - Tests for the CPS arithmetic and the three scoring gates: the score is
   bounded, the weights renormalise over the measured components, an unknown
   archetype is an error, and every gate outcome is recorded in the evidence
@@ -104,7 +137,7 @@ The release that makes Laqta an application you launch, and proves it.
   reports the worker state and answers "degraded" when the worker is
   stopped; the studio's status pill follows it.
 - **A silent clip was scored as if it had speech.** The silence threshold
-  was zero for a digitally silent signal, so every frame fell *above* it
+  was zero for a digitally silent signal, so every frame fell _above_ it
   and the silence ratio came out as 0.0 instead of 1.0. A quiet clip could
   therefore score as if it were clear, voiced audio.
 - **The analyser no longer aborts the pipeline** when ffmpeg cannot decode
@@ -135,7 +168,7 @@ fail-closed defaults the product promises.
   **disabled** and needs an explicit `QATTA_ENABLE_URL_INGESTION=true`. The
   policy, the env template, the error messages and the tests agree.
 - **Every GitHub Action is pinned to a full commit SHA**, and the OpenSSF
-  Scorecard workflow checks it (the *Pinned-Dependencies* check).
+  Scorecard workflow checks it (the _Pinned-Dependencies_ check).
 - The CI runners are pinned to `ubuntu-24.04` before `ubuntu-latest` moves
   to Ubuntu 26.
 
@@ -198,7 +231,7 @@ on your own machine — no account, no upload, no telemetry.
   `QATTA_ENABLE_URL_INGESTION` and a per-import rights confirmation.
 - **Optional hosted ranker** — OpenRouter, Groq, AssemblyAI and local
   OpenAI-compatible endpoints, all fail-closed: they need an explicit opt-in
-  *and* a key, and the UI discloses that transcript text leaves the device.
+  _and_ a key, and the UI discloses that transcript text leaves the device.
 - **Command line** — `laqta doctor`, `laqta serve`, `laqta models`.
 - **Release tooling** — a pinned, hash-verified dependency lock, a version
   consistency check across every manifest, and a one-command setup script.

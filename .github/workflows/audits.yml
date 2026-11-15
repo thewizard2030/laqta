@@ -1,11 +1,10 @@
-name: Scheduled audits
+name: Scheduled audits (Manual Dispatch Only)
 
-# Weekly supply-chain check for the whole repository. It reports problems but
-# does not block a release — the blocking checks live in the CI workflow.
+# Preserved supply-chain security audits (`pip-audit` on runtime + lockfile,
+# `npm audit` on production + dev deps). Automatic `schedule` trigger disabled
+# until migrated to CircleCI; GitHub Actions runner availability is also blocked
+# by the repository account billing lock.
 on:
-  schedule:
-    # Mondays at 07:00 UTC.
-    - cron: "0 7 * * 1"
   workflow_dispatch:
 
 permissions:

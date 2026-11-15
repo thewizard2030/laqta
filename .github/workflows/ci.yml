@@ -1,10 +1,12 @@
-name: CI
+name: CI (Legacy Manual Fallback)
 
+# DEPRECATED as automatic branch/PR CI: superseded by CircleCI (.circleci/config.yml
+# `ci` workflow running `backend`, `core-tests`, and `frontend`). Automatic
+# `push`/`pull_request` triggers are removed to avoid duplicate automated CI.
+# Preserves `security` (gitleaks, pip-audit, npm audit) and legacy test jobs for
+# manual dispatch only. Currently DORMANT due to the GitHub Actions billing lock;
+# do not report dormant jobs as passing.
 on:
-  push:
-    branches: [main, master]
-  pull_request:
-    branches: [main, master]
   workflow_dispatch:
 
 # Least privilege: the workflows only need to read the repository.
