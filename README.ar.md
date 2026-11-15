@@ -314,7 +314,7 @@ flowchart TD
 - **`backend/`**: خدمة FastAPI المحلية (`backend/app/main.py`)، ومستودع SQLite، ومدير مهام الخلفية، وواجهة برمجة الإعدادات.
 - **`frontend/`**: واجهة الاستوديو التفاعلية المبنية بـ React 19 و Vite، وتضم الخط الزمني، ومشغل 9:16، ومحرر النصوص، واستوديو الإعدادات.
 - **`scripts/`**: سكريبتات أتمتة التطوير (`dev.sh` و `setup.sh`)، وفحوصات الـ CI، والتحقق من الإصدارات ونشرها (`publish_github_release.py`)، واختبارات تقييم جودة المقاطع.
-- **`.circleci/`**: منصة الـ CI/CD ونشر الإصدارات الرئيسية المعتمدة (`ci` للفروع وطلبات الدمج، و`release` عند الوسوم مع سياق `laqta-release-publishing` المعزول)، بينما تقتصر مسارات GitHub Actions على التشغيل اليدوي `workflow_dispatch` (ينتظر مرشح `v0.2.5` التحقق البعيد على CircleCI بعد الدفع).
+- **`.circleci/`**: منصة الـ CI/CD ونشر الإصدارات الرئيسية المعتمدة (`ci` للفروع وطلبات الدمج، و`release` عند الوسوم مع سياق `laqta-release-publishing` المعزول)، بينما تقتصر مسارات GitHub Actions على التشغيل اليدوي `workflow_dispatch`. اجتاز إصدار [`v0.2.5`](https://github.com/thewizard2030/laqta/releases/tag/v0.2.5) فحوصات ونشر CircleCI (`backend` و`frontend` و`publish-release` عبر [مسار العمل `1a3a76df`](https://app.circleci.com/workflow/1a3a76df-da76-472a-a5f4-8a5631483787)).
 - **`docs/`**: مركز التوثيق الفني، والمواصفات المعمارية، ودليل السياسات والعلامة التجارية.
 
 ---

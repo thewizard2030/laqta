@@ -6,7 +6,7 @@ CircleCI 2.1 is the **authoritative automated CI and GitHub Release publishing p
 
 ## 1. Pipeline Overview
 
-CircleCI defines two distinct workflows in [`.circleci/config.yml`](file:///home/thewizard/Qatta/.circleci/config.yml):
+CircleCI defines two distinct workflows in [`.circleci/config.yml`](../.circleci/config.yml):
 
 1. **`ci` workflow (Branches & Pull Requests):**
    - Runs `backend` (`cimg/python:3.12`) and `frontend` (`cimg/node:22.14`) concurrently on branch pushes and pull requests.
@@ -22,7 +22,7 @@ CircleCI defines two distinct workflows in [`.circleci/config.yml`](file:///home
 
 ## 2. Smarter Testing Configuration (`.circleci/test-suites.yml`)
 
-All test discovery and JUnit XML ingestion are driven by [`.circleci/test-suites.yml`](file:///home/thewizard/Qatta/.circleci/test-suites.yml):
+All test discovery and JUnit XML ingestion are driven by [`.circleci/test-suites.yml`](../.circleci/test-suites.yml):
 
 | Suite Name       | Executor | Discovery Command                                   | Test Scope                                                                       |
 | :--------------- | :------- | :-------------------------------------------------- | :------------------------------------------------------------------------------- |
@@ -43,7 +43,7 @@ When a stable tag `vX.Y.Z` is pushed:
    - `refs/tags/$CIRCLE_TAG^{commit}` resolves to checked-out `HEAD`.
    - `tests/fixtures/sample_captions_synthetic.ar.vtt` is present and the removed `tests/fixtures/sample_captions.ar.vtt` file is absent.
 3. **Immutable Source Archive:** Runs `git archive --format=tar.gz --prefix="laqta-${CIRCLE_TAG}/" -o "dist/laqta-${CIRCLE_TAG}.tar.gz" "$CIRCLE_TAG"` (source only — no binaries, model weights, `.env`, databases, `node_modules/`, or `frontend/dist/`).
-4. **GitHub Release Publishing & Integrity Verification ([`scripts/publish_github_release.py`](file:///home/thewizard/Qatta/scripts/publish_github_release.py)):**
+4. **GitHub Release Publishing & Integrity Verification ([`scripts/publish_github_release.py`](../scripts/publish_github_release.py)):**
    - Computes local SHA-256 of `dist/laqta-${CIRCLE_TAG}.tar.gz` before any upload.
    - Creates/looks up the release over HTTPS (`https://api.github.com`) and uploads the archive (`https://uploads.github.com`), verifying returned asset `name`, byte `size`, and `sha256:` `digest` when present.
    - **Strict Retry Integrity:** On existing releases/assets, matching file name + byte size alone is **never** trusted as idempotent success:
@@ -59,12 +59,12 @@ When a stable tag `vX.Y.Z` is pushed:
 To keep release credentials isolated from pull requests, branch builds, and test executors:
 
 - Store `GITHUB_TOKEN` inside a **dedicated CircleCI Context** named **`laqta-release-publishing`** rather than a project-level environment variable (project-level environment variables are exposed to every job in a project, including `backend`, `frontend`, and untrusted PR jobs).
-- Attach `context: laqta-release-publishing` **exclusively** to `publish-release` in [`.circleci/config.yml`](file:///home/thewizard/Qatta/.circleci/config.yml). Never attach it to `backend`, `frontend`, or `ci` workflow jobs.
+- Attach `context: laqta-release-publishing` **exclusively** to `publish-release` in [`.circleci/config.yml`](../.circleci/config.yml). Never attach it to `backend`, `frontend`, or `ci` workflow jobs.
 - **How to Restrict the Context (`Organization Settings -> Contexts -> laqta-release-publishing`):**
   1. Restrict the context to repository `thewizard2030/laqta` (Project/Expression restriction if available) and add authorized maintainer Security Groups so only approved maintainers can trigger jobs with access to `laqta-release-publishing`.
   2. Set `GITHUB_TOKEN` using a Fine-Grained GitHub Personal Access Token scoped strictly to repository **`thewizard2030/laqta`** with minimum permissions:
      - **`Contents: Read and write`** (required to create GitHub Releases and upload source archives).
-     - **`Workflows: Read and write`** (required for the initial `v0.2.5` release commit because it modifies files under `.github/workflows/`).
+     - **`Workflows: Read and write`** (required when release commits modify files under `.github/workflows/`, as in `v0.2.5`).
 - **CircleCI Plan & Account Limitations:** Personal GitHub accounts or CircleCI Free plans may not support Security Group / RBAC context restrictions (only enterprise/paid Organization plans expose granular team Security Groups). When RBAC restrictions are unavailable on a personal CircleCI account, **context attachment on `publish-release` + `tags: only: /^v\d+\.\d+\.\d+$/` + `branches: ignore: /.*/` + GitHub tag creation permissions** provide the compensating isolation boundary against ordinary branch and PR builds.
 - If `GITHUB_TOKEN` is missing or set to a placeholder, `publish-release` fails closed with zero secret leakage (`redact_secret()`). Never use `set -x` or print environment variables in release steps.
 
@@ -74,14 +74,14 @@ To keep release credentials isolated from pull requests, branch builds, and test
 
 All automated triggers (`push`, `pull_request`, `schedule`, `branch_protection_rule`) in `.github/workflows/` have been removed so GitHub Actions does not run duplicate automated CI or compete with CircleCI releases. Every workflow definition is preserved for explicit manual `workflow_dispatch` only:
 
-| Workflow Filename                                                                                         | Exact `on:` Triggers | Auto Active? | Overlaps CircleCI?                                  | Intended GitHub-Native? | Recommended Final State                                                                               |
-| :-------------------------------------------------------------------------------------------------------- | :------------------- | :----------- | :-------------------------------------------------- | :---------------------- | :---------------------------------------------------------------------------------------------------- |
-| [`.github/workflows/release.yml`](file:///home/thewizard/Qatta/.github/workflows/release.yml)             | `workflow_dispatch`  | No           | Yes (superseded by CircleCI `release`)              | No                      | Preserved as explicit manual fallback (`confirm_manual_fallback: true` + `publish_github_release.py`) |
-| [`.github/workflows/ci.yml`](file:///home/thewizard/Qatta/.github/workflows/ci.yml)                       | `workflow_dispatch`  | No           | Yes (`backend`/`frontend` superseded; GHA security) | No                      | Preserved as manual fallback for `security` / `dependency-review` / legacy test jobs                  |
-| [`.github/workflows/audits.yml`](file:///home/thewizard/Qatta/.github/workflows/audits.yml)               | `workflow_dispatch`  | No           | No (automated `pip-audit` + lock + `npm audit`)     | Optional (migratable)   | Preserved on `workflow_dispatch` until scheduled vulnerability audits migrate to CircleCI             |
-| [`.github/workflows/scorecard.yml`](file:///home/thewizard/Qatta/.github/workflows/scorecard.yml)         | `workflow_dispatch`  | No           | No (OpenSSF Scorecard SARIF upload)                 | Yes (GitHub-native)     | Preserved on `workflow_dispatch` while GHA billing is locked; restore `schedule`/`push` if unlocked   |
-| [`.github/workflows/evaluation.yml`](file:///home/thewizard/Qatta/.github/workflows/evaluation.yml)       | `workflow_dispatch`  | No           | No (`evaluate_ranking.py --check`)                  | No                      | Preserved on `workflow_dispatch` until ranking evaluation migrates to CircleCI                        |
-| [`.github/workflows/release-check.yml`](file:///home/thewizard/Qatta/.github/workflows/release-check.yml) | `workflow_dispatch`  | No           | No (`verify_release.py` synthetic pipeline)         | No                      | Preserved on `workflow_dispatch` until end-to-end verification migrates to CircleCI                   |
+| Workflow Filename                                                               | Exact `on:` Triggers | Auto Active? | Overlaps CircleCI?                                  | Intended GitHub-Native? | Recommended Final State                                                                               |
+| :------------------------------------------------------------------------------ | :------------------- | :----------- | :-------------------------------------------------- | :---------------------- | :---------------------------------------------------------------------------------------------------- |
+| [`.github/workflows/release.yml`](../.github/workflows/release.yml)             | `workflow_dispatch`  | No           | Yes (superseded by CircleCI `release`)              | No                      | Preserved as explicit manual fallback (`confirm_manual_fallback: true` + `publish_github_release.py`) |
+| [`.github/workflows/ci.yml`](../.github/workflows/ci.yml)                       | `workflow_dispatch`  | No           | Yes (`backend`/`frontend` superseded; GHA security) | No                      | Preserved as manual fallback for `security` / `dependency-review` / legacy test jobs                  |
+| [`.github/workflows/audits.yml`](../.github/workflows/audits.yml)               | `workflow_dispatch`  | No           | No (automated `pip-audit` + lock + `npm audit`)     | Optional (migratable)   | Preserved on `workflow_dispatch` until scheduled vulnerability audits migrate to CircleCI             |
+| [`.github/workflows/scorecard.yml`](../.github/workflows/scorecard.yml)         | `workflow_dispatch`  | No           | No (OpenSSF Scorecard SARIF upload)                 | Yes (GitHub-native)     | Preserved on `workflow_dispatch` while GHA billing is locked; restore `schedule`/`push` if unlocked   |
+| [`.github/workflows/evaluation.yml`](../.github/workflows/evaluation.yml)       | `workflow_dispatch`  | No           | No (`evaluate_ranking.py --check`)                  | No                      | Preserved on `workflow_dispatch` until ranking evaluation migrates to CircleCI                        |
+| [`.github/workflows/release-check.yml`](../.github/workflows/release-check.yml) | `workflow_dispatch`  | No           | No (`verify_release.py` synthetic pipeline)         | No                      | Preserved on `workflow_dispatch` until end-to-end verification migrates to CircleCI                   |
 
 ---
 
@@ -93,4 +93,7 @@ pytest tests --tb=short
 ```
 
 - **Local validation:** `.circleci/config.yml` passed `circleci config validate`, YAML parsing passed across all 8 config/workflow files, and `scripts/publish_github_release.py` passed unit verification (`tests/test_publish_github_release.py`).
-- **Remote validation:** `main` (`b0ede9e`) passed `ci/circleci: backend` and `ci/circleci: frontend`. **The updated `v0.2.5` candidate on `release/v0.2.5` has NOT yet been pushed or validated remotely on CircleCI.**
+- **Remote CircleCI CI & `v0.2.5` publication:**
+  - `release/v0.2.5` (`50d7c90ce5ab61fb9f9b8314aca3d8ad1bdb1436`) passed CircleCI `ci` (`backend` and `frontend`).
+  - Annotated tag `v0.2.5` on merged `main` commit `8030cf5dd1a3acaa7b5f129a69e314f7739dc650` (PR #19) executed CircleCI `release` workflow [`1a3a76df-da76-472a-a5f4-8a5631483787`](https://app.circleci.com/workflow/1a3a76df-da76-472a-a5f4-8a5631483787): `backend` (`success`), `frontend` (`success`), and `publish-release` (`success`).
+  - Published [GitHub Release `v0.2.5`](https://github.com/thewizard2030/laqta/releases/tag/v0.2.5) with source tarball `laqta-v0.2.5.tar.gz` (`5468774` bytes, SHA-256 `a7a0117c2e4c36a7d6a3944d9100628f6af85d400378dc1f4384b5cdc038019e`).
