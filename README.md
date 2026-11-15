@@ -312,7 +312,7 @@ flowchart TD
 - **`backend/`**: Local FastAPI service (`backend/app/main.py`), SQLite repository, job manager, and settings API.
 - **`frontend/`**: React 19 + Vite studio workbench, multi-track audio scrub bar, vertical 9:16 canvas, and settings tabs.
 - **`scripts/`**: Development automation (`dev.sh`, `setup.sh`), CI testing gates, release validation/publishing (`publish_github_release.py`), and ranking benchmark harness.
-- **`.circleci/`**: Primary automated CI (`ci` branch/PR workflow) and tag-triggered GitHub Release pipeline (`release` workflow with isolated `laqta-release-publishing` context); GitHub Actions workflows remain manual `workflow_dispatch` fallbacks/auxiliaries (`v0.2.5` awaits remote CircleCI validation after push).
+- **`.circleci/`**: Primary automated CI (`ci` branch/PR workflow) and tag-triggered GitHub Release pipeline (`release` workflow with isolated `laqta-release-publishing` context); GitHub Actions workflows remain manual `workflow_dispatch` fallbacks/auxiliaries. Release [`v0.2.5`](https://github.com/thewizard2030/laqta/releases/tag/v0.2.5) passed CircleCI (`backend`, `frontend`, and `publish-release` in workflow [`1a3a76df`](https://app.circleci.com/workflow/1a3a76df-da76-472a-a5f4-8a5631483787)).
 - **`docs/`**: Technical documentation center, specifications, benchmarks, and policy manuals.
 
 ---
