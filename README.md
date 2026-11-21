@@ -16,6 +16,8 @@
 
 [English](README.md) • [العربية](README.ar.md)
 
+[Overview](#-overview) • [Showcase](#-visual-showcase) • [Features](#-product-feature-matrix-v025) • [Privacy](#-honest-privacy--security-policy) • [Quick Start](#-quick-start) • [CLI](#-cli-reference) • [Architecture](#-system-architecture) • [Docs](#-documentation-center)
+
 </div>
 
 ---
@@ -27,10 +29,10 @@ Laqta (**لقطة** — _"a take, a shot, or a cut"_) is a desktop-grade, privac
 Most video repurposing tools require uploading gigabytes of private footage to proprietary cloud servers, lock essential features behind recurring monthly fees, or produce broken, reversed Arabic subtitles. Laqta changes this:
 
 1. **Local-First by Default:** All media processing, audio extraction, transcription, and video rendering run directly on your own hardware (`127.0.0.1`). No cloud upload is ever required.
-2. **CPU-First Architecture:** Engineered for standard 8 GB RAM machines using efficient Faster-Whisper models (`int8` quantization) without requiring expensive dedicated GPUs.
+2. **CPU-First Architecture:** Engineered for standard 8 GB RAM machines using Faster-Whisper (`base` `int8` by default in the Studio backend; `qatta/` core pipeline also configures `QATTA_TURBO_MODEL` when memory allows) without requiring dedicated GPUs.
 3. **Explainable Clip Potential Score (CPS):** Instead of arbitrary "viral prediction" percentages, Laqta evaluates candidate moments using measurable acoustic, linguistic, and pacing heuristics with full rationale transparency.
 4. **First-Class Arabic & BiDi Support:** Native right-to-left (RTL) subtitle rendering with Unicode directional isolates (FSI/PDI) and Arablish Whisper prompts, keeping English technical terms in Latin script without breaking subtitle alignment.
-5. **Bring Your Own Keys (BYOK):** Seamless support for optional cloud inference providers (OpenRouter, Groq, AssemblyAI, Hugging Face) and local OpenAI-compatible endpoints (Ollama, LM Studio) with strict local credential isolation.
+5. **Bring Your Own Keys (BYOK):** Seamless support for local OpenAI-compatible endpoints (Ollama, LM Studio, llama.cpp, vLLM) and optional fail-closed hosted inference providers (OpenRouter for LLM ranking; Groq, AssemblyAI, Hugging Face for hosted ASR) with POSIX-isolated local credential storage.
 
 ---
 
@@ -63,10 +65,10 @@ Laqta processes videos through an atomic, resumable manifest pipeline (`qatta_ma
 1. **Local Ingestion:** Copies video footage safely into your local project workspace (`~/.local/share/qatta`). Original files are never modified.
 2. **Audio Extraction:** High-speed 16 kHz mono WAV extraction via local FFmpeg subprocesses.
 3. **Two-Pass Speech Recognition:**
-   - **Pass A (Full Media):** Fast segment-level transcription via local Faster-Whisper (or optional Groq cloud fallback) without full-video word timestamps to conserve CPU cycles.
-   - **Pass B (Selected Clips):** Precise word-level timing alignment computed only for the specific clips chosen for rendering.
-4. **Heuristic Candidate Ranking:** Evaluates speech cadence, pitch dynamics, and topic boundaries to assign each segment an explainable **Clip Potential Score (CPS)**.
-5. **Vertical Video Reframing:** Centers active speakers into a vertical 1080×1920 canvas with title-safe area margins for mobile platforms.
+   - **Pass A (Full Media):** Fast segment-level transcription via local Faster-Whisper (or optional opt-in cloud ASR / YouTube caption-first ingestion) without full-video word timestamps to conserve CPU cycles.
+   - **Pass B (Selected Clips):** Clip-scoped word-level alignment (`small` `int8` model by default) computed on demand only for chosen clips when rendering karaoke captions.
+4. **Heuristic Candidate Ranking:** Evaluates speech cadence, pause boundaries, and vocal dynamics to assign each segment an explainable **Clip Potential Score (CPS)**.
+5. **9:16 Vertical Framing:** Reformats horizontal footage to 1080×1920 via `center_crop` or `blurred_background` layouts with mobile title-safe area overlays in the Studio renderer (an optional face/speaker camera solver lives in core stage `qatta/stages/s06_reframe_subs` when the `[analysis]` extra is installed).
 6. **RTL-Compliant Subtitle Burn-In:** Renders animated karaoke-style captions via `libass` with HarfBuzz/FriBiDi text shaping.
 
 ---
@@ -94,7 +96,7 @@ Laqta processes videos through an atomic, resumable manifest pipeline (`qatta_ma
 - **Local Import:** Drag-and-drop video upload supporting MP4, MOV, MKV, and WebM. `[Supported]`
 - **Project Workspaces:** Persistent SQLite-backed project management in `~/.local/share/qatta/`. `[Supported]`
 - **Multi-Track Timeline:** Interactive audio waveform scrubbing, playback controls, and clip trimming. `[Supported]`
-- **Vertical Framing (9:16):** 1080×1920 portrait reframing with safe-area overlays for Shorts/Reels/TikTok. `[Supported]`
+- **Vertical Framing (9:16):** 1080×1920 centered crop (`center_crop`) or blurred-background (`blurred_background`) framing with safe-area overlays in Studio (`[Supported]`); experimental face/speaker camera solver in `qatta/stages/s06_reframe_subs` (`[Optional / [analysis]]`).
 - **High-Quality Export:** Local FFmpeg encoding with burned-in ASS subtitles or standalone SRT export. `[Supported]`
 - **URL Ingestion:** Optional YouTube caption-first importing via `yt-dlp` (fail-closed, requires operator enablement and per-import rights confirmation). `[Optional / Opt-In]`
 
@@ -102,12 +104,12 @@ Laqta processes videos through an atomic, resumable manifest pipeline (`qatta_ma
 
 - **Local Faster-Whisper:** CPU-optimized CTranslate2 speech recognition running 100% offline. `[Supported]`
 - **Three Performance Profiles:**
-  - `fast` (default): `base` model, `int8` quantization, beam size 1. Best for quick turnaround on 8 GB RAM.
-  - `balanced`: `small` model, `int8` quantization. Enhanced Arabic transcription accuracy.
-  - `accurate`: Configurable larger model with full-video word alignment.
+  - `fast` (default): `base` model, `int8` quantization, beam size 1 (segment-level full pass; Pass B clip alignment on demand). Best for 8 GB RAM.
+  - `balanced`: `small` model, `int8` quantization, beam size 1. Enhanced Arabic transcription accuracy (~2× decode cost vs `base`).
+  - `accurate`: `medium` model, `int8` quantization, beam size 1, with full-video word alignment (noticeably slower on CPU).
 - **Bilingual Arablish Prompting:** Pre-configured Whisper initial prompts that prevent English technical vocabulary from corrupting Arabic sentence flow. `[Supported]`
-- **Optional Hosted ASR:** Fast cloud transcription fallback via Groq Cloud Whisper API or AssemblyAI API. `[Optional / Opt-In]`
-- **OpenAI-Compatible LLMs:** Integration with local inference servers (Ollama, LM Studio) or hosted providers (OpenRouter) for candidate evaluation. `[Optional / Opt-In]`
+- **Optional Local / Hosted ASR:** Optional local `whisper.cpp` support `[Optional Local]`, plus fail-closed hosted transcription via Groq Cloud Whisper API, AssemblyAI API, or Hugging Face Inference API `[Optional / Opt-In]`.
+- **OpenAI-Compatible & Hosted LLMs:** Integration with local inference servers (Ollama, LM Studio, llama.cpp, vLLM) or hosted OpenRouter (`LLM_HOSTED_OPT_IN=true`) for candidate evaluation. `[Optional / Opt-In]`
 
 ### 🔐 Privacy, Security & BYOK
 
@@ -121,7 +123,7 @@ Laqta processes videos through an atomic, resumable manifest pipeline (`qatta_ma
 
 - **Fedora/Linux Primary Support:** Tested on modern Fedora and Linux distributions. `[Supported]`
 - **System Doctor CLI (`laqta doctor`):** Built-in diagnostic tool checking Python, FFmpeg, FFprobe, and disk permissions. `[Supported]`
-- **XDG Desktop Launcher:** Desktop entry (`laqta.desktop`) and scalable application icons for application menus. `[Supported]`
+- **XDG Desktop Launcher:** Desktop entry (`packaging/laqta.desktop`) and hicolor icons installed via `./packaging/install.sh --user`. `[Supported]`
 
 ---
 
@@ -143,6 +145,16 @@ In v0.2.5, user-configured API keys are stored locally in SQLite (`~/.local/shar
 
 ## 🚀 Quick Start
 
+### System Requirements
+
+| Component   | Minimum / Baseline                                                           |
+| :---------- | :--------------------------------------------------------------------------- |
+| **OS**      | Linux (Fedora / RHEL or Ubuntu / Debian)                                     |
+| **Python**  | `>= 3.11` (`3.11` or `3.12` recommended)                                     |
+| **Node.js** | `>= 22.12` + `npm` (required by `frontend/package.json` for Vite 8 / Vitest) |
+| **Media**   | `ffmpeg` (built with `libass` / HarfBuzz / FriBiDi) and `ffprobe`            |
+| **Memory**  | 8 GB RAM (CPU-first `int8`; Whisper weights download on first transcription) |
+
 ### Method 1: Native Installation (Fedora / Linux Recommended)
 
 #### 1. Install System Dependencies
@@ -156,8 +168,10 @@ sudo dnf install -y ffmpeg libass python3 python3-devel nodejs npm
 **Ubuntu / Debian:**
 
 ```bash
-sudo apt update && sudo apt install -y ffmpeg libass-dev python3 python3-venv nodejs npm
+sudo apt update && sudo apt install -y ffmpeg libass-dev python3 python3-venv
 ```
+
+> **Node.js `>= 22.12` on Ubuntu / Debian:** Standard distro `apt` repositories on older LTS releases often ship Node.js `< 20`. Install Node.js `22.x` via [nvm](https://github.com/nvm-sh/nvm), [fnm](https://github.com/Schniz/fnm), or NodeSource if `node -v` is below `v22.12`.
 
 #### 2. Clone and Bootstrap
 
@@ -166,24 +180,31 @@ sudo apt update && sudo apt install -y ffmpeg libass-dev python3 python3-venv no
 git clone https://github.com/thewizard2030/laqta.git
 cd laqta
 
-# Run automated development bootstrap (installs Python venv + frontend packages)
+# Create backend/.venv (core + API + local ASR) and install frontend dependencies
 ./scripts/setup.sh
+# Optional flags: --all (adds yt-dlp + analysis extras) | --api-only | --no-frontend
 ```
 
 #### 3. Verify Your System
 
-Run the built-in diagnostic doctor to ensure all media and speech dependencies are ready:
+Activate the created virtual environment (or invoke `./backend/.venv/bin/laqta` directly) and run `doctor`:
 
 ```bash
+source backend/.venv/bin/activate
 laqta doctor
 ```
 
 ```text
+Laqta doctor — local environment check
+
 ✓   Python          3.11.x           >= 3.11 required
-✓   FFmpeg          8.x              /usr/bin/ffmpeg (libass supported)
+✓   FFmpeg          8.x              /usr/bin/ffmpeg
 ✓   FFprobe         8.x              /usr/bin/ffprobe
 ✓   Local ASR       faster-whisper   Speech recognition on this CPU
+!   URL import      disabled by ...  Disabled by default (QATTA_ENABLE_URL_INGESTION=false)
 ✓   Data directory  writable         ~/.local/share/qatta
+✓   Hosted ranker   disabled         Local heuristic scoring is used — nothing is uploaded
+✓   Disk space      ...              available on the data volume
 ```
 
 #### 4. Launch the Studio
@@ -194,22 +215,30 @@ For active development with hot-reloading:
 ./scripts/dev.sh
 ```
 
-- **Backend API:** `http://127.0.0.1:8000`
+- **Backend API:** `http://127.0.0.1:8000` (Swagger docs at `/docs`)
 - **Studio Workbench:** `http://127.0.0.1:5173`
 
-For standalone local production mode:
+For standalone local production mode (from an activated `backend/.venv`, builds and serves the frontend from FastAPI on a single address):
 
 ```bash
+source backend/.venv/bin/activate
 laqta studio --production
 ```
 
 - Access the unified studio at `http://127.0.0.1:8000`.
 
+Optional desktop menu integration on Linux:
+
+```bash
+./packaging/install.sh --user   # installs ~/.local/share/applications/laqta.desktop & icons
+```
+
 ---
 
-### Method 2: Containerized Run (Docker Compose)
+### Method 2: Docker Compose (Experimental Preview)
 
-Run Laqta instantly in an isolated Linux container with pre-packaged FFmpeg and libass:
+> [!NOTE]
+> Native source installation (Method 1) is the primary verified path for `v0.2.5`. Review [Dockerfile](Dockerfile) and [docker-compose.yml](docker-compose.yml) carefully before containerized use (`Dockerfile` installs the core `.[asr]` extra rather than `backend/requirements.txt` and defines `QATTA_BIND_HOST`/`QATTA_BIND_PORT` rather than `QATTA_HOST`/`QATTA_PORT`).
 
 ```bash
 git clone https://github.com/thewizard2030/laqta.git
@@ -217,16 +246,41 @@ cd laqta
 docker compose up
 ```
 
-Open your browser at **`http://localhost:8000`**.
+When configured, open **`http://127.0.0.1:8000`**.
+
+---
+
+## ⌨️ CLI Reference
+
+Run commands inside `source backend/.venv/bin/activate` (or prefix with `./backend/.venv/bin/`):
+
+| Command                 | Description                                                                                     |
+| :---------------------- | :---------------------------------------------------------------------------------------------- |
+| `laqta --version`       | Print the installed Laqta version (`0.2.5`).                                                    |
+| `laqta doctor [--json]` | Inspect Python, FFmpeg/FFprobe, ASR, URL gating, storage permissions, disk, and servers.        |
+| `laqta models`          | List locally cached Hugging Face speech models and disk usage.                                  |
+| `laqta serve`           | Start the FastAPI backend (`--host 127.0.0.1 --port 8000 [--reload]`).                          |
+| `laqta studio`          | Launch backend API + Vite UI (`--production`, `--api-only`, `--frontend-only`, `--skip-build`). |
+
+---
+
+## 🧪 Development & Verification
+
+```bash
+./scripts/check.sh --fast                 # Ruff, version sync, backend/core pytest, coverage check, TS/ESLint/Prettier/Vitest
+pytest tests --tb=short                   # Core qatta/ test suite
+cd backend && .venv/bin/pytest tests -n auto && cd ..   # FastAPI backend test suite
+cd frontend && npm run check && cd ..     # Typecheck, ESLint, Prettier, Vitest
+```
 
 ---
 
 ## 🛠️ Troubleshooting Common Issues
 
 <details>
-<summary><b>1. <code>ModuleNotFoundError: No module named 'uvicorn'</code></b></summary>
+<summary><b>1. <code>laqta: command not found</code> or <code>No module named 'uvicorn'</code></b></summary>
 
-Ensure you have run `./scripts/setup.sh` to initialize the Python virtual environment under `backend/.venv`. If running commands manually, activate the virtual environment first:
+`./scripts/setup.sh` installs `laqta` and backend dependencies inside `backend/.venv` rather than your global Python environment. Activate the virtual environment first (or run `./backend/.venv/bin/laqta`):
 
 ```bash
 source backend/.venv/bin/activate
@@ -248,9 +302,13 @@ ffmpeg -version | grep -- --enable-libass
 <details>
 <summary><b>3. Port 8000 or 5173 already in use</b></summary>
 
-You can configure alternate port bindings by specifying environment variables before launching:
+`QATTA_PORT` changes the **FastAPI backend** port in `./scripts/dev.sh` (`laqta doctor` also honors `QATTA_PORT`), whereas Vite's dev server stays on `127.0.0.1:5173` and proxies `/api` to `http://127.0.0.1:8000` (configured in `frontend/vite.config.ts`):
 
 ```bash
+# Single-port production mode on an alternate port (no Vite dev server needed):
+./backend/.venv/bin/laqta studio --production --port 8080
+
+# Backend-only development on another port:
 QATTA_PORT=8080 ./scripts/dev.sh
 ```
 
@@ -275,19 +333,19 @@ flowchart TD
 
     subgraph Core["Core Engine (qatta/ Package)"]
         Manifest["qatta_manifest.json<br/>(Pydantic v2 Atomic State)"]
-        Pipeline["Modular Processing Stages<br/>(s01_ingest → s07_render)"]
+        Pipeline["Modular Processing Stages<br/>(s01_ingest → s07_render_learn)"]
     end
 
     subgraph LocalTools["Local Media Subprocesses"]
-        FFmpeg["FFmpeg & FFprobe<br/>(Audio Extraction / 9:16 Video Render)"]
+        FFmpeg["FFmpeg & FFprobe<br/>(Audio Extraction / 9:16 Render)"]
         Libass["libass Subtitle Engine<br/>(HarfBuzz / FriBiDi Text Shaping)"]
-        Whisper["Faster-Whisper (CPU int8)<br/>(Offline CTranslate2 Model)"]
+        Whisper["Faster-Whisper / whisper.cpp<br/>(Offline CPU int8)"]
     end
 
-    subgraph CloudGate["Optional Cloud Gate (Fail-Closed)"]
-        Gate{"ALLOW_CLOUD_APIS=true<br/>& User Opt-In?"}
-        HostedASR["Hosted Speech API<br/>(Groq / AssemblyAI)"]
-        HostedLLM["Hosted LLM Ranker<br/>(OpenRouter / OpenAI-Compatible)"]
+    subgraph CloudGate["LLM & Optional Cloud Gate (Fail-Closed)"]
+        Gate{"ALLOW_CLOUD_APIS /<br/>LLM_HOSTED_OPT_IN?"}
+        HostedASR["Hosted Speech API<br/>(Groq / AssemblyAI / Hugging Face)"]
+        HostedLLM["LLM Ranker<br/>(Ollama local; OpenRouter cloud)"]
     end
 
     UI <-->|HTTP / JSON| API
@@ -301,9 +359,9 @@ flowchart TD
     Pipeline --> Whisper
 
     Pipeline -.->|Requires Explicit Opt-In| Gate
-    Gate -->|Yes| HostedASR
-    Gate -->|Yes| HostedLLM
-    Gate -->|"No (Default)"| Whisper
+    Gate -->|Cloud Enabled| HostedASR
+    Gate -->|Local or Opt-In| HostedLLM
+    Gate -->|"Default (Local ASR)"| Whisper
 ```
 
 ### Subsystems Breakdown
@@ -321,15 +379,22 @@ flowchart TD
 
 For comprehensive architectural specifications, benchmarks, and contributor guides, visit the **[Laqta Documentation Center](docs/README.md)**:
 
-| Document                                                         | Description                                                                  |
-| :--------------------------------------------------------------- | :--------------------------------------------------------------------------- |
-| **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**                 | Deep-dive into manifest lifecycle, stage synchronization, and IPC boundaries |
-| **[docs/POLICY.md](docs/POLICY.md)**                             | Public privacy contract, telemetry policy, and model license documentation   |
-| **[docs/BYOK_DESIGN.md](docs/BYOK_DESIGN.md)**                   | Bring Your Own Keys specification, SQLite schema, and security threat model  |
-| **[docs/EVALUATION.md](docs/EVALUATION.md)**                     | Measured clip-selection precision, recall, and F1 ranking benchmarks         |
-| **[docs/PERFORMANCE.md](docs/PERFORMANCE.md)**                   | Two-pass transcription profiles and 8 GB RAM memory constraints              |
-| **[docs/BRANDING.md](docs/BRANDING.md)**                         | Official brand identity, color tokens, and asset usage guidelines            |
-| **[docs/RELEASE_NOTES_v0.2.0.md](docs/RELEASE_NOTES_v0.2.0.md)** | Official v0.2.0 release notes and feature highlights                         |
+| Document                                                         | Description                                                                      |
+| :--------------------------------------------------------------- | :------------------------------------------------------------------------------- |
+| **[CHANGELOG.md](CHANGELOG.md)**                                 | Full release history including **`v0.2.5`**, fixes, and known limitations        |
+| **[docs/RELEASING.md](docs/RELEASING.md)**                       | Automated CircleCI tag-release flow, SHA-256 verification, and `v0.2.5` record   |
+| **[docs/CIRCLECI_MIGRATION.md](docs/CIRCLECI_MIGRATION.md)**     | CircleCI 2.1 Smarter Testing, `laqta-release-publishing`, and GHA deprecation    |
+| **[docs/LICENSING.md](docs/LICENSING.md)**                       | Permanent MIT License policy, third-party separation, and trademark references   |
+| **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**                 | Deep-dive into manifest lifecycle, stage synchronization, and IPC boundaries     |
+| **[docs/POLICY.md](docs/POLICY.md)**                             | Public privacy contract, telemetry policy, and model license documentation       |
+| **[docs/BYOK_DESIGN.md](docs/BYOK_DESIGN.md)**                   | Bring Your Own Keys specification, SQLite schema, and security threat model      |
+| **[docs/EVALUATION.md](docs/EVALUATION.md)**                     | Measured clip-selection precision, recall, and F1 ranking benchmarks             |
+| **[docs/PERFORMANCE.md](docs/PERFORMANCE.md)**                   | Two-pass transcription profiles and 8 GB RAM memory constraints                  |
+| **[docs/CAPTION_QA.md](docs/CAPTION_QA.md)**                     | Arabic BiDi subtitle layout verification, FSI/PDI isolates, and `libass` burn-in |
+| **[docs/UPGRADING.md](docs/UPGRADING.md)**                       | Release upgrade paths, database migrations, and configuration compatibility      |
+| **[docs/BRANDING.md](docs/BRANDING.md)**                         | Official brand identity, color tokens, and asset usage guidelines                |
+| **[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)**             | Open-source licenses and copyright attributions for direct and runtime packages  |
+| **[docs/RELEASE_NOTES_v0.2.0.md](docs/RELEASE_NOTES_v0.2.0.md)** | Earlier `v0.2.0` release notes (BYOK & Advanced Settings Studio)                 |
 
 ---
 
