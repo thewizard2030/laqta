@@ -371,7 +371,7 @@ flowchart TD
 - **`backend/`**: Local FastAPI service (`backend/app/main.py`), SQLite repository, job manager, and settings API.
 - **`frontend/`**: React 19 + Vite studio workbench, multi-track audio scrub bar, vertical 9:16 canvas, and settings tabs.
 - **`scripts/`**: Development automation (`dev.sh`, `setup.sh`), CI testing gates, release validation/publishing (`publish_github_release.py`), and ranking benchmark harness.
-- **`.circleci/`**: Primary automated CI (`ci` branch/PR workflow) and tag-triggered GitHub Release pipeline (`release` workflow with isolated `laqta-release-publishing` context); GitHub Actions workflows remain manual `workflow_dispatch` fallbacks/auxiliaries. Release [`v0.2.5`](https://github.com/thewizard2030/laqta/releases/tag/v0.2.5) passed CircleCI (`backend`, `frontend`, and `publish-release` in workflow [`1a3a76df`](https://app.circleci.com/workflow/1a3a76df-da76-472a-a5f4-8a5631483787)).
+- **`.circleci/`**: Primary automated CI (`ci` branch/PR workflow) and tag-triggered GitHub Release pipeline (`release` workflow with isolated `laqta-release-publishing` context); GitHub Actions workflows remain manual `workflow_dispatch` fallbacks/auxiliaries. Releases [`v0.2.5`](https://github.com/thewizard2030/laqta/releases/tag/v0.2.5) and [`v0.3.0`](https://github.com/thewizard2030/laqta/releases/tag/v0.3.0) passed CircleCI (`backend`, `frontend`, and `publish-release` in workflows [`1a3a76df`](https://app.circleci.com/workflow/1a3a76df-da76-472a-a5f4-8a5631483787) and [`3d0f2617`](https://app.circleci.com/workflow/3d0f2617-08eb-499e-b906-36a6b9cee815)).
 - **`docs/`**: Technical documentation center, specifications, benchmarks, and policy manuals.
 
 ---
@@ -383,7 +383,7 @@ For comprehensive architectural specifications, benchmarks, and contributor guid
 | Document                                                         | Description                                                                      |
 | :--------------------------------------------------------------- | :------------------------------------------------------------------------------- |
 | **[CHANGELOG.md](CHANGELOG.md)**                                 | Full release history including **`v0.2.5`**, fixes, and known limitations        |
-| **[docs/RELEASING.md](docs/RELEASING.md)**                       | Automated CircleCI tag-release flow, SHA-256 verification, and `v0.2.5` record   |
+| **[docs/RELEASING.md](docs/RELEASING.md)**                       | Automated CircleCI tag-release flow, SHA-256 verification, and `v0.3.0` record   |
 | **[docs/CIRCLECI_MIGRATION.md](docs/CIRCLECI_MIGRATION.md)**     | CircleCI 2.1 Smarter Testing, `laqta-release-publishing`, and GHA deprecation    |
 | **[docs/LICENSING.md](docs/LICENSING.md)**                       | Permanent MIT License policy, third-party separation, and trademark references   |
 | **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**                 | Deep-dive into manifest lifecycle, stage synchronization, and IPC boundaries     |

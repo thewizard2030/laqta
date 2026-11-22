@@ -44,6 +44,7 @@ Scriptable Laqta — one pipeline, two entry points, no duplicated stage list.
 - **Cancellation is at stage boundaries.** Ctrl-C lets the running stage finish before stopping; a second Ctrl-C stops immediately, and the manifest is never advanced past the last completed stage. Cancellation is never claimed to be instant.
 - **`backend/requirements-lock.txt` is stale per `--check`** because upstream published newer versions. It was not regenerated in this release to avoid a gratuitous 42-package bump; `--verify` still passes, and the default profile installs reproducibly from the committed lock.
 - **`backend/requirements-lock.txt` still resolves for Python 3.11** (the minimum supported interpreter) while the development virtualenv is 3.12; this is intentional and documented in `scripts/generate_lock.py`.
+- **Release record:** `v0.3.0` is published via CircleCI ([workflow `3d0f2617`](https://app.circleci.com/workflow/3d0f2617-08eb-499e-b906-36a6b9cee815): `backend`, `frontend` and `publish-release` all passed), creating [GitHub Release `v0.3.0`](https://github.com/thewizard2030/laqta/releases/tag/v0.3.0) from tag object `b6cca91ee422116e7874acd30d35b894abc0b189` on merge commit `23ec167e105c8cdfcee14e036a1e87ac7edd281d` (PR #25), with asset `laqta-v0.3.0.tar.gz` (`5521156` bytes, SHA-256 `1ca1760cb66a3b534e588a5a899b614c4967b46cf4d4087bf81d418d4456bada`). All `.github/workflows/` files remain explicit `workflow_dispatch` fallbacks only.
 
 ## [0.2.5] — 2026-11-15
 
