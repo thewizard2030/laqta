@@ -78,6 +78,16 @@ To retry after fixing a token or transient error, re-run the `publish-release` j
 
 ---
 
+## Completed Release Record: `v0.3.0` (2026-11-22)
+
+- **Tag & Verified Target Commit:** `v0.3.0` (`b6cca91ee422116e7874acd30d35b894abc0b189`) -> [`23ec167e105c8cdfcee14e036a1e87ac7edd281d`](https://github.com/thewizard2030/laqta/commit/23ec167e105c8cdfcee14e036a1e87ac7edd281d) (PR #25)
+- **CircleCI Release Workflow:** [`3d0f2617-08eb-499e-b906-36a6b9cee815`](https://app.circleci.com/workflow/3d0f2617-08eb-499e-b906-36a6b9cee815) (`backend`: `success`, `frontend`: `success`, `publish-release`: `success`)
+- **Published GitHub Release:** https://github.com/thewizard2030/laqta/releases/tag/v0.3.0
+- **Source Tarball Asset:** [`laqta-v0.3.0.tar.gz`](https://github.com/thewizard2030/laqta/releases/download/v0.3.0/laqta-v0.3.0.tar.gz) (`5521156` bytes, SHA-256 `1ca1760cb66a3b534e588a5a899b614c4967b46cf4d4087bf81d418d4456bada`)
+- **Independent verification:** downloaded the asset from the published release, recomputed the SHA-256 above, and confirmed `qatta/__init__.py` reports `0.3.0` and the archive contains `qatta/core/runner.py`, both new locks and the new test suites.
+
+---
+
 ## Completed Release Record: `v0.2.5` (2026-11-15)
 
 - **Tag & Verified Target Commit:** `v0.2.5` (`ac93f32810332cf2cbe5e8fbd43f77b7680856df`) -> [`8030cf5dd1a3acaa7b5f129a69e314f7739dc650`](https://github.com/thewizard2030/laqta/commit/8030cf5dd1a3acaa7b5f129a69e314f7739dc650) (PR #19)

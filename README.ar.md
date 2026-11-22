@@ -377,7 +377,7 @@ flowchart TD
 - **`backend/`**: خدمة FastAPI المحلية (`backend/app/main.py`)، ومستودع SQLite، ومدير مهام الخلفية، وواجهة برمجة الإعدادات.
 - **`frontend/`**: واجهة الاستوديو التفاعلية المبنية بـ React 19 و Vite، وتضم الخط الزمني، ومشغل 9:16، ومحرر النصوص، واستوديو الإعدادات.
 - **`scripts/`**: سكريبتات أتمتة التطوير (`dev.sh` و `setup.sh`)، وفحوصات الـ CI، والتحقق من الإصدارات ونشرها (`publish_github_release.py`)، واختبارات تقييم جودة المقاطع.
-- **`.circleci/`**: منصة الـ CI/CD ونشر الإصدارات الرئيسية المعتمدة (`ci` للفروع وطلبات الدمج، و`release` عند الوسوم مع سياق `laqta-release-publishing` المعزول)، بينما تقتصر مسارات GitHub Actions على التشغيل اليدوي `workflow_dispatch`. اجتاز إصدار [`v0.2.5`](https://github.com/thewizard2030/laqta/releases/tag/v0.2.5) فحوصات ونشر CircleCI (`backend` و`frontend` و`publish-release` عبر [مسار العمل `1a3a76df`](https://app.circleci.com/workflow/1a3a76df-da76-472a-a5f4-8a5631483787)).
+- **`.circleci/`**: منصة الـ CI/CD ونشر الإصدارات الرئيسية المعتمدة (`ci` للفروع وطلبات الدمج، و`release` عند الوسوم مع سياق `laqta-release-publishing` المعزول)، بينما تقتصر مسارات GitHub Actions على التشغيل اليدوي `workflow_dispatch`. اجتاز الإصداران [`v0.2.5`](https://github.com/thewizard2030/laqta/releases/tag/v0.2.5) و[`v0.3.0`](https://github.com/thewizard2030/laqta/releases/tag/v0.3.0) فحوصات ونشر CircleCI (`backend` و`frontend` و`publish-release` عبر مساري العمل [`1a3a76df`](https://app.circleci.com/workflow/1a3a76df-da76-472a-a5f4-8a5631483787) و[`3d0f2617`](https://app.circleci.com/workflow/3d0f2617-08eb-499e-b906-36a6b9cee815)).
 - **`docs/`**: مركز التوثيق الفني، والمواصفات المعمارية، ودليل السياسات والعلامة التجارية.
 
 ---
@@ -389,7 +389,7 @@ flowchart TD
 | الوثيقة                                                          | الوصف والمحتوى                                                                     |
 | :--------------------------------------------------------------- | :--------------------------------------------------------------------------------- |
 | **[CHANGELOG.md](CHANGELOG.md)**                                 | سجل التغييرات الكامل متضمنًا **`v0.2.5`** والإصلاحات والقيود المعروفة              |
-| **[docs/RELEASING.md](docs/RELEASING.md)**                       | خطوات النشر التلقائي عبر CircleCI والتحقق بـ SHA-256 وسجل إصدار `v0.2.5`           |
+| **[docs/RELEASING.md](docs/RELEASING.md)**                       | خطوات النشر التلقائي عبر CircleCI والتحقق بـ SHA-256 وسجل إصدار `v0.3.0`           |
 | **[docs/CIRCLECI_MIGRATION.md](docs/CIRCLECI_MIGRATION.md)**     | بنية CircleCI 2.1 وعزل سياق `laqta-release-publishing` وتفاصيل الانتقال من Actions |
 | **[docs/LICENSING.md](docs/LICENSING.md)**                       | سياسة ترخيص MIT الدائمة وفصل حزم الطرف الثالث وحقوق العلامة التجارية               |
 | **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**                 | شرح تفصيلي لدورة حياة ملف البيان، ومزامنة المراحل، وحدود العمليات                  |
