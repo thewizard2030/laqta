@@ -5,6 +5,16 @@
 **Document Status:** **Proposed Asset Rights Policy — Not Adopted**  
 **Date:** November 15, 2026
 
+> [!NOTE]
+> **Status as of v0.3.0 (November 2026): still proposed, deliberately.** The
+> asset dispositions below are recommendations, not policy. Two of them matter
+> for anyone redistributing Laqta: `Laqta_Brand_Kit/guidelines/` contains an
+> AI-generated reference image with unverified provenance (and a `.png`/WebP
+> format mismatch), and the inline `GitHubIcon`/`YouTubeIcon` SVG paths in
+> `frontend/src/components/ui/BrandIcons.tsx` have no verified upstream
+> license. Both are still in the tree. Treat a redistributed build as carrying
+> those unresolved questions until the maintainer decides.
+
 > [!IMPORTANT]
 > **Copyright vs. Trademark Distinction:** [`docs/TRADEMARKS.md`](file:///home/thewizard/Qatta/docs/TRADEMARKS.md) regulates brand identity, naming, and false endorsement; **it is NOT an artwork copyright license**. Every non-code visual asset directory requires an independent copyright disposition alongside (and separate from) MIT software licensing and trademark rules.
 

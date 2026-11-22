@@ -40,14 +40,107 @@ except ImportError:  # pragma: no cover - packaging ships with pip
 REPO_ROOT = Path(__file__).resolve().parent.parent
 MIN_PYTHON = "3.11"
 
+# Every profile that ships an optional capability gets its own lock. A profile
+# without a lock would mean the pinned install guarantees nothing for the code
+# that depends on it.
 PROFILES = {
     "default": ("backend/requirements-asr.txt", "backend/requirements-lock.txt"),
+    "url": ("backend/requirements-url.txt", "backend/requirements-url-lock.txt"),
+    "analysis": (
+        "backend/requirements-analysis.txt",
+        "backend/requirements-analysis-lock.txt",
+    ),
     "api": ("backend/requirements.txt", None),
     "all": ("backend/requirements-all.txt", None),
 }
 
+# The composed profiles install several locks; naming them in the error makes
+# the relationship explicit instead of looking like an omission.
+COMPOSED_FROM = {
+    "api": "the backend requirements plus the default lock",
+    "all": "the default, url and analysis locks together",
+}
+
 _INCLUDE_RE = re.compile(r"^\s*-r\s+(?P<path>\S+)\s*$")
 _COMMENT_RE = re.compile(r"^\s*#")
+_PINNED_RE = re.compile(r"^([a-zA-Z0-9][a-zA-Z0-9._-]*)==([^\s\\;]+)")
+
+
+def _normalise(name: str) -> str:
+    """PEP 503 name normalisation (the form the lock uses)."""
+    return re.sub(r"[-_.]+", "-", name).lower()
+
+
+def verify_locks() -> list[str]:
+    """Check that every locked profile is structurally coherent — offline.
+
+    This is the gate CI can rely on. ``--check`` compares against a *fresh
+    resolution*, so it turns red whenever upstream publishes a new version
+    even though nothing in the repository changed; it is a maintainer tool,
+    not a gate. What must never happen is a requirement being added to a
+    profile while its lock silently keeps the old set, and that is what this
+    function detects.
+    """
+    problems: list[str] = []
+
+    for name, (requirements_rel, output_rel) in sorted(PROFILES.items()):
+        if output_rel is None:
+            continue
+        requirements = REPO_ROOT / requirements_rel
+        output = REPO_ROOT / output_rel
+        if not output.is_file():
+            problems.append(f"{output_rel}: missing — run `--profile {name}` to generate it")
+            continue
+
+        text = output.read_text(encoding="utf-8")
+        if requirements_rel not in text:
+            problems.append(
+                f"{output_rel}: the header does not name {requirements_rel}, so it "
+                "was probably generated from a different profile"
+            )
+
+        locked: dict[str, bool] = {}
+        current: str | None = None
+        for line in text.splitlines():
+            pinned = _PINNED_RE.match(line)
+            if pinned:
+                current = _normalise(pinned.group(1))
+                if current in locked:
+                    problems.append(f"{output_rel}: {current} is pinned twice")
+                locked[current] = False
+            elif "--hash=" in line and current is not None:
+                locked[current] = True
+
+        for package, has_hash in sorted(locked.items()):
+            if not has_hash:
+                problems.append(
+                    f"{output_rel}: {package} has no hash — "
+                    "install with --require-hashes would not be reproducible"
+                )
+
+        for required in parse_requirement_names(requirements):
+            key = _normalise(required)
+            if key not in locked:
+                problems.append(
+                    f"{output_rel}: {key} is required by {requirements_rel} but is "
+                    "not pinned — regenerate the lock"
+                )
+
+    # The composed profile must include the locked ones, or "install
+    # everything" would quietly miss a capability.
+    composed = (REPO_ROOT / "backend/requirements-all.txt").read_text(encoding="utf-8")
+    for included in (
+        "requirements-asr.txt",
+        "requirements-url.txt",
+        "requirements-analysis.txt",
+    ):
+        if included not in composed:
+            problems.append(
+                f"backend/requirements-all.txt: does not include {included}, so the "
+                "'everything' profile is not everything"
+            )
+
+    return problems
 
 
 def parse_requirement_names(path: Path) -> list[str]:
@@ -159,15 +252,39 @@ def main() -> int:
     parser.add_argument(
         "--check",
         action="store_true",
-        help="verify the lock file is up to date instead of writing it",
+        help=(
+            "compare against a fresh resolution (needs the network; turns red "
+            "when upstream publishes a new version — a maintainer tool, not a gate)"
+        ),
+    )
+    parser.add_argument(
+        "--verify",
+        action="store_true",
+        help=(
+            "check every lock is structurally coherent with its profile "
+            "(offline; this is the CI gate)"
+        ),
     )
     args = parser.parse_args()
 
+    if args.verify:
+        problems = verify_locks()
+        if problems:
+            print("The dependency locks are not coherent:", file=sys.stderr)
+            for problem in problems:
+                print(f"  - {problem}", file=sys.stderr)
+            return 1
+        locked = sorted(name for name, (_, out) in PROFILES.items() if out)
+        print(f"All {len(locked)} locks are coherent: {', '.join(locked)}.")
+        return 0
+
     requirements_rel, output_rel = PROFILES[args.profile]
     if output_rel is None:
+        composed = COMPOSED_FROM.get(args.profile, "")
         print(
-            f"The '{args.profile}' profile is not locked — only the default "
-            "profile ships a lock file.",
+            f"The '{args.profile}' profile is composed, not locked: install "
+            f"{composed}. The locked profiles are: "
+            f"{', '.join(sorted(name for name, (_, out) in PROFILES.items() if out))}.",
             file=sys.stderr,
         )
         return 2

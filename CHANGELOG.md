@@ -9,6 +9,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Nothing yet.
 
+## [0.3.0] — 2026-11-22
+
+Scriptable Laqta — one pipeline, two entry points, no duplicated stage list.
+
+### Added
+
+- **`laqta run SOURCE`** — run the full pipeline headless, with no server and no browser. Flags: `--project-id`, `--work-dir`, `--stages` (comma-separated subset), `--force`, `--json`. `--json` emits NDJSON events (`run_start`, `stage_start`, `stage_end`, `run_end`, `error`, `cancelled`) carrying the **measured** `stage_timings_ms` from the manifest. Exit codes: `0` success, `1` failure, `130` interrupted.
+- **`qatta/core/runner.py`** — the single source of truth for the pipeline: `PIPELINE_STAGES`, `register_default_stages()` and `run_pipeline()`. The backend job manager and the CLI both use it, so the stage order cannot drift between them.
+- `PipelineOrchestrator.registered_stages` — the stages an orchestrator can actually run.
+- **Hash-pinned locks for the optional profiles**: `backend/requirements-url-lock.txt` (1 package) and `backend/requirements-analysis-lock.txt` (31 packages), generated from the new `requirements-url.txt` / `requirements-analysis.txt` profiles.
+- **`scripts/generate_lock.py --verify`** — an offline structural gate: every locked profile ships a lock, every requirement is pinned with a hash, no package is pinned twice, and the composed `all` profile includes every capability. Wired into CircleCI (`backend` job) and `scripts/check.sh`. `--check` remains the maintainer's freshness tool and is deliberately **not** a CI gate: it turns red when upstream publishes a new version even though nothing in the repository changed.
+- Tests: `tests/test_runner.py` (15), `tests/test_cli_run.py` (13), `tests/test_generate_lock.py` (11), and `backend/tests/test_stage_registration.py` (3).
+
+### Changed
+
+- The backend job manager no longer owns a stage list. It delegates registration and execution to `qatta.core.runner` and keeps only what is genuinely its own: the UI progress percentages (`_PROGRESS_BY_STAGE`, asserted to match the pipeline) and the SQLite projection after each stage.
+- `backend/requirements-all.txt` now composes the `asr`, `url` and `analysis` profiles with `-r` includes instead of restating their packages.
+- README refresh in English and Arabic: navigation, system requirements, a CLI reference that matches `qatta/cli.py`, a feature matrix separating `[Supported]` / `[Optional]` / `[Not shipped]`, and Docker Compose labelled an experimental preview with the reason (the Dockerfile installs the `[asr]` extra and defines `QATTA_BIND_HOST`/`QATTA_BIND_PORT`, not `QATTA_HOST`/`QATTA_PORT`).
+
+### Removed
+
+- **`mediapipe` from the `analysis` and `all` extras.** Nothing imported it: stage `s06_reframe_subs` has a camera solver that consumes `FaceDetection` objects, but no detector produces them. It also installed `opencv-contrib-python` alongside `scenedetect`'s hard `opencv-python`, two packages providing the same `cv2` module.
+
+### Fixed
+
+- The `[analysis]` profile now resolves to exactly one `cv2` provider (`opencv-python`) instead of two silently shadowing each other.
+- The README no longer claims the face/speaker camera solver works when the `[analysis]` extra is installed. It does not: no detector feeds it and the stage is not registered.
+
+### Known limitations
+
+- **The two policy proposals remain pending, deliberately.** `docs/DEPENDENCY_POLICY_PROPOSAL.md` and `docs/ASSET_COPYRIGHT_POLICY_PROPOSAL.md` carry a dated status note stating that `docs/POLICY.md` is unchanged and that the transitive `MPL-2.0` / `PSF-2.0` / `CC-BY-4.0` / `BlueOak-1.0.0` / `MIT-0` licences they audit are shipped but not covered by a written policy. Adopting them is a maintainer licensing decision, not an agent one.
+- **`s07_render_learn` and `s06_reframe_subs` are not wired.** Both are implemented and unit-tested; neither is registered, and a test asserts that only `s06_render` is. `s07` is documented as library-only in its README.
+- **Cancellation is at stage boundaries.** Ctrl-C lets the running stage finish before stopping; a second Ctrl-C stops immediately, and the manifest is never advanced past the last completed stage. Cancellation is never claimed to be instant.
+- **`backend/requirements-lock.txt` is stale per `--check`** because upstream published newer versions. It was not regenerated in this release to avoid a gratuitous 42-package bump; `--verify` still passes, and the default profile installs reproducibly from the committed lock.
+- **`backend/requirements-lock.txt` still resolves for Python 3.11** (the minimum supported interpreter) while the development virtualenv is 3.12; this is intentional and documented in `scripts/generate_lock.py`.
+
 ## [0.2.5] — 2026-11-15
 
 Maintenance, licensing continuity, fixture remediation, and release-hardening update — permanently retaining the MIT License.

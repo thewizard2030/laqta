@@ -63,6 +63,7 @@ PY="$VENV_DIR/bin/python"
 run "ruff lint"            "$VENV_DIR/bin/ruff" check qatta backend/app backend/tests tests scripts
 run "ruff format"          "$VENV_DIR/bin/ruff" format --check qatta backend/app backend/tests tests scripts
 run "version consistency"  "$PY" scripts/check_version.py
+run "dependency locks"     "$PY" scripts/generate_lock.py --verify
 # Both suites write into ONE coverage session (see the CI workflow): the core
 # suite exercises the `qatta` package, the backend suite the `app` package.
 # Each suite runs in its own directory (both are named `tests`, so they must

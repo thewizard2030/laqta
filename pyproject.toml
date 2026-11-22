@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "laqta"
-version = "0.2.5"
+version = "0.3.0"
 description = "Laqta — local-first, Arabic-first long-video to vertical Shorts engine."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -60,12 +60,15 @@ dependencies = [
 [project.optional-dependencies]
 # Local CPU speech recognition (faster-whisper + CTranslate2, MIT).
 asr = ["faster-whisper>=1.1"]
-# Optional analysis stages (shot detection, audio features, face landmarks).
+# Optional analysis stages (shot detection and audio features).
+# mediapipe is deliberately absent: stage s06_reframe_subs has a camera
+# solver, but no face detector produces its input yet, so nothing imports
+# mediapipe. It would also install opencv-contrib-python next to
+# scenedetect's opencv-python — two packages providing the same `cv2`.
 analysis = [
     "librosa>=0.10",
     "soundfile>=0.12",
-    "scenedetect[opencv]>=0.6",
-    "mediapipe>=0.10",
+    "scenedetect>=0.6",
 ]
 # URL ingestion / YouTube captions-first flow (Unlicense).
 # The platform-policy/rights review was completed by owner decision on
@@ -94,8 +97,7 @@ all = [
     "faster-whisper>=1.1",
     "librosa>=0.10",
     "soundfile>=0.12",
-    "scenedetect[opencv]>=0.6",
-    "mediapipe>=0.10",
+    "scenedetect>=0.6",
     "yt-dlp>=2024.04",
 ]
 

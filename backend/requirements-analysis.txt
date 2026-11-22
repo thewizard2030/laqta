@@ -1,0 +1,17 @@
+# Laqta backend — optional analysis stages.
+#
+# Shot detection and audio features. Heavy, and imported lazily: every stage
+# degrades with a clear error when these are absent.
+#
+#   pip install --require-hashes -r requirements-analysis-lock.txt
+#
+# mediapipe is deliberately NOT listed. Stage s06_reframe_subs has a camera
+# solver that consumes FaceDetection objects, but no detector produces them
+# yet, so nothing imports mediapipe — and installing it would pull
+# opencv-contrib-python alongside scenedetect's opencv-python, two packages
+# that provide the same `cv2` module. It returns when a detector is wired and
+# tested; see CHANGELOG v0.3.0.
+
+librosa>=0.10
+soundfile>=0.12
+scenedetect>=0.6
