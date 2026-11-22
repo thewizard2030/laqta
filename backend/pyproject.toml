@@ -1,6 +1,6 @@
 [project]
 name = "laqta-backend"
-version = "0.2.5"
+version = "0.3.0"
 description = "Laqta backend — local-first API for the long-video-to-Shorts studio."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -37,7 +37,7 @@ dependencies = [
 pipeline = ["laqta"]
 # Local CPU speech recognition (faster-whisper + CTranslate2, MIT).
 asr = ["faster-whisper>=1.1"]
-# Optional analysis stages (shot detection, audio features, face landmarks).
+# Optional analysis stages (shot detection and audio features).
 analysis = [
     "librosa>=0.10",
     "soundfile>=0.12",

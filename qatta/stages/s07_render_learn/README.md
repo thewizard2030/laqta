@@ -1,5 +1,21 @@
 # S07 Render Learn
 
+> ## Status: library-only — not wired into the pipeline
+>
+> This stage is implemented and unit-tested, but **nothing runs it**. The
+> single source of truth for stage order, `qatta/core/runner.py`, does not
+> list it, so neither the backend job manager nor `laqta run` registers it.
+> `laqta doctor` will not offer it and no manifest records it.
+>
+> It stays out on purpose: activating a 657-line renderer changes what users
+> get without a way to verify the output, and `AGENTS.md` rule 7 forbids
+> shipping future phases early. Wiring it needs a real visual verification
+> pass, an opt-in flag, and an honest label — not a silent registration.
+>
+> The same applies to `s06_reframe_subs`: the camera solver exists, but no
+> face detector produces its `FaceDetection` input yet, so it is not
+> registered either. Only `s06_render` is.
+
 ## Overview
 YPP-safe single-pass vertical video rendering, pattern interrupt zoom, hook remix dual cut rendering, and channel analytics feedback learning loop.
 

@@ -68,7 +68,7 @@ Laqta processes videos through an atomic, resumable manifest pipeline (`qatta_ma
    - **Pass A (Full Media):** Fast segment-level transcription via local Faster-Whisper (or optional opt-in cloud ASR / YouTube caption-first ingestion) without full-video word timestamps to conserve CPU cycles.
    - **Pass B (Selected Clips):** Clip-scoped word-level alignment (`small` `int8` model by default) computed on demand only for chosen clips when rendering karaoke captions.
 4. **Heuristic Candidate Ranking:** Evaluates speech cadence, pause boundaries, and vocal dynamics to assign each segment an explainable **Clip Potential Score (CPS)**.
-5. **9:16 Vertical Framing:** Reformats horizontal footage to 1080×1920 via `center_crop` or `blurred_background` layouts with mobile title-safe area overlays in the Studio renderer (an optional face/speaker camera solver lives in core stage `qatta/stages/s06_reframe_subs` when the `[analysis]` extra is installed).
+5. **9:16 Vertical Framing:** Reformats horizontal footage to 1080×1920 via `center_crop` or `blurred_background` layouts with mobile title-safe area overlays in the Studio renderer. An experimental camera solver lives in core stage `qatta/stages/s06_reframe_subs`, but no face detector feeds it yet and the stage is not wired into the pipeline — the two Studio layouts are what actually ship.
 6. **RTL-Compliant Subtitle Burn-In:** Renders animated karaoke-style captions via `libass` with HarfBuzz/FriBiDi text shaping.
 
 ---
@@ -89,14 +89,14 @@ Laqta processes videos through an atomic, resumable manifest pipeline (`qatta_ma
 
 ---
 
-## 🧩 Product Feature Matrix (v0.2.5)
+## 🧩 Product Feature Matrix (v0.3.0)
 
 ### 🎬 Video Workflow & Editing
 
 - **Local Import:** Drag-and-drop video upload supporting MP4, MOV, MKV, and WebM. `[Supported]`
 - **Project Workspaces:** Persistent SQLite-backed project management in `~/.local/share/qatta/`. `[Supported]`
 - **Multi-Track Timeline:** Interactive audio waveform scrubbing, playback controls, and clip trimming. `[Supported]`
-- **Vertical Framing (9:16):** 1080×1920 centered crop (`center_crop`) or blurred-background (`blurred_background`) framing with safe-area overlays in Studio (`[Supported]`); experimental face/speaker camera solver in `qatta/stages/s06_reframe_subs` (`[Optional / [analysis]]`).
+- **Vertical Framing (9:16):** 1080×1920 centered crop (`center_crop`) or blurred-background (`blurred_background`) framing with safe-area overlays in Studio (`[Supported]`); `qatta/stages/s06_reframe_subs` contains an experimental camera solver, but no face detector feeds it yet and the stage is not wired into the pipeline (`[Not shipped]`).
 - **High-Quality Export:** Local FFmpeg encoding with burned-in ASS subtitles or standalone SRT export. `[Supported]`
 - **URL Ingestion:** Optional YouTube caption-first importing via `yt-dlp` (fail-closed, requires operator enablement and per-import rights confirmation). `[Optional / Opt-In]`
 
@@ -238,7 +238,7 @@ Optional desktop menu integration on Linux:
 ### Method 2: Docker Compose (Experimental Preview)
 
 > [!NOTE]
-> Native source installation (Method 1) is the primary verified path for `v0.2.5`. Review [Dockerfile](Dockerfile) and [docker-compose.yml](docker-compose.yml) carefully before containerized use (`Dockerfile` installs the core `.[asr]` extra rather than `backend/requirements.txt` and defines `QATTA_BIND_HOST`/`QATTA_BIND_PORT` rather than `QATTA_HOST`/`QATTA_PORT`).
+> Native source installation (Method 1) is the primary verified path for `v0.3.0`. Review [Dockerfile](Dockerfile) and [docker-compose.yml](docker-compose.yml) carefully before containerized use (`Dockerfile` installs the core `.[asr]` extra rather than `backend/requirements.txt` and defines `QATTA_BIND_HOST`/`QATTA_BIND_PORT` rather than `QATTA_HOST`/`QATTA_PORT`).
 
 ```bash
 git clone https://github.com/thewizard2030/laqta.git
@@ -256,8 +256,9 @@ Run commands inside `source backend/.venv/bin/activate` (or prefix with `./backe
 
 | Command                 | Description                                                                                     |
 | :---------------------- | :---------------------------------------------------------------------------------------------- |
-| `laqta --version`       | Print the installed Laqta version (`0.2.5`).                                                    |
+| `laqta --version`       | Print the installed Laqta version (`0.3.0`).                                                    |
 | `laqta doctor [--json]` | Inspect Python, FFmpeg/FFprobe, ASR, URL gating, storage permissions, disk, and servers.        |
+| `laqta run SOURCE`      | Run the full pipeline headless: `--project-id`, `--work-dir`, `--stages`, `--force`, `--json`.  |
 | `laqta models`          | List locally cached Hugging Face speech models and disk usage.                                  |
 | `laqta serve`           | Start the FastAPI backend (`--host 127.0.0.1 --port 8000 [--reload]`).                          |
 | `laqta studio`          | Launch backend API + Vite UI (`--production`, `--api-only`, `--frontend-only`, `--skip-build`). |

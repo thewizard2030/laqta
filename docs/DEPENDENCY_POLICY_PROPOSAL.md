@@ -5,6 +5,17 @@
 **Document Status:** **Proposed Policy Revision — Not Adopted** (`docs/POLICY.md` has **not** been modified)  
 **Date:** November 15, 2026
 
+> [!NOTE]
+> **Status as of v0.3.0 (November 2026): still proposed, deliberately.** This
+> document needs a licensing decision from the maintainer, not from an agent.
+> Nothing in it has been applied: `docs/POLICY.md` §5 still lists only
+> `MIT`, `Apache-2.0`, `BSD`, `ISC` and `Unlicense`, and `AGPL-3.0` remains
+> forbidden. The transitive licenses it audits (`MPL-2.0`, `PSF-2.0`,
+> `CC-BY-4.0`, `BlueOak-1.0.0`, `MIT-0`, and NumPy's bundled components) are
+> shipped today and are **not** covered by a written policy. Read this before
+> redistributing a modified build; the gap is real and is stated here rather
+> than papered over.
+
 > [!IMPORTANT]
 > **No Silent Whitelist Changes:** Phase 3.1 lockfile reconciliation showed that [`backend/requirements-lock.txt`](file:///home/thewizard/Qatta/backend/requirements-lock.txt) and [`frontend/package-lock.json`](file:///home/thewizard/Qatta/frontend/package-lock.json) contain packages under `MPL-2.0`, `PSF-2.0`/`PSFL`, `CC-BY-4.0`, `BlueOak-1.0.0`, `MIT-0`, and NumPy's `0BSD`/`Zlib`/`CC0-1.0`/`NCSA` components. This document proposes structured policy updates for explicit maintainer approval under Laqta's permanent **MIT License** model rather than silently expanding [`docs/POLICY.md`](file:///home/thewizard/Qatta/docs/POLICY.md).
 

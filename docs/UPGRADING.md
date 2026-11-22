@@ -4,6 +4,41 @@ What changed between the releases, and what you have to do.
 
 ---
 
+## 0.2.5 → 0.3.0
+
+**No action required.** The data directory, the project format
+(`qatta_manifest.json`, schema version 1) and the API are unchanged — your
+existing projects keep working.
+
+New in this release:
+
+- **`laqta run SOURCE`** runs the pipeline without the studio:
+  `laqta run clip.mp4 --project-id demo --json`. It is the same pipeline the
+  studio runs, with the same manifest and measured timings. `--stages`
+  limits the run to a subset; `--force` re-runs stages already recorded as
+  completed.
+- The pipeline order now lives in `qatta/core/runner.py`, used by both the
+  backend and the CLI. Nothing changes for existing projects.
+
+Things worth knowing:
+
+- **`mediapipe` is no longer part of the `[analysis]` extra.** It was never
+  imported, and it pulled a second `cv2` provider
+  (`opencv-contrib-python`) next to `scenedetect`'s `opencv-python`. If you
+  installed `mediapipe` yourself, it is harmless but unused; nothing in
+  Laqta calls it.
+- **Optional profiles have their own locks:**
+  `backend/requirements-url-lock.txt` and
+  `backend/requirements-analysis-lock.txt`. Install with
+  `pip install --require-hashes -r backend/requirements-analysis-lock.txt`.
+- **`s07_render_learn` and `s06_reframe_subs` are still not wired.** They are
+  libraries with tests, not pipeline stages. Do not expect them to run.
+- **Ctrl-C stops at the next stage boundary.** The running stage finishes
+  first; press Ctrl-C a second time to stop immediately. The manifest is
+  never advanced past the last completed stage.
+
+---
+
 ## 0.1.1 → 0.1.2
 
 **No action required.** The API, the data directory and the project format
