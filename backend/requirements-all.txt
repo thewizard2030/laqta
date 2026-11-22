@@ -2,7 +2,7 @@
 #
 # Adds the optional capabilities on top of the recommended profile:
 #   • URL ingestion / YouTube captions-first flow (yt-dlp, Unlicense)
-#   • Analysis stages: shot detection, audio features, face landmarks
+#   • Analysis stages: shot detection and audio features
 #
 # These are opt-in on purpose: they are heavy, and URL ingestion carries the
 # platform-policy/rights rules documented in docs/POLICY.md.
@@ -12,10 +12,12 @@
 -r requirements-asr.txt
 
 # URL ingestion (gated behind QATTA_ENABLE_URL_INGESTION + a rights confirmation)
-yt-dlp>=2024.04
+-r requirements-url.txt
 
 # Optional analysis stages
-librosa>=0.10
-soundfile>=0.12
-scenedetect[opencv]>=0.6
-mediapipe>=0.10
+-r requirements-analysis.txt
+
+# Each of these has its own hash-pinned lock:
+#   requirements-lock.txt           (asr — the default profile)
+#   requirements-url-lock.txt
+#   requirements-analysis-lock.txt

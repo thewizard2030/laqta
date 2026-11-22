@@ -56,6 +56,10 @@ jobs:
           command: python scripts/check_version.py
 
       - run:
+          name: Verify the dependency locks are coherent
+          command: python scripts/generate_lock.py --verify
+
+      - run:
           name: Lint and format check (ruff)
           command: |
             python -m ruff check qatta backend/app backend/tests tests scripts

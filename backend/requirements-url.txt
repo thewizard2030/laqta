@@ -1,0 +1,8 @@
+# Laqta backend — URL ingestion / YouTube captions-first flow.
+#
+# Gated at runtime behind QATTA_ENABLE_URL_INGESTION (default: false) and a
+# per-import rights confirmation. See docs/POLICY.md.
+#
+#   pip install --require-hashes -r requirements-url-lock.txt
+
+yt-dlp>=2024.04
