@@ -4,18 +4,23 @@
 
     laqta --version      print the version
     laqta doctor         check this machine for everything Laqta needs
+    laqta run SOURCE     run the pipeline headless (no server, no browser)
     laqta serve          run the local API server
     laqta studio         run the API and the studio frontend together
     laqta models         show the locally cached speech models
 
 The CLI never contacts the network and never uploads anything: it only
-inspects the local machine and starts a server that binds to 127.0.0.1.
+inspects the local machine, processes local files and starts a server that
+binds to 127.0.0.1.
 """
 
 from __future__ import annotations
 
+import json
 import os
+import re
 import shutil
+import signal
 import subprocess
 import sys
 import time
@@ -479,6 +484,303 @@ def models() -> None:
         return
     console.print(table)
     console.print("")
+
+
+@app.command()
+def run(
+    source: str = typer.Argument(..., help="Local media file to process."),
+    project_id: str | None = typer.Option(
+        None,
+        "--project-id",
+        help="Project id. Defaults to a name derived from the media file.",
+    ),
+    work_dir: str | None = typer.Option(
+        None,
+        "--work-dir",
+        help="Project directory. Defaults to <data_dir>/projects/<project-id>.",
+    ),
+    stages: str | None = typer.Option(
+        None,
+        "--stages",
+        help="Comma-separated stage subset, e.g. s01_ingest,s02_transcript.",
+    ),
+    force: bool = typer.Option(
+        False, "--force", help="Re-run stages already recorded as completed."
+    ),
+    json_output: bool = typer.Option(
+        False, "--json", help="Emit one JSON object per line (NDJSON) for scripts."
+    ),
+) -> None:
+    """Run the pipeline on a local media file, headless.
+
+    This is the same pipeline the studio runs — same stages, same manifest,
+    same measured timings — without starting a server or opening a browser.
+    Progress is printed as it happens; ``--json`` turns it into NDJSON events
+    (``run_start``, ``stage_start``, ``stage_end``, ``run_end``, ``error``,
+    ``cancelled``) that a script can consume.
+
+    Interrupting with Ctrl-C stops at the **next stage boundary**: the stage
+    that is already running finishes first, because killing a render or a
+    transcription mid-write would leave a truncated artefact behind. Press
+    Ctrl-C a second time to stop immediately.
+
+    Exit codes: 0 success, 1 failure, 130 interrupted.
+    """
+    from qatta.core.config import QattaSettings
+    from qatta.core.pipeline import PipelineError, PipelineOrchestrator
+    from qatta.core.runner import (
+        PipelineCancelledError,
+        register_default_stages,
+        run_pipeline,
+        stage_names,
+    )
+
+    def fail(message: str, *, kind: str = "usage_error") -> None:
+        if json_output:
+            _json_event("error", kind=kind, message=message)
+        else:
+            console.print(f"[red]{message}[/red]")
+
+    if "://" in source:
+        fail(
+            "`laqta run` takes a local file, not a URL. URL ingestion is "
+            "opt-in and gated (see docs/POLICY.md); download the media first."
+        )
+        raise typer.Exit(code=1)
+
+    source_path = Path(source).expanduser()
+    if not source_path.exists():
+        fail(f"Source media does not exist: {source_path}")
+        raise typer.Exit(code=1)
+    if not source_path.is_file():
+        fail(f"Source is not a regular file: {source_path}")
+        raise typer.Exit(code=1)
+
+    selected: list[str] | None = None
+    if stages is not None:
+        selected = [part.strip() for part in stages.split(",") if part.strip()]
+        if not selected:
+            fail("No stages were selected; nothing would run.")
+            raise typer.Exit(code=1)
+
+    settings = QattaSettings()
+    pid = project_id or _safe_project_id(source_path)
+    target_dir = Path(work_dir).expanduser() if work_dir else settings.manifest_path(pid).parent
+
+    try:
+        orchestrator = PipelineOrchestrator(
+            project_id=pid,
+            source_path=source_path,
+            work_dir=target_dir,
+            settings=settings,
+        )
+    except PipelineError as exc:
+        fail(str(exc), kind="pipeline_error")
+        raise typer.Exit(code=1) from None
+
+    # Reusing a project id for a different file would process the old source
+    # while the command line says otherwise. Refuse instead of guessing.
+    tracked = Path(orchestrator.manifest.source_path)
+    if tracked.resolve() != source_path.resolve():
+        fail(
+            f"Project '{pid}' already tracks {tracked}. Use another "
+            "--project-id or --work-dir, or remove that project directory."
+        )
+        raise typer.Exit(code=1)
+
+    register_default_stages(orchestrator)
+
+    total = len(selected) if selected is not None else len(stage_names())
+    seen = {"count": 0}
+
+    def on_stage_start(stage) -> None:
+        seen["count"] += 1
+        if json_output:
+            _json_event(
+                "stage_start",
+                stage=stage.name,
+                label=stage.label,
+                index=seen["count"],
+                total=total,
+            )
+        else:
+            console.print(f"[cyan]▸[/cyan] {stage.name} — {stage.label}")
+
+    def on_stage_end(stage, result) -> None:
+        # Two honest numbers: what this run took, and what the manifest has
+        # accumulated for that stage across runs (real measurements only).
+        total_ms = orchestrator.manifest.stage_timings_ms.get(stage.name, result.duration_ms)
+        if json_output:
+            _json_event(
+                "stage_end",
+                stage=stage.name,
+                label=stage.label,
+                status=result.status,
+                duration_ms=result.duration_ms,
+                stage_timings_ms=total_ms,
+            )
+        else:
+            marker = OK if result.executed else "[dim]·[/dim]"
+            state = "executed" if result.executed else "skipped (cached)"
+            console.print(
+                f"  {marker} {state} in {_format_ms(result.duration_ms)}"
+                f"  (manifest total {_format_ms(total_ms)})"
+            )
+
+    if json_output:
+        _json_event(
+            "run_start",
+            version=__version__,
+            project_id=pid,
+            source=str(source_path),
+            work_dir=str(target_dir),
+            stages=selected or list(stage_names()),
+            force=force,
+        )
+    else:
+        console.print(f"\n[bold]Laqta {__version__} run[/bold] — project [bold]{pid}[/bold]")
+        console.print(f"  source: {source_path}")
+        console.print(f"  work:   {target_dir}\n")
+
+    cancel_requested = {"value": False}
+    previous_handler = signal.getsignal(signal.SIGINT)
+    handler_installed = False
+
+    def request_cancel(_signum: int, _frame: object) -> None:
+        if cancel_requested["value"]:
+            # Second Ctrl-C: stop now rather than at the next boundary.
+            raise KeyboardInterrupt
+        cancel_requested["value"] = True
+        if json_output:
+            _json_event("cancel_requested")
+        else:
+            console.print(
+                "\n[yellow]Cancelling at the next stage boundary…[/yellow] "
+                "Press Ctrl-C again to stop immediately."
+            )
+
+    try:
+        signal.signal(signal.SIGINT, request_cancel)
+        handler_installed = True
+    except (ValueError, OSError):  # pragma: no cover - non-main thread
+        pass
+
+    started = time.monotonic()
+    try:
+        results = run_pipeline(
+            orchestrator,
+            stages=selected,
+            force=force,
+            on_stage_start=on_stage_start,
+            on_stage_end=on_stage_end,
+            should_cancel=lambda: cancel_requested["value"],
+        )
+    except PipelineCancelledError as exc:
+        if json_output:
+            _json_event("cancelled", stage=exc.stage, message=str(exc))
+        else:
+            console.print(f"\n[yellow]Cancelled.[/yellow] {exc}")
+        raise typer.Exit(code=130) from None
+    except PipelineError as exc:
+        if json_output:
+            _json_event("error", kind="pipeline_error", message=str(exc))
+        else:
+            console.print(f"\n[red]Pipeline failed:[/red] {exc}")
+        raise typer.Exit(code=1) from None
+    except KeyboardInterrupt:
+        if json_output:
+            _json_event(
+                "cancelled",
+                stage=None,
+                message=(
+                    "Interrupted immediately. The manifest was not advanced "
+                    "past the last completed stage."
+                ),
+            )
+        else:
+            console.print(
+                "\n[yellow]Interrupted.[/yellow] The manifest was not advanced "
+                "past the last completed stage."
+            )
+        raise typer.Exit(code=130) from None
+    finally:
+        if handler_installed:
+            try:
+                signal.signal(signal.SIGINT, previous_handler)
+            except (ValueError, OSError):  # pragma: no cover - non-main thread
+                pass
+
+    elapsed_ms = int((time.monotonic() - started) * 1000)
+    executed = sum(1 for result in results if result.executed)
+    skipped = sum(1 for result in results if result.skipped_cached)
+
+    if json_output:
+        _json_event(
+            "run_end",
+            project_id=pid,
+            work_dir=str(target_dir),
+            manifest=str(orchestrator.manifest_path),
+            executed=executed,
+            skipped=skipped,
+            duration_ms=elapsed_ms,
+            stages=[
+                {
+                    "stage": result.name,
+                    "label": result.label,
+                    "status": result.status,
+                    "duration_ms": result.duration_ms,
+                    "stage_timings_ms": orchestrator.manifest.stage_timings_ms.get(
+                        result.name, result.duration_ms
+                    ),
+                }
+                for result in results
+            ],
+        )
+        return
+
+    table = Table(box=None, pad_edge=False, show_header=True)
+    table.add_column("stage", style="bold", no_wrap=True)
+    table.add_column("status")
+    table.add_column("this run", justify="right")
+    table.add_column("manifest total", justify="right")
+    for result in results:
+        table.add_row(
+            result.name,
+            "executed" if result.executed else "skipped (cached)",
+            _format_ms(result.duration_ms),
+            _format_ms(orchestrator.manifest.stage_timings_ms.get(result.name, result.duration_ms)),
+        )
+    console.print("")
+    console.print(table)
+    console.print(
+        f"\n[bold green]Done.[/bold green] {executed} executed, {skipped} cached, "
+        f"{_format_ms(elapsed_ms)} total.\n"
+        f"Manifest: {orchestrator.manifest_path}\n"
+    )
+
+
+def _json_event(event: str, **fields: object) -> None:
+    """Write one NDJSON event to stdout. Nothing else may go there in --json mode."""
+    print(
+        json.dumps({"event": event, **fields}, ensure_ascii=False, sort_keys=True),
+        flush=True,
+    )
+
+
+def _format_ms(ms: int) -> str:
+    if ms < 1000:
+        return f"{ms} ms"
+    seconds = ms / 1000
+    if seconds < 60:
+        return f"{seconds:.1f} s"
+    minutes, remainder = divmod(int(round(seconds)), 60)
+    return f"{minutes}m {remainder:02d}s"
+
+
+def _safe_project_id(source: Path) -> str:
+    """A filesystem- and URL-safe project id derived from the file name."""
+    stem = re.sub(r"[^A-Za-z0-9._-]+", "-", source.stem).strip("-._")
+    return stem or "project"
 
 
 @app.command()
