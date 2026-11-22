@@ -68,13 +68,8 @@ from app.services.transcription.cache import (
 from app.services.transcription.profiles import resolve_transcription_profile
 from qatta.core.config import QattaSettings
 from qatta.core.pipeline import PipelineOrchestrator
+from qatta.core.runner import PipelineCancelledError, register_default_stages, run_pipeline
 from qatta.core.schema import AtomicUtterance, WordToken
-from qatta.stages.s01_ingest import ingestor
-from qatta.stages.s02_transcript import fast_pass, fine_pass
-from qatta.stages.s03_multimodal import analyzer
-from qatta.stages.s04_candidates import generator
-from qatta.stages.s05_ranking import scorer
-from qatta.stages.s06_render import renderer
 
 
 def _utc_now_iso() -> str:
@@ -1049,17 +1044,9 @@ class JobManager:
             work_dir=project_dir,
             settings=q_settings,
         )
-        from qatta.stages.s05b_section_fetch import section_fetch
-
-        ingestor.register(orch)
-        fast_pass.register(orch)
-        fine_pass.register(orch)
-        analyzer.register(orch)
-        generator.register(orch)
-        scorer.register(orch)
-        section_fetch.register(orch)
-        renderer.register(orch)
-        return orch
+        # The stage list lives in qatta.core.runner so that the backend and the
+        # CLI cannot drift apart.
+        return register_default_stages(orch)
 
     async def _execute_multimodal(self, job: JobRecord, cancel_event: asyncio.Event) -> None:
         """Run Stage s03 multimodal analysis (scene cuts & acoustic features)."""
@@ -1411,24 +1398,33 @@ class JobManager:
             finished_at=_utc_now_iso(),
         )
 
+    # Coarse progress for the UI. The runner owns the stage order; this only
+    # maps a stage to the percentage the progress bar shows while it runs.
+    # A stage missing from this map reports 0 rather than borrowing a
+    # neighbour's number.
+    _PROGRESS_BY_STAGE = {
+        "s01_ingest": 15.0,
+        "s02_transcript": 35.0,
+        "s03_multimodal": 50.0,
+        "s04_candidates": 60.0,
+        "s05_ranking": 70.0,
+        "s05b_section_fetch": 80.0,
+        "s02b_fine_alignment": 90.0,
+        "s06_render": 96.0,
+    }
+
     async def _execute_pipeline(self, job: JobRecord, cancel_event: asyncio.Event) -> None:
         """Execute full end-to-end Laqta manifest pipeline sequentially."""
         orch = self._get_or_create_orchestrator(job.project_id, job.media_id)
-        stages = [
-            ("s01_ingest", 15.0, "ingesting_media"),
-            ("s02_transcript", 35.0, "transcribing_audio"),
-            ("s03_multimodal", 50.0, "analyzing_multimodal"),
-            ("s04_candidates", 60.0, "generating_candidates"),
-            ("s05_ranking", 70.0, "ranking_candidates"),
-            ("s05b_section_fetch", 80.0, "fetching_clip_sections"),
-            ("s02b_fine_alignment", 90.0, "aligning_clip_words"),
-            ("s06_render", 96.0, "rendering_shorts"),
-        ]
-        for stage_name, pct, stage_label in stages:
-            if cancel_event and cancel_event.is_set():
-                raise JobCancelledError()
-            self.repo.update_job(job.id, progress=pct, stage=stage_label)
-            orch.run_stage(stage_name, force=False)
+
+        def on_stage_start(stage) -> None:
+            self.repo.update_job(
+                job.id,
+                progress=self._PROGRESS_BY_STAGE.get(stage.name, 0.0),
+                stage=stage.label,
+            )
+
+        def on_stage_end(stage, result) -> None:
             sync_manifest_to_db(
                 orch.manifest,
                 job.project_id,
@@ -1436,6 +1432,19 @@ class JobManager:
                 self.candidates_repo,
                 self.render_repo,
             )
+
+        try:
+            run_pipeline(
+                orch,
+                on_stage_start=on_stage_start,
+                on_stage_end=on_stage_end,
+                should_cancel=lambda: bool(cancel_event and cancel_event.is_set()),
+            )
+        except PipelineCancelledError as exc:
+            # The job manager's own cancellation type carries the semantics the
+            # API and the job record expect; translate rather than leak a core
+            # exception through the HTTP layer.
+            raise JobCancelledError(str(exc)) from None
 
         # Pipeline overwrites candidates (s04/s05) — refresh their thumbnails.
         await self._enqueue_candidate_thumbnails(job.project_id, job.media_id)

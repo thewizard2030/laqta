@@ -192,6 +192,11 @@ class PipelineOrchestrator:
 
         return wrapper(fn) if fn else wrapper
 
+    @property
+    def registered_stages(self) -> tuple[str, ...]:
+        """The stages this orchestrator can run, in registration order."""
+        return tuple(self._stage_functions)
+
     # TODO(stage-types): prefer returning new manifest objects inside stages.
     def run_stage(self, name: str, force: bool = False) -> dict:
         """Run one registered stage with artifact caching.
