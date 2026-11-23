@@ -72,7 +72,7 @@ def run_render_stage(
     settings: QattaSettings | None = None,
     work_dir: Path | None = None,
     quality: str = "high",
-    layout: str = "fill_crop",
+    layout: str = "center_crop",
     burn_captions: bool = True,
     cancel_event: asyncio.Event | None = None,
 ) -> QattaManifest:
@@ -83,7 +83,7 @@ def run_render_stage(
     """
     settings = settings or QattaSettings()
     ffmpeg_bin = _require_ffmpeg(settings.ffmpeg_timeout_seconds)
-    _require_ffprobe(settings.ffprobe_timeout_seconds)
+    ffprobe_bin = _require_ffprobe(settings.ffprobe_timeout_seconds)
 
     source_path = Path(manifest.source_path)
 
@@ -120,10 +120,19 @@ def run_render_stage(
     from app.schemas.captions import CaptionStyleSettings
     from app.services.captions.service import generate_candidate_captions
     from app.services.rendering.render import (
+        QUALITY_PRESETS,
+        RenderError,
         build_render_command,
         probe_render_environment,
         probe_render_output,
     )
+
+    preset = QUALITY_PRESETS.get(quality)
+    if preset is None:
+        raise PipelineError(
+            f"Unknown quality preset '{quality}'. Available: {sorted(QUALITY_PRESETS)}."
+        )
+    out_w, out_h = int(preset["width"]), int(preset["height"])
 
     env_report = probe_render_environment(ffmpeg_bin)
     h264_enc = env_report.get("h264_encoder") or "libx264"
@@ -168,7 +177,9 @@ def run_render_stage(
 
         out_name = f"{clip_id}_{quality}.mp4"
         out_path = renders_dir / out_name
-        tmp_path = renders_dir / f".{out_name}.part-{os.getpid()}"
+        # Keep the real extension LAST: FFmpeg infers the muxer from it, and a
+        # name like ".clip.mp4.part-123" makes it refuse to open the output.
+        tmp_path = renders_dir / f".{out_path.stem}.part-{os.getpid()}{out_path.suffix}"
 
         cmd = build_render_command(
             ffmpeg_bin=ffmpeg_bin,
@@ -202,13 +213,22 @@ def run_render_stage(
             if not tmp_path.exists() or tmp_path.stat().st_size == 0:
                 raise PipelineError(f"Render produced empty file for clip '{clip_id}'.")
 
-            # Probe output validation
-            probe_res = probe_render_output(tmp_path)
-            if not probe_res.get("valid"):
-                err_msg = probe_res.get("error")
-                raise PipelineError(
-                    f"Rendered output validation failed for clip '{clip_id}': {err_msg}"
+            # Probe output validation: probe_render_output raises RenderError
+            # with a specific code when the file is missing, unreadable, the
+            # wrong size/codec, or the wrong duration. A render is only
+            # accepted after this passes.
+            try:
+                probe_render_output(
+                    ffprobe_bin,
+                    tmp_path,
+                    out_w,
+                    out_h,
+                    duration_ms,
                 )
+            except RenderError as exc:
+                raise PipelineError(
+                    f"Rendered output validation failed for clip '{clip_id}': {exc.message}"
+                ) from exc
 
             # Atomic replace
             os.replace(tmp_path, out_path)

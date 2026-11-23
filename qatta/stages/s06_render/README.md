@@ -5,7 +5,7 @@ Vertical 9:16 video rendering engine producing styled burned-in ASS captions and
 
 ## Interface
 - utterances_to_segments(utterances: list[AtomicUtterance]) -> list[TranscriptSegment]
-- run_render_stage(manifest: QattaManifest, candidate_id: str | None = None, settings: QattaSettings | None = None, work_dir: Path | None = None, quality: str = 'high', layout: str = 'fill_crop', burn_captions: bool = True, cancel_event: asyncio.Event | None = None) -> QattaManifest
+- run_render_stage(manifest: QattaManifest, candidate_id: str | None = None, settings: QattaSettings | None = None, work_dir: Path | None = None, quality: str = 'high', layout: str = 'center_crop', burn_captions: bool = True, cancel_event: asyncio.Event | None = None) -> QattaManifest
 - register(orchestrator: PipelineOrchestrator, candidate_id: str | None = None) -> None
 
 ## Invariants
