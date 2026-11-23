@@ -9,6 +9,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Nothing yet.
 
+## [0.3.1] — 2026-11-23
+
+The render stage actually renders. Three defects in `qatta/stages/s06_render`
+had made every headless render fail; the Studio was unaffected because it
+calls the renderer service directly with an explicit layout.
+
+### Fixed
+
+- **The default layout was never implemented.** `run_render_stage` defaulted to
+  `layout="fill_crop"`, while `build_render_command` accepts only
+  `center_crop` and `blurred_background`. The registered stage passes no
+  layout, so every `laqta run` and every backend job-pipeline render raised
+  `INVALID_CONFIG` before touching ffmpeg. The default is now `center_crop`,
+  and `SUPPORTED_LAYOUTS` in `backend/app/services/rendering/render.py` is the
+  single place both modules ask, so the two cannot drift apart again.
+- **The atomic temp file could not be muxed.** The stage wrote to
+  `.<clip>_<quality>.mp4.part-<pid>`. FFmpeg infers the container from the last
+  extension, so it refused the file with *"use a standard extension for the
+  filename or specify the format manually"*. The temp name now keeps `.mp4`
+  last (`.<stem>.part-<pid>.mp4`), preserving both the hidden-file convention
+  and the atomic `os.replace`.
+- **The output probe was called with the wrong signature.**
+  `probe_render_output(tmp_path)` was invoked with one argument against a
+  five-argument function, so validation raised `TypeError` instead of probing.
+  It now passes the real `ffprobe` binary, the rendered path, the preset
+  dimensions and the clip duration, and converts a `RenderError` into a
+  `PipelineError` carrying the specific reason (missing, empty, wrong
+  dimensions, wrong codec, wrong duration).
+
+### Added
+
+- `tests/test_s06_render_defaults.py` — four regression tests. Two are pure
+  contract checks (the default layout is in `SUPPORTED_LAYOUTS`; that layout
+  builds a real argv); one renders a synthetic clip through
+  `run_render_stage` with **no layout argument**, exactly as the registered
+  stage calls it, and asserts the recorded output exists; one asserts
+  `fill_crop` is not a supported layout. The render test is gated on a local
+  ffmpeg with a software H.264 encoder and skips with a stated reason
+  otherwise.
+
+### Known limitations
+
+- `run_render_stage` still passes `has_audio=True` unconditionally, so a
+  source with no audio stream is rejected by the output probe with
+  `NO_AUDIO_STREAM` rather than rendered silently. This is a loud failure, not
+  a wrong result, and is left for the next release because the manifest does
+  not currently record audio presence for section media.
+
 ## [0.3.0] — 2026-11-22
 
 Scriptable Laqta — one pipeline, two entry points, no duplicated stage list.

@@ -89,7 +89,7 @@ Laqta processes videos through an atomic, resumable manifest pipeline (`qatta_ma
 
 ---
 
-## 🧩 Product Feature Matrix (v0.3.0)
+## 🧩 Product Feature Matrix (v0.3.1)
 
 ### 🎬 Video Workflow & Editing
 
@@ -238,7 +238,7 @@ Optional desktop menu integration on Linux:
 ### Method 2: Docker Compose (Experimental Preview)
 
 > [!NOTE]
-> Native source installation (Method 1) is the primary verified path for `v0.3.0`. Review [Dockerfile](Dockerfile) and [docker-compose.yml](docker-compose.yml) carefully before containerized use (`Dockerfile` installs the core `.[asr]` extra rather than `backend/requirements.txt` and defines `QATTA_BIND_HOST`/`QATTA_BIND_PORT` rather than `QATTA_HOST`/`QATTA_PORT`).
+> Native source installation (Method 1) is the primary verified path for `v0.3.1`. Review [Dockerfile](Dockerfile) and [docker-compose.yml](docker-compose.yml) carefully before containerized use (`Dockerfile` installs the core `.[asr]` extra rather than `backend/requirements.txt` and defines `QATTA_BIND_HOST`/`QATTA_BIND_PORT` rather than `QATTA_HOST`/`QATTA_PORT`).
 
 ```bash
 git clone https://github.com/thewizard2030/laqta.git
@@ -256,7 +256,7 @@ Run commands inside `source backend/.venv/bin/activate` (or prefix with `./backe
 
 | Command                 | Description                                                                                     |
 | :---------------------- | :---------------------------------------------------------------------------------------------- |
-| `laqta --version`       | Print the installed Laqta version (`0.3.0`).                                                    |
+| `laqta --version`       | Print the installed Laqta version (`0.3.1`).                                                    |
 | `laqta doctor [--json]` | Inspect Python, FFmpeg/FFprobe, ASR, URL gating, storage permissions, disk, and servers.        |
 | `laqta run SOURCE`      | Run the full pipeline headless: `--project-id`, `--work-dir`, `--stages`, `--force`, `--json`.  |
 | `laqta models`          | List locally cached Hugging Face speech models and disk usage.                                  |
@@ -383,7 +383,7 @@ For comprehensive architectural specifications, benchmarks, and contributor guid
 | Document                                                         | Description                                                                      |
 | :--------------------------------------------------------------- | :------------------------------------------------------------------------------- |
 | **[CHANGELOG.md](CHANGELOG.md)**                                 | Full release history including **`v0.2.5`**, fixes, and known limitations        |
-| **[docs/RELEASING.md](docs/RELEASING.md)**                       | Automated CircleCI tag-release flow, SHA-256 verification, and `v0.3.0` record   |
+| **[docs/RELEASING.md](docs/RELEASING.md)**                       | Automated CircleCI tag-release flow, SHA-256 verification, and the `v0.3.1` record   |
 | **[docs/CIRCLECI_MIGRATION.md](docs/CIRCLECI_MIGRATION.md)**     | CircleCI 2.1 Smarter Testing, `laqta-release-publishing`, and GHA deprecation    |
 | **[docs/LICENSING.md](docs/LICENSING.md)**                       | Permanent MIT License policy, third-party separation, and trademark references   |
 | **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**                 | Deep-dive into manifest lifecycle, stage synchronization, and IPC boundaries     |

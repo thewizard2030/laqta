@@ -4,6 +4,33 @@ What changed between the releases, and what you have to do.
 
 ---
 
+## 0.3.0 → 0.3.1
+
+**No action required.** The data directory, the project format
+(`qatta_manifest.json`, schema version 1) and the API are unchanged.
+
+This release fixes the render stage, which was failing for anyone who ran the
+pipeline rather than clicking render in the Studio:
+
+- `s06_render` defaulted to a layout that was never implemented
+  (`fill_crop`), so `laqta run` and backend job renders failed with
+  `INVALID_CONFIG`. The default is now `center_crop`.
+- The atomic temp file ended in `.part-<pid>`, which ffmpeg cannot map to a
+  container. It now ends in `.mp4`.
+- The output probe was called with the wrong arguments, so validation raised
+  `TypeError` instead of checking the file.
+
+Things worth knowing:
+
+- **`fill_crop` is not a layout.** If you passed `layout="fill_crop"` yourself
+  (it was the old default), it still raises `INVALID_CONFIG`. Use
+  `center_crop` or `blurred_background`.
+- **Silent sources fail loudly.** The stage requests audio unconditionally, so
+  a video with no audio stream is rejected by the output probe with
+  `NO_AUDIO_STREAM` rather than rendered silently.
+
+---
+
 ## 0.2.5 → 0.3.0
 
 **No action required.** The data directory, the project format
