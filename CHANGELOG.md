@@ -56,6 +56,7 @@ calls the renderer service directly with an explicit layout.
   `NO_AUDIO_STREAM` rather than rendered silently. This is a loud failure, not
   a wrong result, and is left for the next release because the manifest does
   not currently record audio presence for section media.
+- **Release record:** `v0.3.1` is published via CircleCI ([workflow `913c44df`](https://app.circleci.com/workflow/913c44df-32db-42c4-9fac-a5e990a2df86): `backend`, `frontend` and `publish-release` all passed), creating [GitHub Release `v0.3.1`](https://github.com/thewizard2030/laqta/releases/tag/v0.3.1) from tag object `122a6122f7d362d87df7628e55857b5a3a9665fa` on merge commit `d240a32431dcc824d546e1b9a42e81a40dc4adbf` (PR #29), with asset `laqta-v0.3.1.tar.gz` (`5525167` bytes, SHA-256 `5c1695e1e4b6b90be60fd467bbb8829543d5467ab05dc7b8c723d9b9c24b9dc9`).
 
 ## [0.3.0] — 2026-11-22
 

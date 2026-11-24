@@ -93,6 +93,11 @@ pytest tests --tb=short
 ```
 
 - **Local validation:** `.circleci/config.yml` passed `circleci config validate`, YAML parsing passed across all 8 config/workflow files, and `scripts/publish_github_release.py` passed unit verification (`tests/test_publish_github_release.py`).
+- **Remote CircleCI CI & `v0.3.1` publication:**
+  - `release/v0.3.1` (`e3fff75`) passed CircleCI `ci` (`backend` and `frontend`).
+  - Annotated tag `v0.3.1` on merged `main` commit `d240a32431dcc824d546e1b9a42e81a40dc4adbf` (PR #29) executed CircleCI `release` workflow [`913c44df-32db-42c4-9fac-a5e990a2df86`](https://app.circleci.com/workflow/913c44df-32db-42c4-9fac-a5e990a2df86): `backend` (`success`), `frontend` (`success`), and `publish-release` (`success`).
+  - Published [GitHub Release `v0.3.1`](https://github.com/thewizard2030/laqta/releases/tag/v0.3.1) with source tarball `laqta-v0.3.1.tar.gz` (`5525167` bytes, SHA-256 `5c1695e1e4b6b90be60fd467bbb8829543d5467ab05dc7b8c723d9b9c24b9dc9`).
+
 - **Remote CircleCI CI & `v0.3.0` publication:**
   - `release/v0.3.0` (`62a6c54cf48a61538dc9e9ba11c675464bff3b65`) passed CircleCI `ci` (`backend` and `frontend`).
   - Annotated tag `v0.3.0` on merged `main` commit `23ec167e105c8cdfcee14e036a1e87ac7edd281d` (PR #25) executed CircleCI `release` workflow [`3d0f2617-08eb-499e-b906-36a6b9cee815`](https://app.circleci.com/workflow/3d0f2617-08eb-499e-b906-36a6b9cee815): `backend` (`success`), `frontend` (`success`), and `publish-release` (`success`).
