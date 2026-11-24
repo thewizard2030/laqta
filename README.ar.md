@@ -91,7 +91,7 @@ _إدارة المشاريع، استيراد الوسائط محليًا، ال
 
 ---
 
-## 🧩 مصفوفة الخصائص والإمكانات (v0.3.0)
+## 🧩 مصفوفة الخصائص والإمكانات (v0.3.1)
 
 ### 🎬 مسار الفيديو والتحرير
 
@@ -240,7 +240,7 @@ laqta studio --production
 ### الطريقة الثانية: التشغيل عبر Docker Compose (معاينة تجريبية)
 
 > [!NOTE]
-> التثبيت المحلي من المصدر (الطريقة الأولى) هو المسار الأساسي المختبر لإصدار `v0.3.0`. راجع [Dockerfile](Dockerfile) و[docker-compose.yml](docker-compose.yml) قبل الاعتماد على الحاويات (حيث يثبّت `Dockerfile` الحزمة الأساسية `.[asr]` فقط دون `backend/requirements.txt` ويستخدم `QATTA_BIND_HOST`/`QATTA_BIND_PORT` بدلاً من `QATTA_HOST`/`QATTA_PORT`).
+> التثبيت المحلي من المصدر (الطريقة الأولى) هو المسار الأساسي المختبر لإصدار `v0.3.1`. راجع [Dockerfile](Dockerfile) و[docker-compose.yml](docker-compose.yml) قبل الاعتماد على الحاويات (حيث يثبّت `Dockerfile` الحزمة الأساسية `.[asr]` فقط دون `backend/requirements.txt` ويستخدم `QATTA_BIND_HOST`/`QATTA_BIND_PORT` بدلاً من `QATTA_HOST`/`QATTA_PORT`).
 
 ```bash
 git clone https://github.com/thewizard2030/laqta.git
@@ -258,7 +258,7 @@ docker compose up
 
 | الأمر                   | الوصف                                                                                                |
 | :---------------------- | :--------------------------------------------------------------------------------------------------- |
-| `laqta --version`       | عرض رقم الإصدار المثبّت (`0.3.0`).                                                                   |
+| `laqta --version`       | عرض رقم الإصدار المثبّت (`0.3.1`).                                                                   |
 | `laqta doctor [--json]` | فحص Python و FFmpeg/FFprobe ومحرّك التفريغ وحالة استيراد الروابط وأذونات التخزين والخوادم.           |
 | `laqta run SOURCE`      | تشغيل خط المعالجة كاملاً بدون واجهة: `--project-id`، `--work-dir`، `--stages`، `--force`، `--json`. |
 | `laqta models`          | استعراض نماذج الصوت المخزنة محليًا في ذاكرة Hugging Face وحجمها على القرص.                           |
@@ -389,7 +389,7 @@ flowchart TD
 | الوثيقة                                                          | الوصف والمحتوى                                                                     |
 | :--------------------------------------------------------------- | :--------------------------------------------------------------------------------- |
 | **[CHANGELOG.md](CHANGELOG.md)**                                 | سجل التغييرات الكامل متضمنًا **`v0.2.5`** والإصلاحات والقيود المعروفة              |
-| **[docs/RELEASING.md](docs/RELEASING.md)**                       | خطوات النشر التلقائي عبر CircleCI والتحقق بـ SHA-256 وسجل إصدار `v0.3.0`           |
+| **[docs/RELEASING.md](docs/RELEASING.md)**                       | خطوات النشر التلقائي عبر CircleCI والتحقق بـ SHA-256 وسجل إصدار `v0.3.1`           |
 | **[docs/CIRCLECI_MIGRATION.md](docs/CIRCLECI_MIGRATION.md)**     | بنية CircleCI 2.1 وعزل سياق `laqta-release-publishing` وتفاصيل الانتقال من Actions |
 | **[docs/LICENSING.md](docs/LICENSING.md)**                       | سياسة ترخيص MIT الدائمة وفصل حزم الطرف الثالث وحقوق العلامة التجارية               |
 | **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**                 | شرح تفصيلي لدورة حياة ملف البيان، ومزامنة المراحل، وحدود العمليات                  |

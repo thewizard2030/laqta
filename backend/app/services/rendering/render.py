@@ -77,6 +77,13 @@ QUALITY_PRESETS: dict[str, dict[str, Any]] = {
     },
 }
 
+# The layouts this module can actually build a filtergraph for. Declared once
+# so callers (the pipeline stage, the API schema, the tests) have one place to
+# ask instead of repeating the tuple. `fill_crop` is deliberately absent: it
+# was never implemented, and a default that names an unimplemented layout made
+# every headless render fail.
+SUPPORTED_LAYOUTS: tuple[str, ...] = ("center_crop", "blurred_background")
+
 
 # ---------------------------------------------------------------------------
 # Environment probing (FFmpeg + libass), honest diagnostics
@@ -251,10 +258,10 @@ def build_render_command(
             f"Unknown quality preset '{quality}'. Available: {sorted(QUALITY_PRESETS)}.",
             error_code="INVALID_CONFIG",
         )
-    if layout not in ("center_crop", "blurred_background"):
+    if layout not in SUPPORTED_LAYOUTS:
         raise RenderError(
             f"Layout '{layout}' is not implemented in this phase "
-            "(center_crop and blurred_background only).",
+            f"({', '.join(SUPPORTED_LAYOUTS)} only).",
             error_code="INVALID_CONFIG",
         )
     out_w, out_h = int(preset["width"]), int(preset["height"])
