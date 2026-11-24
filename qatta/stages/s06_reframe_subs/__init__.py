@@ -38,6 +38,22 @@ from qatta.stages.s06_reframe_subs.camera_solver import (
     compute_mouth_aspect_ratio,
     partition_clip_into_shots,
 )
+from qatta.stages.s06_reframe_subs.detector import (
+    DetectorUnavailableError,
+    FaceDetector,
+    NullDetector,
+    OpenCVHaarDetector,
+    build_detector,
+    detector_status,
+)
+from qatta.stages.s06_reframe_subs.frame_sampler import (
+    FrameSamplingError,
+    SampledFrame,
+    SamplingCancelledError,
+    build_sample_command,
+    sample_frames,
+    temporary_sample_dir,
+)
 
 if TYPE_CHECKING:
     from qatta.core.pipeline import PipelineOrchestrator
@@ -50,13 +66,23 @@ __all__ = [
     "BoundingBox",
     "CameraSolver",
     "CaptionLine",
+    "DetectorUnavailableError",
     "FaceDetection",
+    "FaceDetector",
     "FrameObservation",
+    "FrameSamplingError",
     "LayoutMode",
     "LayoutStateMachine",
+    "NullDetector",
+    "OpenCVHaarDetector",
+    "SampledFrame",
+    "SamplingCancelledError",
     "SceneAwareHysteresisSolver",
     "ShotSegment",
+    "build_detector",
+    "build_sample_command",
     "compute_mouth_aspect_ratio",
+    "detector_status",
     "generate_dynamic_ass",
     "group_words_into_lines",
     "hex_to_ass_color",
@@ -64,6 +90,8 @@ __all__ = [
     "partition_clip_into_shots",
     "register",
     "run_reframe_subs_stage",
+    "sample_frames",
+    "temporary_sample_dir",
 ]
 
 
