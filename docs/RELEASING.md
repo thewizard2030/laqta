@@ -78,6 +78,16 @@ To retry after fixing a token or transient error, re-run the `publish-release` j
 
 ---
 
+## Completed Release Record: `v0.3.1` (2026-11-24)
+
+- **Tag & Verified Target Commit:** `v0.3.1` (`122a6122f7d362d87df7628e55857b5a3a9665fa`) -> [`d240a32431dcc824d546e1b9a42e81a40dc4adbf`](https://github.com/thewizard2030/laqta/commit/d240a32431dcc824d546e1b9a42e81a40dc4adbf) (PR #29)
+- **CircleCI Release Workflow:** [`913c44df-32db-42c4-9fac-a5e990a2df86`](https://app.circleci.com/workflow/913c44df-32db-42c4-9fac-a5e990a2df86) (`backend`: `success`, `frontend`: `success`, `publish-release`: `success`)
+- **Published GitHub Release:** https://github.com/thewizard2030/laqta/releases/tag/v0.3.1
+- **Source Tarball Asset:** [`laqta-v0.3.1.tar.gz`](https://github.com/thewizard2030/laqta/releases/download/v0.3.1/laqta-v0.3.1.tar.gz) (`5525167` bytes, SHA-256 `5c1695e1e4b6b90be60fd467bbb8829543d5467ab05dc7b8c723d9b9c24b9dc9`)
+- **Independent verification:** downloaded the asset from the published release, recomputed the SHA-256 above, and confirmed `qatta/__init__.py` reports `0.3.1`, that `run_render_stage` defaults to `center_crop` with the corrected temp filename and probe call, that `SUPPORTED_LAYOUTS` exists, and that `tests/test_s06_render_defaults.py` is present.
+
+---
+
 ## Completed Release Record: `v0.3.0` (2026-11-22)
 
 - **Tag & Verified Target Commit:** `v0.3.0` (`b6cca91ee422116e7874acd30d35b894abc0b189`) -> [`23ec167e105c8cdfcee14e036a1e87ac7edd281d`](https://github.com/thewizard2030/laqta/commit/23ec167e105c8cdfcee14e036a1e87ac7edd281d) (PR #25)
