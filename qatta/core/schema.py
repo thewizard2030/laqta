@@ -28,6 +28,20 @@ U_ID_PATTERN = re.compile(r"^U_\d{4,}$")
 
 ClipArchetype = Literal["STORY", "TACTICAL_INSIGHT", "HOT_TAKE"]
 OverlayType = Literal["STOCK_VIDEO", "TEXT_CARD", "PUNCH_IN_ZOOM"]
+# Composition mode chosen per shot by stage s06_reframe_subs. Declared here as
+# a literal rather than imported from the stage package: ``qatta.core`` must
+# not depend on ``qatta.stages``, and a persisted enum is a schema concern.
+FramingLayout = Literal["SINGLE_SPEAKER", "DUAL_SPLIT", "SCREENSHARE_PIP"]
+
+# The manifest version this build writes. Defined once so the model default
+# and the reader's upper bound in ``pipeline.py`` cannot drift apart — that
+# drift is what would make every freshly written manifest unreadable.
+#
+# v2 is additive: it adds ``ClipCandidate.crop_trajectory`` and
+# ``ClipCandidate.framing_meta``. A v1 manifest still validates, because both
+# default to empty/None; the version bump exists so a *newer* build's fields
+# are refused instead of silently dropped.
+MAX_SCHEMA_VERSION = 2
 
 
 class _StrictModel(BaseModel):
@@ -216,6 +230,72 @@ class MonetizationMeta(_StrictModel):
     ypp_safe: bool
 
 
+class CropKeyframe(_StrictModel):
+    """One camera position, in source-timeline milliseconds.
+
+    Only the horizontal centre is stored: the vertical crop is fixed by the
+    9:16 window, and storing a value that is never used would invite the
+    assumption that vertical tracking exists.
+    """
+
+    timestamp_ms: int = Field(ge=0)
+    center_x: float = Field(ge=0.0, le=1.0)
+
+
+class ShotFraming(_StrictModel):
+    """The solved crop trajectory for one shot of one clip.
+
+    This is the *solver's output*, deliberately not its input: the raw
+    ``FrameObservation`` series (every face box on every sampled frame) is far
+    too large to persist and is not needed once the trajectory is solved.
+    """
+
+    shot_index: int = Field(ge=0)
+    start_ms: int = Field(ge=0)
+    end_ms: int = Field(gt=0)
+    layout: FramingLayout
+    keyframes: list[CropKeyframe] = Field(default_factory=list)
+
+    @model_validator(mode="after")
+    def _check_shot(self) -> "ShotFraming":
+        if self.end_ms <= self.start_ms:
+            raise ValueError(
+                f"ShotFraming {self.shot_index}: end_ms ({self.end_ms}) must be "
+                f"greater than start_ms ({self.start_ms})."
+            )
+        stamps = [k.timestamp_ms for k in self.keyframes]
+        if stamps != sorted(stamps):
+            raise ValueError(f"ShotFraming {self.shot_index}: keyframes are not in time order.")
+        for keyframe in self.keyframes:
+            if not self.start_ms <= keyframe.timestamp_ms <= self.end_ms:
+                raise ValueError(
+                    f"ShotFraming {self.shot_index}: keyframe at "
+                    f"{keyframe.timestamp_ms} ms lies outside "
+                    f"[{self.start_ms}, {self.end_ms}] ms."
+                )
+        return self
+
+
+class FramingMeta(_StrictModel):
+    """What actually happened when framing was computed.
+
+    This exists so the UI can say "face-guided framing ran and found faces in
+    12 of 40 frames" instead of implying a capability that did not run. Every
+    number here is measured during the stage; none is derived or estimated.
+    """
+
+    detector: str = Field(min_length=1)
+    enabled: bool
+    frames_sampled: int = Field(ge=0)
+    frames_analysed: int = Field(ge=0)
+    frames_with_face: int = Field(ge=0)
+    elapsed_ms: int = Field(ge=0)
+    # Set when framing degraded — feature off, detector unavailable, sampling
+    # failed. ``None`` means it ran as configured. The crop then falls back to
+    # a centred window, which is a real result, not an error.
+    degradation_reason: str | None = Field(default=None)
+
+
 class ClipCandidate(_StrictModel):
     """A candidate short, grounded in utterance IDs and real timestamps."""
 
@@ -245,6 +325,12 @@ class ClipCandidate(_StrictModel):
     section_media_path: str | None = Field(default=None)
     section_audio_16k_path: str | None = Field(default=None)
     section_start_ms: int | None = Field(default=None, ge=0)
+    # Schema v2 (stage s06_reframe_subs): the solved crop trajectory per shot,
+    # plus the measured facts behind it. Both default to empty/None so a v1
+    # manifest still validates unchanged, and so "no framing was computed" is
+    # distinguishable from "framing computed and chose to stay centred".
+    crop_trajectory: list[ShotFraming] = Field(default_factory=list)
+    framing_meta: FramingMeta | None = Field(default=None)
 
     @model_validator(mode="after")
     def _check_span(self) -> "ClipCandidate":
@@ -271,7 +357,7 @@ class ClipCandidate(_StrictModel):
 class QattaManifest(_StrictModel):
     """The single source of truth for one project's pipeline state."""
 
-    schema_version: int = Field(default=1, ge=1)
+    schema_version: int = Field(default=MAX_SCHEMA_VERSION, ge=1)
     project_id: str = Field(min_length=1)
     source_path: str = Field(min_length=1)
     source_url: str | None = None
