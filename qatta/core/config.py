@@ -164,6 +164,30 @@ class QattaSettings(BaseSettings):
         description="Absolute upper bound (configurable up to 180 s).",
     )
 
+    # --- Stage s06_reframe_subs: face-guided framing (OPT-IN) ---------------
+    # Off by default. Turning it on costs frame sampling plus Haar detection
+    # per clip, and Haar only sees frontal faces — a profile or backlit shot
+    # degrades to a centred crop. Enabling it is a real choice, so it is not
+    # inferred from anything.
+    face_guided_framing: bool = Field(
+        default=False,
+        description=(
+            "Opt-in face-guided crop trajectories for the reframe stage. "
+            "When off, the stage writes a centred crop trajectory and records "
+            "why, instead of pretending to detect faces."
+        ),
+    )
+    face_detector: str = Field(
+        default="opencv_haar",
+        description=(
+            "Detector used when face_guided_framing is on: 'opencv_haar' "
+            "(bundled in opencv-python, frontal faces only) or 'none'."
+        ),
+    )
+    reframe_sample_fps: float = Field(default=5.0, gt=0, le=30)
+    reframe_max_frames: int = Field(default=600, ge=1)
+    reframe_timeout_seconds: float = Field(default=120.0, gt=0)
+
     # --- Storage ------------------------------------------------------------
     data_dir: Path = Path.home() / ".local" / "share" / "qatta"
     ffprobe_timeout_seconds: float = Field(default=30.0, gt=0)

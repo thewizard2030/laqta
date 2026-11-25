@@ -61,6 +61,9 @@ PIPELINE_STAGES: tuple[PipelineStage, ...] = (
     PipelineStage("s05_ranking", "ranking_candidates"),
     PipelineStage("s05b_section_fetch", "fetching_clip_sections"),
     PipelineStage("s02b_fine_alignment", "aligning_clip_words"),
+    # Needs s03's scene cuts and Pass 2's word timings; s06_render consumes
+    # the captions and crop trajectories it writes.
+    PipelineStage("s06_reframe_subs", "reframing_and_captions"),
     PipelineStage("s06_render", "rendering_shorts"),
 )
 
@@ -111,6 +114,7 @@ def register_default_stages(
     modules pull in heavy optional dependencies lazily themselves, and the CLI
     should be able to describe the pipeline without loading them.
     """
+    from qatta.stages import s06_reframe_subs
     from qatta.stages.s01_ingest import ingestor
     from qatta.stages.s02_transcript import fast_pass, fine_pass
     from qatta.stages.s03_multimodal import analyzer
@@ -127,6 +131,7 @@ def register_default_stages(
         generator,
         scorer,
         section_fetch,
+        s06_reframe_subs,
         renderer,
     ):
         module.register(orchestrator)

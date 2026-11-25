@@ -1410,6 +1410,7 @@ class JobManager:
         "s05_ranking": 70.0,
         "s05b_section_fetch": 80.0,
         "s02b_fine_alignment": 90.0,
+        "s06_reframe_subs": 93.0,
         "s06_render": 96.0,
     }
 

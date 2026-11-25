@@ -28,6 +28,7 @@ in frame. The cost is that a genuinely small face in a wide shot is missed.
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable, Iterable
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
@@ -36,6 +37,7 @@ from qatta.stages.s06_reframe_subs.camera_solver import (
     FaceDetection,
     FrameObservation,
 )
+from qatta.stages.s06_reframe_subs.frame_sampler import SampledFrame
 
 logger = logging.getLogger("qatta.s06_reframe.detector")
 
@@ -273,6 +275,42 @@ def _clamp01(value: float) -> float:
     if value > 1.0:
         return 1.0
     return value
+
+
+def _imread(path: Path) -> Any | None:
+    """Read one JPEG with OpenCV, or return None when it cannot be decoded."""
+    import cv2
+
+    return cv2.imread(str(path))
+
+
+def observe_frames(
+    detector: FaceDetector,
+    frames: Iterable[SampledFrame],
+    *,
+    reader: Callable[[Path], Any | None] | None = None,
+) -> list[FrameObservation]:
+    """Turn sampled frames into one observation per readable frame.
+
+    Decoding lives here, next to the only other place that knows about cv2, so
+    the stage never imports OpenCV directly. ``reader`` is injectable for the
+    same reason ``detect`` is tested with a fake cv2: the logic must be
+    exercisable on a machine without the analysis extra.
+
+    A frame that will not decode is skipped rather than aborting the clip. The
+    returned list is therefore shorter than the input when frames are
+    unreadable, which the caller reports as ``frames_analysed`` — it must not
+    assume the two counts match.
+    """
+    read = reader or _imread
+    observations: list[FrameObservation] = []
+    for frame in frames:
+        image = read(frame.path)
+        if image is None:
+            logger.debug("Skipping a sampled frame that would not decode: %s", frame.path)
+            continue
+        observations.append(detector.detect(image, frame.timestamp_ms))
+    return observations
 
 
 def build_detector(name: str = "opencv_haar") -> FaceDetector:

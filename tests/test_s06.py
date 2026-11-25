@@ -413,8 +413,9 @@ def test_run_reframe_subs_stage_end_to_end(tmp_path: Path):
         captions_dir=captions_dir,
     )
 
-    # 1. Check ASS file was written
-    ass_path = captions_dir / "clip_001.ass"
+    # 1. Check ASS file was written, in its own namespace: the render stage
+    # writes {captions_dir}/{clip}.ass and must not be overwritten by this one.
+    ass_path = captions_dir / "reframe" / "clip_001.ass"
     assert ass_path.is_file()
     ass_content = ass_path.read_text(encoding="utf-8")
     assert "PlayResX: 1080" in ass_content
