@@ -7,7 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Nothing yet.
+### Added
+
+- **Stage `s06_reframe_subs` is wired into the pipeline.** It was a module with
+  a camera solver and no registered stage, so it never ran. It now sits between
+  `s02b_fine_alignment` and `s06_render`, consuming the scene cuts from
+  `s03_multimodal` and the word timings from Pass 2, and writing per-clip ASS
+  captions plus a solved crop trajectory.
+- **Opt-in face-guided framing** (`QATTA_FACE_GUIDED_FRAMING`, default off).
+  When enabled, the stage samples frames from each winning clip with a single
+  bounded FFmpeg call and follows the face using OpenCV's bundled Haar cascade.
+  Nothing is downloaded and nothing leaves the machine.
+- **Manifest schema v2** (additive): `ClipCandidate.crop_trajectory` holds the
+  solved per-shot trajectory, and `ClipCandidate.framing_meta` holds the
+  measured facts behind it. A v1 manifest still loads unchanged.
+
+### Changed
+
+- **Reframe captions moved to `captions/reframe/`.** The reframe stage and the
+  render stage both wrote `captions/{clip_id}.ass`, so whichever ran last
+  silently replaced the other's subtitles. They no longer collide.
+
+### Notes
+
+- Face-guided framing is **not** speaker detection. Haar returns a box and no
+  landmarks, so `mar` is always `0.0` and `is_speaking` is always `False`, and
+  `face_id` is a per-frame index rather than a tracked person. Frontal faces
+  only: profile, backlit and occluded faces are missed, and the crop stays
+  centred.
+- The analysis profile pins `opencv-python<5` because OpenCV 5.x no longer
+  bundles the Haar cascade. On 5.x the detector fails closed and records the
+  reason rather than finding nothing silently.
 
 ## [0.3.1] — 2026-11-23
 

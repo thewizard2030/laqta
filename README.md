@@ -68,7 +68,7 @@ Laqta processes videos through an atomic, resumable manifest pipeline (`qatta_ma
    - **Pass A (Full Media):** Fast segment-level transcription via local Faster-Whisper (or optional opt-in cloud ASR / YouTube caption-first ingestion) without full-video word timestamps to conserve CPU cycles.
    - **Pass B (Selected Clips):** Clip-scoped word-level alignment (`small` `int8` model by default) computed on demand only for chosen clips when rendering karaoke captions.
 4. **Heuristic Candidate Ranking:** Evaluates speech cadence, pause boundaries, and vocal dynamics to assign each segment an explainable **Clip Potential Score (CPS)**.
-5. **9:16 Vertical Framing:** Reformats horizontal footage to 1080×1920 via `center_crop` or `blurred_background` layouts with mobile title-safe area overlays in the Studio renderer. An experimental camera solver lives in core stage `qatta/stages/s06_reframe_subs`, but no face detector feeds it yet and the stage is not wired into the pipeline — the two Studio layouts are what actually ship.
+5. **9:16 Vertical Framing:** Reformats horizontal footage to 1080×1920 via `center_crop` or `blurred_background` layouts with mobile title-safe area overlays in the Studio renderer. Core stage `qatta/stages/s06_reframe_subs` is wired into the pipeline and, when you opt in with `QATTA_FACE_GUIDED_FRAMING=true`, samples frames and records a per-shot crop trajectory in the manifest. **The renderer does not consume that trajectory yet**, so the rendered file is unchanged: the two Studio layouts above are still what you get.
 6. **RTL-Compliant Subtitle Burn-In:** Renders animated karaoke-style captions via `libass` with HarfBuzz/FriBiDi text shaping.
 
 ---
@@ -96,7 +96,7 @@ Laqta processes videos through an atomic, resumable manifest pipeline (`qatta_ma
 - **Local Import:** Drag-and-drop video upload supporting MP4, MOV, MKV, and WebM. `[Supported]`
 - **Project Workspaces:** Persistent SQLite-backed project management in `~/.local/share/qatta/`. `[Supported]`
 - **Multi-Track Timeline:** Interactive audio waveform scrubbing, playback controls, and clip trimming. `[Supported]`
-- **Vertical Framing (9:16):** 1080×1920 centered crop (`center_crop`) or blurred-background (`blurred_background`) framing with safe-area overlays in Studio (`[Supported]`); `qatta/stages/s06_reframe_subs` contains an experimental camera solver, but no face detector feeds it yet and the stage is not wired into the pipeline (`[Not shipped]`).
+- **Vertical Framing (9:16):** 1080×1920 centered crop (`center_crop`) or blurred-background (`blurred_background`) framing with safe-area overlays in Studio (`[Supported]`); `qatta/stages/s06_reframe_subs` is wired into the pipeline and, when opted in via `QATTA_FACE_GUIDED_FRAMING=true`, samples frames and records a per-shot crop trajectory in the manifest (`[Opt-In]`). The renderer does not consume that trajectory yet, so rendered output is still centre-crop (`[Not shipped]`).
 - **High-Quality Export:** Local FFmpeg encoding with burned-in ASS subtitles or standalone SRT export. `[Supported]`
 - **URL Ingestion:** Optional YouTube caption-first importing via `yt-dlp` (fail-closed, requires operator enablement and per-import rights confirmation). `[Optional / Opt-In]`
 

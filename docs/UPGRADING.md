@@ -4,6 +4,32 @@ What changed between the releases, and what you have to do.
 
 ---
 
+## Unreleased (0.3.1 → next)
+
+**Action required only if you run `s06_reframe_subs` yourself** — the pipeline
+does it for you.
+
+- **The project format is schema version 2.** It is additive: two new optional
+  fields on each candidate (`crop_trajectory`, `framing_meta`). Existing v1
+  manifests still load, and nothing is migrated in place. A manifest is
+  relabelled v2 the first time the reframe stage writes to it, so an older
+  build will refuse it with "newer than this build understands" instead of
+  failing on an unknown field.
+- **Reframe captions live in `captions/reframe/`.** They used to share
+  `captions/{clip_id}.ass` with the render stage, so one silently overwrote
+  the other. If you read that path directly, read the new one.
+- **Face-guided framing is off by default.** Turn it on with
+  `QATTA_FACE_GUIDED_FRAMING=true` after installing the analysis extra
+  (`pip install --require-hashes -r backend/requirements-analysis-lock.txt`).
+  With it off, no frames are sampled and `framing_meta.degradation_reason`
+  records that the feature is disabled.
+- **The analysis extra pins `opencv-python<5`.** OpenCV 5.x stopped bundling
+  the Haar cascade the detector needs, so a 5.x wheel installs fine and then
+  finds no faces at all. If you manage OpenCV yourself, stay below 5 or expect
+  the detector to report itself unavailable.
+
+---
+
 ## 0.3.0 → 0.3.1
 
 **No action required.** The data directory, the project format
