@@ -43,8 +43,12 @@ FFMPEG = shutil.which("ffmpeg")
 # ---------------------------------------------------------------------------
 
 
-def test_the_supported_layouts_are_the_two_documented_ones() -> None:
-    assert set(SUPPORTED_LAYOUTS) == {"center_crop", "blurred_background"}
+def test_the_supported_layouts_are_the_implemented_ones() -> None:
+    assert set(SUPPORTED_LAYOUTS) == {
+        "center_crop",
+        "blurred_background",
+        "face_guided",
+    }
     # `fill_crop` is the bug: it was a default, never an implementation.
     assert "fill_crop" not in SUPPORTED_LAYOUTS
 
@@ -52,7 +56,10 @@ def test_the_supported_layouts_are_the_two_documented_ones() -> None:
 def test_the_render_stage_default_layout_is_supported() -> None:
     default = inspect.signature(run_render_stage).parameters["layout"].default
 
-    assert default in SUPPORTED_LAYOUTS, (
+    # None means "auto": face_guided when the candidate has a solved
+    # trajectory, centre crop otherwise. Any other value must be a layout the
+    # command builder can actually construct.
+    assert default is None or default in SUPPORTED_LAYOUTS, (
         f"run_render_stage defaults to layout={default!r}, which "
         f"build_render_command rejects. Supported: {SUPPORTED_LAYOUTS}."
     )
@@ -61,12 +68,14 @@ def test_the_render_stage_default_layout_is_supported() -> None:
 def test_the_default_layout_builds_a_real_command(tmp_path: Path) -> None:
     """The registered stage passes no layout, so the default must build."""
     default = inspect.signature(run_render_stage).parameters["layout"].default
+    # A manifest with no trajectory resolves auto -> center_crop.
+    resolved = default if default is not None else "center_crop"
 
     cmd = build_render_command(
         "ffmpeg",
         Path("/media/src.mp4"),
         tmp_path / "out.mp4",
-        layout=default,
+        layout=resolved,
         quality="high",
         src_width=1920,
         src_height=1080,

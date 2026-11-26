@@ -66,17 +66,56 @@ def utterances_to_segments(utterances: list[AtomicUtterance]):
     return segments
 
 
+def _clip_relative_trajectory(candidate) -> list[tuple[int, float]]:
+    """Flatten a candidate's per-shot trajectory onto the clip's own timeline.
+
+    ``build_render_command`` seeks to the clip start, so FFmpeg's ``t`` begins
+    at zero there. Source-timeline keyframes must be rebased or every pan
+    lands at the wrong moment — a bug that renders a perfectly valid video
+    with the camera in the wrong place.
+    """
+    duration_ms = candidate.end_ms - candidate.start_ms
+    points: list[tuple[int, float]] = []
+    for shot in candidate.crop_trajectory:
+        for keyframe in shot.keyframes:
+            offset_ms = keyframe.timestamp_ms - candidate.start_ms
+            points.append((min(max(offset_ms, 0), duration_ms), keyframe.center_x))
+    points.sort(key=lambda point: point[0])
+    return points
+
+
+def _resolve_layout(candidate, requested: str | None) -> tuple[str, list[tuple[int, float]]]:
+    """Decide the composition for one candidate and flatten its trajectory.
+
+    ``requested=None`` is auto: follow the solved trajectory when this clip has
+    one, otherwise centre. An explicit layout is honoured as given, except that
+    ``face_guided`` with nothing to follow still returns an empty trajectory so
+    the caller can record the fallback instead of implying a pan.
+    """
+    resolved = requested
+    if resolved is None:
+        resolved = "face_guided" if candidate.crop_trajectory else "center_crop"
+    if resolved != "face_guided":
+        return resolved, []
+    return resolved, _clip_relative_trajectory(candidate)
+
+
 def run_render_stage(
     manifest: QattaManifest,
     candidate_id: str | None = None,
     settings: QattaSettings | None = None,
     work_dir: Path | None = None,
     quality: str = "high",
-    layout: str = "center_crop",
+    layout: str | None = None,
     burn_captions: bool = True,
     cancel_event: asyncio.Event | None = None,
 ) -> QattaManifest:
     """Execute Stage s06 rendering on selected candidate(s).
+
+    ``layout=None`` means auto: use ``face_guided`` when the candidate carries
+    a solved crop trajectory (written by ``s06_reframe_subs``), otherwise
+    ``center_crop``. The resolved layout is recorded in the evidence log, so a
+    render never silently changes composition.
 
     Updates manifest in-place (and returns it) with:
     ``candidate.rendered_paths["vertical_9_16"] = str(output_path)``.
@@ -181,11 +220,27 @@ def run_render_stage(
         # name like ".clip.mp4.part-123" makes it refuse to open the output.
         tmp_path = renders_dir / f".{out_path.stem}.part-{os.getpid()}{out_path.suffix}"
 
+        # Resolve the composition for THIS candidate. A trajectory is only
+        # meaningful when it was solved for this clip, so the decision is
+        # per-candidate rather than per-run.
+        resolved_layout, trajectory = _resolve_layout(candidate, layout)
+        if resolved_layout == "face_guided" and not trajectory:
+            # Explicitly asked for face-guided framing with nothing to
+            # follow: say so and centre, instead of implying a pan.
+            candidate.evidence_log.append(
+                "s06_render: face_guided requested but no crop trajectory "
+                "exists; falling back to a centred crop"
+            )
+        candidate.evidence_log.append(
+            f"s06_render: layout={resolved_layout}"
+            + (f", {len(trajectory)} trajectory points" if trajectory else "")
+        )
+
         cmd = build_render_command(
             ffmpeg_bin=ffmpeg_bin,
             input_path=clip_input,
             output_path=tmp_path,
-            layout=layout,
+            layout=resolved_layout,
             quality=quality,
             src_width=src_w,
             src_height=src_h,
@@ -195,6 +250,7 @@ def run_render_stage(
             start_ms=clip_start_ms,
             duration_ms=duration_ms,
             video_encoder=h264_enc,
+            crop_trajectory=trajectory or None,
         )
 
         try:
