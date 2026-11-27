@@ -32,6 +32,7 @@ const mockExportSettings: ExportSettings = {
   resolution: "1080p",
   format: "mp4",
   burnInSubtitles: true,
+  faceGuidedFraming: false,
 };
 
 describe("InspectorPanel & Sub-Tabs", () => {
@@ -179,6 +180,12 @@ describe("InspectorPanel & Sub-Tabs", () => {
     const res4k = screen.getByTestId("res-option-4k");
     await user.click(res4k);
     expect(onUpdate).toHaveBeenCalledWith({ resolution: "4k" });
+
+    // Face-guided framing is an explicit opt-in, off by default.
+    const faceToggle = screen.getByTestId("face-guided-framing-toggle");
+    expect(faceToggle).toHaveAttribute("aria-checked", "false");
+    await user.click(faceToggle);
+    expect(onUpdate).toHaveBeenCalledWith({ faceGuidedFraming: true });
 
     // Click Export Short button
     const exportBtn = screen.getByTestId("export-short-btn");

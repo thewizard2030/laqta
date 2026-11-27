@@ -3,8 +3,10 @@
 `qatta/core/runner.py` is the single source of truth for the pipeline. These
 tests exercise the backend's real construction path and assert that it
 registers exactly that pipeline — nothing missing, nothing extra. They are the
-guard against silently wiring a future stage (`s07_render_learn`) or a stage
-whose inputs do not exist yet (`s06_reframe_subs`).
+guard against silently wiring a future stage (`s07_render_learn`), and they
+also pin the moment a previously unwired stage became real: `s06_reframe_subs`
+is registered now that a detector produces the observations its camera solver
+consumed blindly before.
 """
 
 from __future__ import annotations
@@ -34,16 +36,17 @@ def test_the_backend_registers_exactly_the_runner_pipeline() -> None:
     assert set(orchestrator.registered_stages) == set(stage_names())
 
 
-def test_the_backend_registers_only_s06_render_among_render_stages() -> None:
+def test_the_backend_registers_only_shipped_render_stages() -> None:
     orchestrator = _orchestrator("registration-render")
 
     render_family = {
         name for name in orchestrator.registered_stages if name.startswith(("s06", "s07"))
     }
 
-    assert render_family == {"s06_render"}
+    # s06_reframe_subs is real now: it has a detector, a sampler and a stage
+    # body. s07_render_learn is still a future phase and must stay unwired.
+    assert render_family == {"s06_reframe_subs", "s06_render"}
     assert "s07_render_learn" not in orchestrator.registered_stages
-    assert "s06_reframe_subs" not in orchestrator.registered_stages
 
 
 def test_every_registered_stage_has_a_progress_percentage() -> None:

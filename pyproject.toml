@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "laqta"
-version = "0.3.1"
+version = "0.4.0"
 description = "Laqta — local-first, Arabic-first long-video to vertical Shorts engine."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -69,6 +69,11 @@ analysis = [
     "librosa>=0.10",
     "soundfile>=0.12",
     "scenedetect>=0.6",
+    # Deliberate upper bound: OpenCV 5.x no longer bundles the Haar cascade
+    # that qatta/stages/s06_reframe_subs/detector.py needs, and shipping no
+    # model download is the constraint that makes this detector viable.
+    # Rationale and measurements: backend/requirements-analysis.txt.
+    "opencv-python<5",
 ]
 # URL ingestion / YouTube captions-first flow (Unlicense).
 # The platform-policy/rights review was completed by owner decision on

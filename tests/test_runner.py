@@ -60,6 +60,7 @@ def test_the_stage_order_is_the_expected_one() -> None:
         "s05_ranking",
         "s05b_section_fetch",
         "s02b_fine_alignment",
+        "s06_reframe_subs",
         "s06_render",
     )
 
@@ -211,7 +212,7 @@ def test_cancellation_stops_at_a_stage_boundary(tmp_path) -> None:
 
     assert log == ["s01_ingest", "s02_transcript"]
     assert caught.value.stage == "s03_multimodal"
-    assert "2 of 8" in str(caught.value)
+    assert f"2 of {len(stage_names())}" in str(caught.value)
     assert orchestrator.manifest.completed_stages == ["s01_ingest", "s02_transcript"]
 
 

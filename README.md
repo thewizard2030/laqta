@@ -68,7 +68,7 @@ Laqta processes videos through an atomic, resumable manifest pipeline (`qatta_ma
    - **Pass A (Full Media):** Fast segment-level transcription via local Faster-Whisper (or optional opt-in cloud ASR / YouTube caption-first ingestion) without full-video word timestamps to conserve CPU cycles.
    - **Pass B (Selected Clips):** Clip-scoped word-level alignment (`small` `int8` model by default) computed on demand only for chosen clips when rendering karaoke captions.
 4. **Heuristic Candidate Ranking:** Evaluates speech cadence, pause boundaries, and vocal dynamics to assign each segment an explainable **Clip Potential Score (CPS)**.
-5. **9:16 Vertical Framing:** Reformats horizontal footage to 1080×1920 via `center_crop` or `blurred_background` layouts with mobile title-safe area overlays in the Studio renderer. An experimental camera solver lives in core stage `qatta/stages/s06_reframe_subs`, but no face detector feeds it yet and the stage is not wired into the pipeline — the two Studio layouts are what actually ship.
+5. **9:16 Vertical Framing:** Reformats horizontal footage to 1080×1920 via `center_crop`, `blurred_background` or `face_guided` layouts with mobile title-safe area overlays in the Studio renderer. Core stage `qatta/stages/s06_reframe_subs` runs in the pipeline; when you opt in with `QATTA_FACE_GUIDED_FRAMING=true` (or `{"face_guided_framing": true}` on a pipeline job) it samples frames and solves a per-shot crop trajectory. With the `face_guided` layout the renderer pans the 9:16 window along that trajectory. Clips with no solved trajectory — including every clip when you have not opted in — render as a centred crop, and the render config records why.
 6. **RTL-Compliant Subtitle Burn-In:** Renders animated karaoke-style captions via `libass` with HarfBuzz/FriBiDi text shaping.
 
 ---
@@ -89,14 +89,14 @@ Laqta processes videos through an atomic, resumable manifest pipeline (`qatta_ma
 
 ---
 
-## 🧩 Product Feature Matrix (v0.3.1)
+## 🧩 Product Feature Matrix (v0.4.0)
 
 ### 🎬 Video Workflow & Editing
 
 - **Local Import:** Drag-and-drop video upload supporting MP4, MOV, MKV, and WebM. `[Supported]`
 - **Project Workspaces:** Persistent SQLite-backed project management in `~/.local/share/qatta/`. `[Supported]`
 - **Multi-Track Timeline:** Interactive audio waveform scrubbing, playback controls, and clip trimming. `[Supported]`
-- **Vertical Framing (9:16):** 1080×1920 centered crop (`center_crop`) or blurred-background (`blurred_background`) framing with safe-area overlays in Studio (`[Supported]`); `qatta/stages/s06_reframe_subs` contains an experimental camera solver, but no face detector feeds it yet and the stage is not wired into the pipeline (`[Not shipped]`).
+- **Vertical Framing (9:16):** 1080×1920 `center_crop`, `blurred_background` or `face_guided` framing with safe-area overlays in Studio (`[Supported]`). `face_guided` follows a solved crop trajectory, which requires the opt-in solver (`QATTA_FACE_GUIDED_FRAMING=true` or the pipeline job flag) and sees frontal faces only (`[Opt-In]`). Without a trajectory the renderer centres the crop and records the fallback reason in the render config.
 - **High-Quality Export:** Local FFmpeg encoding with burned-in ASS subtitles or standalone SRT export. `[Supported]`
 - **URL Ingestion:** Optional YouTube caption-first importing via `yt-dlp` (fail-closed, requires operator enablement and per-import rights confirmation). `[Optional / Opt-In]`
 
@@ -238,7 +238,7 @@ Optional desktop menu integration on Linux:
 ### Method 2: Docker Compose (Experimental Preview)
 
 > [!NOTE]
-> Native source installation (Method 1) is the primary verified path for `v0.3.1`. Review [Dockerfile](Dockerfile) and [docker-compose.yml](docker-compose.yml) carefully before containerized use (`Dockerfile` installs the core `.[asr]` extra rather than `backend/requirements.txt` and defines `QATTA_BIND_HOST`/`QATTA_BIND_PORT` rather than `QATTA_HOST`/`QATTA_PORT`).
+> Native source installation (Method 1) is the primary verified path for `v0.4.0`. Review [Dockerfile](Dockerfile) and [docker-compose.yml](docker-compose.yml) carefully before containerized use (`Dockerfile` installs the core `.[asr]` extra rather than `backend/requirements.txt` and defines `QATTA_BIND_HOST`/`QATTA_BIND_PORT` rather than `QATTA_HOST`/`QATTA_PORT`).
 
 ```bash
 git clone https://github.com/thewizard2030/laqta.git
@@ -256,7 +256,7 @@ Run commands inside `source backend/.venv/bin/activate` (or prefix with `./backe
 
 | Command                 | Description                                                                                     |
 | :---------------------- | :---------------------------------------------------------------------------------------------- |
-| `laqta --version`       | Print the installed Laqta version (`0.3.1`).                                                    |
+| `laqta --version`       | Print the installed Laqta version (`0.4.0`).                                                    |
 | `laqta doctor [--json]` | Inspect Python, FFmpeg/FFprobe, ASR, URL gating, storage permissions, disk, and servers.        |
 | `laqta run SOURCE`      | Run the full pipeline headless: `--project-id`, `--work-dir`, `--stages`, `--force`, `--json`.  |
 | `laqta models`          | List locally cached Hugging Face speech models and disk usage.                                  |
@@ -383,7 +383,7 @@ For comprehensive architectural specifications, benchmarks, and contributor guid
 | Document                                                         | Description                                                                      |
 | :--------------------------------------------------------------- | :------------------------------------------------------------------------------- |
 | **[CHANGELOG.md](CHANGELOG.md)**                                 | Full release history including **`v0.2.5`**, fixes, and known limitations        |
-| **[docs/RELEASING.md](docs/RELEASING.md)**                       | Automated CircleCI tag-release flow, SHA-256 verification, and the `v0.3.1` record   |
+| **[docs/RELEASING.md](docs/RELEASING.md)**                       | Automated CircleCI tag-release flow, SHA-256 verification, and completed release records |
 | **[docs/CIRCLECI_MIGRATION.md](docs/CIRCLECI_MIGRATION.md)**     | CircleCI 2.1 Smarter Testing, `laqta-release-publishing`, and GHA deprecation    |
 | **[docs/LICENSING.md](docs/LICENSING.md)**                       | Permanent MIT License policy, third-party separation, and trademark references   |
 | **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**                 | Deep-dive into manifest lifecycle, stage synchronization, and IPC boundaries     |

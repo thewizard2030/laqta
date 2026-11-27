@@ -15,3 +15,23 @@
 librosa>=0.10
 soundfile>=0.12
 scenedetect>=0.6
+
+# Upper bound on an otherwise indirect dependency, and deliberate.
+#
+# scenedetect requires plain `opencv-python` with no version range, so this
+# file is what decides which line the analysis profile gets. The reframe
+# stage's face detector (`qatta/stages/s06_reframe_subs/detector.py`) uses
+# OpenCV's *bundled* Haar cascade, and that is the only reason it needs no
+# model download. OpenCV 5.0 dropped the cascades from the wheel: `cv2/data/`
+# ships `__init__.py` and nothing else, so `haarcascade_frontalface_default.xml`
+# is absent and the detector fails closed on every install.
+#
+# Captured by measurement, not assumption: cv2 5.1.0 and 5.0.0 have an empty
+# `cv2/data/`, cv2 4.14.0 ships 17 cascades including the frontal-face one.
+# Wheels from 4.14.0.94 are `cp37-abi3`, so the pin costs no Python-version
+# coverage (3.11-3.14 all work). The moment a 5.x wheel bundles the cascade
+# again, this bound can be lifted and the detector re-verified.
+#
+# Lifting it also means re-running the real-detector test, not just the unit
+# tests: they inject a fake cv2 and would pass on a cascade-less build.
+opencv-python<5

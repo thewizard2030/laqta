@@ -4,6 +4,46 @@ What changed between the releases, and what you have to do.
 
 ---
 
+## 0.3.1 → 0.4.0
+
+**No action required for existing projects.** The data directory, the API and
+the project format are backwards compatible; the new fields are additive and
+the new layout is opt-in. Read on if you run `s06_reframe_subs` or want the
+face-guided crop.
+
+- **The renderer now consumes the trajectory.** `face_guided` is a supported
+  layout, and `run_render_stage(layout=None)` picks it automatically when a
+  candidate has a solved trajectory (otherwise it centres the crop). The
+  backend render config gains `trajectory_points` and `framing_fallback`, so
+  a centred fallback is distinguishable from a pan. An explicit
+  `face_guided` request with nothing to follow still succeeds and records why.
+- **Trajectories are rebased onto the clip's current bounds.** If you trimmed
+  a candidate after the pipeline ran, the pan follows the trim instead of
+  drifting.
+- **Pipeline jobs can opt in over HTTP.** `POST
+  /api/projects/{id}/pipeline-jobs` accepts `{"face_guided_framing": true}`;
+  omitting the body keeps the previous behaviour.
+- **The project format is schema version 2.** It is additive: two new optional
+  fields on each candidate (`crop_trajectory`, `framing_meta`). Existing v1
+  manifests still load, and nothing is migrated in place. A manifest is
+  relabelled v2 the first time the reframe stage writes to it, so an older
+  build will refuse it with "newer than this build understands" instead of
+  failing on an unknown field.
+- **Reframe captions live in `captions/reframe/`.** They used to share
+  `captions/{clip_id}.ass` with the render stage, so one silently overwrote
+  the other. If you read that path directly, read the new one.
+- **Face-guided framing is off by default.** Turn it on with
+  `QATTA_FACE_GUIDED_FRAMING=true` after installing the analysis extra
+  (`pip install --require-hashes -r backend/requirements-analysis-lock.txt`).
+  With it off, no frames are sampled and `framing_meta.degradation_reason`
+  records that the feature is disabled.
+- **The analysis extra pins `opencv-python<5`.** OpenCV 5.x stopped bundling
+  the Haar cascade the detector needs, so a 5.x wheel installs fine and then
+  finds no faces at all. If you manage OpenCV yourself, stay below 5 or expect
+  the detector to report itself unavailable.
+
+---
+
 ## 0.3.0 → 0.3.1
 
 **No action required.** The data directory, the project format

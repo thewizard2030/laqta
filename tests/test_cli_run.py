@@ -93,8 +93,8 @@ def test_json_run_emits_ordered_ndjson_with_real_timings(tmp_path, fake_stages) 
     ends = [event for event in parsed if event["event"] == "stage_end"]
     assert [event["stage"] for event in starts] == list(stage_names())
     assert [event["stage"] for event in ends] == list(stage_names())
-    assert [event["index"] for event in starts] == list(range(1, 9))
-    assert all(event["total"] == 8 for event in starts)
+    assert [event["index"] for event in starts] == list(range(1, len(stage_names()) + 1))
+    assert all(event["total"] == len(stage_names()) for event in starts)
 
     for event in ends:
         assert event["status"] == "executed"
@@ -103,7 +103,7 @@ def test_json_run_emits_ordered_ndjson_with_real_timings(tmp_path, fake_stages) 
         assert isinstance(event["stage_timings_ms"], int)
         assert event["stage_timings_ms"] >= event["duration_ms"]
 
-    assert parsed[-1]["executed"] == 8
+    assert parsed[-1]["executed"] == len(stage_names())
     assert parsed[-1]["skipped"] == 0
     assert fake_stages == list(stage_names())
 

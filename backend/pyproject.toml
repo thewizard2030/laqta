@@ -1,6 +1,6 @@
 [project]
 name = "laqta-backend"
-version = "0.3.1"
+version = "0.4.0"
 description = "Laqta backend — local-first API for the long-video-to-Shorts studio."
 readme = "README.md"
 requires-python = ">=3.11"
@@ -42,7 +42,17 @@ analysis = [
     "librosa>=0.10",
     "soundfile>=0.12",
     "scenedetect[opencv]>=0.6",
-    "mediapipe>=0.10",
+    # Deliberate upper bound, and a direct conflict guard. OpenCV 5.x stopped
+    # bundling the Haar cascade that qatta/stages/s06_reframe_subs/detector.py
+    # loads, so a 5.x wheel installs fine and then silently finds no faces.
+    # Rationale and measurements: backend/requirements-analysis.txt.
+    #
+    # mediapipe is intentionally absent (it was already meant to be gone after
+    # v0.3.0): it pulls opencv-contrib-python, a *different* distribution that
+    # installs the same `cv2` package. Two of them in one environment means one
+    # silently overwrites the other, so the detector could load a build with no
+    # cascades regardless of this pin.
+    "opencv-python<5",
 ]
 # URL ingestion / YouTube captions-first flow (Unlicense).
 url = ["yt-dlp>=2024.04"]

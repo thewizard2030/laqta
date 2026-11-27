@@ -27,7 +27,7 @@ from collections.abc import Callable
 from pathlib import Path
 
 from qatta.core.config import QattaSettings
-from qatta.core.schema import QattaManifest
+from qatta.core.schema import MAX_SCHEMA_VERSION, QattaManifest
 
 
 class PipelineError(Exception):
@@ -141,10 +141,11 @@ class PipelineOrchestrator:
             ) from e
 
         version = data.get("schema_version", 1)
-        if not isinstance(version, int) or version > 1:
+        if not isinstance(version, int) or version > MAX_SCHEMA_VERSION:
             raise PipelineError(
                 f"Manifest schema_version {version!r} at {self.manifest_path} "
-                "is newer than this Laqta build understands (max 1)."
+                f"is newer than this Laqta build understands "
+                f"(max {MAX_SCHEMA_VERSION})."
             )
         try:
             return QattaManifest.model_validate(data)

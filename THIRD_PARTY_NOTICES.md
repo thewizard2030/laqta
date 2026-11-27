@@ -28,11 +28,19 @@ need them:
 - **librosa**: ISC License. Audio analysis (imported lazily).
 - **PySceneDetect (`scenedetect[opencv]`)**: BSD 2-Clause License.
   Shot-boundary detection; pulls on `opencv-python` (Intel), which is
-  Apache 2.0 — no AGPL OpenCV build is declared.
-- **mediapipe**: Apache 2.0 License (Google LLC). Optional face/image
-  landmark analysis for later framing stages (imported lazily; no wheels
-  exist for some Python versions — stages degrade with a clear
-  "capability unavailable" error).
+  Apache 2.0 — no AGPL OpenCV build is declared. The analysis profile pins
+  `opencv-python<5` on purpose: OpenCV 5.x no longer bundles
+  `haarcascade_frontalface_default.xml`, which is the only face detector
+  Laqta ships, so a 5.x wheel would install cleanly and then find no faces
+  forever. No model weights are downloaded or redistributed — the cascade
+  arrives inside the Apache-2.0 wheel. Measurements and the condition for
+  lifting the bound are in `backend/requirements-analysis.txt`.
+- **mediapipe**: Apache 2.0 License (Google LLC). **No longer a dependency.**
+  It was removed from the `analysis` and `all` extras in v0.3.0 because
+  nothing imported it, and it pulled `opencv-contrib-python` — a second
+  distribution providing the same `cv2` package. The reframe stage's face
+  detector uses OpenCV's bundled Haar cascade instead, so mediapipe is not
+  needed and must not be reintroduced without removing that conflict.
 - **yt-dlp**: Unlicense. Powers URL ingestion and the YouTube
   captions-first transcription source (PRD FR-12, review completed by
   owner decision on 2026-10-19). Imports require per-import rights

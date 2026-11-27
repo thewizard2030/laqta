@@ -5,9 +5,74 @@ All notable changes to Laqta are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.4.0] — 2026-11-27
 
-Nothing yet.
+"Face-guided framing, shipped honestly." The trajectory the reframe stage
+solves is now consumed by the renderer, and you can ask for it from the
+Studio, the API and the pipeline — as an explicit opt-in, with the limits
+stated where you turn it on.
+
+### Added
+
+- **`face_guided` render layout.** The renderer pans a fixed-size 9:16 window
+  along a clip's solved crop trajectory instead of holding it centred. The
+  trajectory becomes a piecewise-linear FFmpeg `crop x` expression, clamped to
+  the legal range and forced to an even offset (yuv420p rejects odd crop
+  offsets).
+- **Studio export switch: Face-Guided Framing.** Off by default. The copy
+  states that only frontal faces are detected and that clips without a solved
+  trajectory export with a centred crop.
+- **Pipeline opt-in:** `POST /api/projects/{id}/pipeline-jobs` accepts
+  `{"face_guided_framing": true}`; the core CLI keeps using
+  `QATTA_FACE_GUIDED_FRAMING=true`.
+- **Stage `s06_reframe_subs` is wired into the pipeline.** It was a module with
+  a camera solver and no registered stage, so it never ran. It now sits between
+  `s02b_fine_alignment` and `s06_render`, consuming the scene cuts from
+  `s03_multimodal` and the word timings from Pass 2, and writing per-clip ASS
+  captions plus a solved crop trajectory.
+- **Opt-in face-guided framing** (`QATTA_FACE_GUIDED_FRAMING`, default off).
+  When enabled, the stage samples frames from each winning clip with a single
+  bounded FFmpeg call and follows the face using OpenCV's bundled Haar cascade.
+  Nothing is downloaded and nothing leaves the machine.
+- **Manifest schema v2** (additive): `ClipCandidate.crop_trajectory` holds the
+  solved per-shot trajectory, and `ClipCandidate.framing_meta` holds the
+  measured facts behind it. A v1 manifest still loads unchanged.
+- **`run_render_stage(layout=None)`** means auto: `face_guided` when the
+  candidate has a trajectory, `center_crop` otherwise. The resolved layout is
+  written to the evidence log.
+
+### Changed
+
+- **The backend render config records what actually happened.** Every render
+  now carries `trajectory_points` and `framing_fallback`. An explicit
+  `face_guided` request with nothing to follow renders a centred crop and
+  records the reason (`no_manifest`, `no_trajectory`,
+  `candidate_missing_from_manifest`, ...) instead of implying a pan.
+- **Trajectories are rebased onto the clip's current bounds.** A candidate
+  trimmed after the pipeline ran would otherwise pan at the wrong moments —
+  still producing a valid file, which is the worst kind of wrong. The backend
+  rebases against the candidate record's `start_ms`/`end_ms`, the same values
+  it passes to `-ss`/`-t`.
+- **Reframe captions moved to `captions/reframe/`.** The reframe stage and the
+  render stage both wrote `captions/{clip_id}.ass`, so whichever ran last
+  silently replaced the other's subtitles. They no longer collide.
+
+### Notes
+
+- Face-guided framing is **not** speaker detection. Haar returns a box and no
+  landmarks, so `mar` is always `0.0` and `is_speaking` is always `False`, and
+  `face_id` is a per-frame index rather than a tracked person. Frontal faces
+  only: profile, backlit and occluded faces are missed, and the crop stays
+  centred.
+- **The camera is smoothed, not glued to the face.** The solver holds inside a
+  15% deadband and eases toward a new target with a 0.25 factor per sample, so
+  a very fast pan lags behind and the face can sit off-centre inside the crop.
+  It stays in frame; it is not always dead-centre.
+- The analysis profile pins `opencv-python<5` because OpenCV 5.x no longer
+  bundles the Haar cascade. On 5.x the detector fails closed and records the
+  reason rather than finding nothing silently.
+- A static or missing trajectory is a real result, not an error: the crop is
+  centred and the evidence log says so.
 
 ## [0.3.1] — 2026-11-23
 

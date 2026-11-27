@@ -9,7 +9,7 @@ The release is a **source-only GitHub Release** (`git archive` tarball + release
 The version has one source of truth:
 
 ```text
-qatta/__init__.py  →  __version__ = "0.3.1"
+qatta/__init__.py  →  __version__ = "0.4.0"
 ```
 
 Everything else mirrors it:

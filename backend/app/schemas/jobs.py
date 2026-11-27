@@ -38,6 +38,24 @@ class JobCreateRequest(BaseModel):
     config: dict[str, Any] | None = Field(default=None, description="Optional job configuration")
 
 
+class PipelineJobRequest(BaseModel):
+    """Optional knobs for a full pipeline run.
+
+    Face-guided framing is off by default because the detector is
+    frontal-face only; enabling it is a deliberate per-run decision, never a
+    silent upgrade of the default path.
+    """
+
+    face_guided_framing: bool = Field(
+        default=False,
+        description=(
+            "Solve a face-guided crop trajectory for each candidate. Frontal "
+            "faces only; clips without a detected face fall back to a centred "
+            "crop at render time."
+        ),
+    )
+
+
 class JobResponse(BaseModel):
     """Standard response model for background jobs."""
 

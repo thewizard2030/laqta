@@ -676,6 +676,61 @@ class JobManager:
             finished_at=_utc_now_iso(),
         )
 
+    def _resolve_crop_trajectory(
+        self,
+        *,
+        project_id: str,
+        clip_id: str,
+        layout: str,
+        clip_start_ms: int,
+        clip_end_ms: int,
+    ) -> tuple[list[tuple[int, float]], str | None]:
+        """Load a clip's solved crop trajectory for face_guided rendering.
+
+        The manifest is the only place the solved trajectory lives, while the
+        render job's candidate record is the only place the *current* clip
+        bounds live — a user can trim a candidate after the pipeline ran.
+        Rebasing therefore uses the record's bounds, not the manifest's, so the
+        pan stays aligned with the ``-ss``/``-t`` the renderer actually passes.
+
+        Returns ``(points, fallback_reason)``. A reason is recorded whenever an
+        explicit face_guided request has nothing to follow, so the render
+        config explains the centred result instead of implying a pan.
+        """
+        if layout != "face_guided":
+            return [], None
+
+        manifest_path = settings.get_project_dir(project_id) / "qatta_manifest.json"
+        if not manifest_path.is_file():
+            return [], "no_manifest"
+        try:
+            from qatta.core.schema import QattaManifest
+            from qatta.stages.s06_render.renderer import clip_relative_trajectory
+
+            manifest = QattaManifest.model_validate_json(manifest_path.read_text(encoding="utf-8"))
+        except Exception as exc:
+            # A malformed manifest must never fail a render that would
+            # otherwise succeed; the honest fallback is a centred crop.
+            logger.warning(
+                f"Could not read crop trajectory for clip {clip_id}: {exc}; "
+                "rendering a centred crop."
+            )
+            return [], f"manifest_unreadable: {exc}"
+
+        solved = next((c for c in manifest.candidates if c.clip_id == clip_id), None)
+        if solved is None:
+            return [], "candidate_missing_from_manifest"
+        if not solved.crop_trajectory:
+            return [], "no_trajectory"
+        points = clip_relative_trajectory(
+            solved.crop_trajectory,
+            clip_start_ms=clip_start_ms,
+            clip_end_ms=clip_end_ms,
+        )
+        if not points:
+            return [], "empty_trajectory"
+        return points, None
+
     async def _execute_render(self, job: JobRecord, cancel_event: asyncio.Event) -> None:
         """Render one approved candidate to a vertical MP4 (PRD FR-09, Gate D).
 
@@ -716,6 +771,13 @@ class JobManager:
         caption_format = cfg.get("caption_format", "ass")
         overwrite = bool(cfg.get("overwrite", False))
         style = CaptionStyleSettings(**(cfg.get("style") or {}))
+        crop_trajectory, framing_fallback = self._resolve_crop_trajectory(
+            project_id=job.project_id,
+            clip_id=candidate.id,
+            layout=layout,
+            clip_start_ms=candidate.start_ms,
+            clip_end_ms=candidate.end_ms,
+        )
         preset = RENDER_PRESETS.get(quality)
         if preset is None:
             raise RenderError(
@@ -908,6 +970,7 @@ class JobManager:
             start_ms=candidate.start_ms,
             duration_ms=candidate.end_ms - candidate.start_ms,
             video_encoder=env["h264_encoder"],
+            crop_trajectory=crop_trajectory,
         )
         cfg["render"] = {
             "layout": layout,
@@ -921,6 +984,8 @@ class JobManager:
             "temp_output": str(temp_output),
             "final_output": str(final_output),
             "overwrite": overwrite,
+            "trajectory_points": len(crop_trajectory),
+            "framing_fallback": framing_fallback,
         }
         self.repo.update_job(job.id, stage="rendering", progress=20.0)
 
@@ -1004,7 +1069,11 @@ class JobManager:
         logger.info(f"Render job {job.id} completed successfully: {final_output}")
 
     def _get_or_create_orchestrator(
-        self, project_id: str, media_id: str | None = None
+        self,
+        project_id: str,
+        media_id: str | None = None,
+        *,
+        settings_override: QattaSettings | None = None,
     ) -> PipelineOrchestrator:
         """Initialize or load a PipelineOrchestrator for the project, with all stages registered."""
         project_dir = settings.get_project_dir(project_id)
@@ -1037,7 +1106,7 @@ class JobManager:
             manifest_path.write_text(init_manifest.model_dump_json(), encoding="utf-8")
             source_path = None
 
-        q_settings = QattaSettings()
+        q_settings = settings_override or QattaSettings()
         orch = PipelineOrchestrator(
             project_id=project_id,
             source_path=source_path,
@@ -1410,12 +1479,26 @@ class JobManager:
         "s05_ranking": 70.0,
         "s05b_section_fetch": 80.0,
         "s02b_fine_alignment": 90.0,
+        "s06_reframe_subs": 93.0,
         "s06_render": 96.0,
     }
 
     async def _execute_pipeline(self, job: JobRecord, cancel_event: asyncio.Event) -> None:
         """Execute full end-to-end Laqta manifest pipeline sequentially."""
-        orch = self._get_or_create_orchestrator(job.project_id, job.media_id)
+        cfg = json.loads(job.config_json or "{}")
+        # Face-guided framing is an explicit per-run opt-in: the detector is
+        # frontal-face only, so it must never switch itself on. A true value
+        # builds the settings override the reframe stage reads.
+        settings_override = (
+            QattaSettings(face_guided_framing=True)
+            if cfg.get("face_guided_framing") is True
+            else None
+        )
+        orch = self._get_or_create_orchestrator(
+            job.project_id,
+            job.media_id,
+            settings_override=settings_override,
+        )
 
         def on_stage_start(stage) -> None:
             self.repo.update_job(

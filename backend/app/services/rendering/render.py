@@ -18,7 +18,7 @@ import json
 import re
 import shutil
 import subprocess
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from pathlib import Path
 from typing import Any
 
@@ -82,7 +82,18 @@ QUALITY_PRESETS: dict[str, dict[str, Any]] = {
 # ask instead of repeating the tuple. `fill_crop` is deliberately absent: it
 # was never implemented, and a default that names an unimplemented layout made
 # every headless render fail.
-SUPPORTED_LAYOUTS: tuple[str, ...] = ("center_crop", "blurred_background")
+#
+# `face_guided` is a real layout, not a promise: it pans a fixed-size 9:16
+# window across the source using a solved crop trajectory. It degrades to a
+# centred crop when no trajectory is supplied, because a centred crop is a
+# usable result and a missing trajectory is not an error.
+SUPPORTED_LAYOUTS: tuple[str, ...] = ("center_crop", "blurred_background", "face_guided")
+
+# Upper bound on control points in a rendered crop expression. The trajectory
+# can hold one keyframe per sampled frame (hundreds), and an expression that
+# long is evaluated every frame and is miserable to debug. A camera pan does
+# not need 5 FPS resolution, so decimation keeps the shape and bounds the cost.
+MAX_TRAJECTORY_POINTS = 32
 
 
 # ---------------------------------------------------------------------------
@@ -227,6 +238,110 @@ def compute_center_crop(src_w: int, src_h: int, out_w: int, out_h: int) -> tuple
     return int(crop_w // 2 * 2) or 2, int(crop_h // 2 * 2) or 2
 
 
+def _center_x_to_pixels(center_x: float, src_width: int, crop_width: int) -> float:
+    """Map a normalised face centre to a clamped crop x offset in pixels."""
+    x = center_x * src_width - crop_width / 2.0
+    max_x = float(src_width - crop_width)
+    return min(max(x, 0.0), max_x)
+
+
+def _compress_keyframes(
+    keyframes: Sequence[tuple[int, float]],
+) -> list[tuple[int, float]]:
+    """Collapse a sampled trajectory into the points that actually move.
+
+    The solver holds the crop steady inside its deadband, so a sampled
+    trajectory is mostly runs of identical centres. Each run is represented by
+    its first and last sample: that preserves both the hold and the moment the
+    pan begins, which a naive "keep the first sample of each run" would not.
+    """
+    ordered = sorted(
+        (int(timestamp_ms), min(1.0, max(0.0, float(center)))) for timestamp_ms, center in keyframes
+    )
+    runs: list[list[tuple[int, float]]] = []
+    for point in ordered:
+        if runs and point[1] == runs[-1][0][1]:
+            runs[-1].append(point)
+        else:
+            runs.append([point])
+
+    compressed: list[tuple[int, float]] = []
+    for run in runs:
+        compressed.append(run[0])
+        if len(run) > 1:
+            compressed.append(run[-1])
+    return compressed
+
+
+def _decimate(points: list[tuple[int, float]], max_points: int) -> list[tuple[int, float]]:
+    """Keep at most ``max_points`` evenly spaced control points.
+
+    First and last are always kept so the pan still starts and ends where the
+    solver said it did.
+    """
+    if len(points) <= max_points or max_points < 2:
+        return points
+    step = (len(points) - 1) / (max_points - 1)
+    picked: list[tuple[int, float]] = []
+    for index in range(max_points):
+        point = points[round(index * step)]
+        if not picked or point != picked[-1]:
+            picked.append(point)
+    return picked
+
+
+def build_crop_x_expression(
+    keyframes: Sequence[tuple[int, float]],
+    *,
+    src_width: int,
+    crop_width: int,
+    max_points: int = MAX_TRAJECTORY_POINTS,
+) -> str | None:
+    """Build an FFmpeg ``crop`` x-expression from a solved crop trajectory.
+
+    ``keyframes`` are ``(milliseconds relative to the clip start, center_x)``
+    pairs, where ``center_x`` is the normalised source coordinate the crop
+    window should be centred on. Milliseconds are relative to the clip because
+    ``build_render_command`` seeks to the clip start, so FFmpeg's ``t`` begins
+    at zero there.
+
+    Returns ``None`` when no horizontal movement is possible (crop as wide as
+    the source, or no keyframes), so callers can fall back to a centred crop
+    instead of emitting a pointless expression.
+    """
+    if src_width <= 0 or crop_width <= 0 or crop_width >= src_width:
+        return None
+    points = _decimate(_compress_keyframes(keyframes), max_points)
+    if not points:
+        return None
+
+    # (seconds, x pixels), guaranteed ascending by time.
+    samples = [
+        (timestamp_ms / 1000.0, _center_x_to_pixels(center, src_width, crop_width))
+        for timestamp_ms, center in points
+    ]
+    xs = [x for _, x in samples]
+    max_x = float(src_width - crop_width)
+    if max(xs) - min(xs) < 0.5:
+        # Statically positioned: a constant is exact and cheap to evaluate.
+        return f"{xs[0]:.2f}"
+
+    expression = f"{samples[-1][1]:.2f}"
+    for index in range(len(samples) - 1, 0, -1):
+        t_prev, x_prev = samples[index - 1]
+        t_cur, x_cur = samples[index]
+        span = t_cur - t_prev
+        if span <= 0:
+            continue
+        segment = f"{x_prev:.2f}+({x_cur - x_prev:.2f})*(t-{t_prev:.3f})/{span:.3f}"
+        expression = f"if(lt(t,{t_cur:.3f}),{segment},{expression})"
+
+    # Clamp to the legal range and force an even offset: yuv420p chroma
+    # subsampling rejects odd crop offsets, and ffmpeg would otherwise fail the
+    # whole render over a one-pixel camera position.
+    return f"2*trunc(clip({expression},0,{max_x:.2f})/2)"
+
+
 def build_render_command(
     ffmpeg_bin: str,
     input_path: Path,
@@ -242,6 +357,7 @@ def build_render_command(
     start_ms: int | None = None,
     duration_ms: int | None = None,
     video_encoder: str = "libx264",
+    crop_trajectory: Sequence[tuple[int, float]] | None = None,
 ) -> list[str]:
     """Build the full FFmpeg argument array for one render.
 
@@ -251,6 +367,11 @@ def build_render_command(
     ``video_encoder``: 'libx264' supports -preset/-crf; other H.264 encoders
     (e.g. Fedora's libopenh264) use the preset's average bitrate instead,
     because CRF/preset flags are not portable across H.264 encoders.
+
+    ``crop_trajectory``: ``(milliseconds relative to the clip start, center_x)``
+    pairs consumed by the ``face_guided`` layout. Ignored by the other layouts.
+    A missing or static trajectory renders as a centred crop rather than
+    failing: the trajectory is an enhancement, not a requirement.
     """
     preset = QUALITY_PRESETS.get(quality)
     if preset is None:
@@ -284,6 +405,31 @@ def build_render_command(
             f"scale={out_w}:{out_h}:flags=lanczos",
             "setsar=1",
         ]
+        if cap_filter:
+            vf.append(cap_filter)
+        cmd += ["-vf", ",".join(vf)]
+    elif layout == "face_guided":
+        crop_w, crop_h = compute_center_crop(src_width, src_height, out_w, out_h)
+        crop_y = (src_height - crop_h) // 2
+        x_expression = (
+            build_crop_x_expression(
+                crop_trajectory,
+                src_width=src_width,
+                crop_width=crop_w,
+            )
+            if crop_trajectory
+            else None
+        )
+        if x_expression is None:
+            # No usable trajectory: centre the window. This is a real result,
+            # not a silent failure — the caller records why.
+            crop_x = (src_width - crop_w) // 2
+            crop = f"crop=w={crop_w}:h={crop_h}:x={crop_x}:y={crop_y}"
+        else:
+            # Single quotes protect the expression's commas from the
+            # filtergraph splitter, which separates filters on commas.
+            crop = f"crop=w={crop_w}:h={crop_h}:x='{x_expression}':y={crop_y}"
+        vf = [crop, f"scale={out_w}:{out_h}:flags=lanczos", "setsar=1"]
         if cap_filter:
             vf.append(cap_filter)
         cmd += ["-vf", ",".join(vf)]
