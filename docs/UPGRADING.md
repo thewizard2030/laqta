@@ -4,11 +4,25 @@ What changed between the releases, and what you have to do.
 
 ---
 
-## Unreleased (0.3.1 → next)
+## 0.3.1 → 0.4.0
 
-**Action required only if you run `s06_reframe_subs` yourself** — the pipeline
-does it for you.
+**No action required for existing projects.** The data directory, the API and
+the project format are backwards compatible; the new fields are additive and
+the new layout is opt-in. Read on if you run `s06_reframe_subs` or want the
+face-guided crop.
 
+- **The renderer now consumes the trajectory.** `face_guided` is a supported
+  layout, and `run_render_stage(layout=None)` picks it automatically when a
+  candidate has a solved trajectory (otherwise it centres the crop). The
+  backend render config gains `trajectory_points` and `framing_fallback`, so
+  a centred fallback is distinguishable from a pan. An explicit
+  `face_guided` request with nothing to follow still succeeds and records why.
+- **Trajectories are rebased onto the clip's current bounds.** If you trimmed
+  a candidate after the pipeline ran, the pan follows the trim instead of
+  drifting.
+- **Pipeline jobs can opt in over HTTP.** `POST
+  /api/projects/{id}/pipeline-jobs` accepts `{"face_guided_framing": true}`;
+  omitting the body keeps the previous behaviour.
 - **The project format is schema version 2.** It is additive: two new optional
   fields on each candidate (`crop_trajectory`, `framing_meta`). Existing v1
   manifests still load, and nothing is migrated in place. A manifest is
