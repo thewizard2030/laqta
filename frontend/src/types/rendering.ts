@@ -2,7 +2,7 @@
  * Rendering and caption artifact types matching backend schemas (PRD §5 FR-08/FR-09).
  */
 
-export type LayoutMode = "center_crop" | "blurred_background";
+export type LayoutMode = "center_crop" | "blurred_background" | "face_guided";
 export type QualityPreset = "high" | "cpu_friendly";
 export type CaptionFormatForRender = "ass" | "srt" | "none";
 export type CaptionPosition = "bottom" | "middle" | "top";

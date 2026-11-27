@@ -40,8 +40,8 @@ from qatta.core.schema import (
     VetoGates,
 )
 from qatta.stages.s06_render.renderer import (
-    _clip_relative_trajectory,
     _resolve_layout,
+    clip_relative_trajectory,
     run_render_stage,
 )
 
@@ -250,7 +250,12 @@ def test_an_explicit_face_guided_without_a_trajectory_reports_nothing_to_follow(
 def test_the_trajectory_is_rebased_onto_the_clip_timeline() -> None:
     # Keyframes are in SOURCE time (1000..3000); the clip starts at 1000, so
     # ffmpeg's t=0 must correspond to source 1000.
-    points = _clip_relative_trajectory(_candidate([_shot()]))
+    candidate = _candidate([_shot()])
+    points = clip_relative_trajectory(
+        candidate.crop_trajectory,
+        clip_start_ms=candidate.start_ms,
+        clip_end_ms=candidate.end_ms,
+    )
 
     assert points == [(0, 0.2), (1000, 0.5), (2000, 0.8)]
 
@@ -268,7 +273,11 @@ def test_keyframes_outside_the_clip_are_clamped() -> None:
     )
     candidate = _candidate([shot])
 
-    points = _clip_relative_trajectory(candidate)
+    points = clip_relative_trajectory(
+        candidate.crop_trajectory,
+        clip_start_ms=candidate.start_ms,
+        clip_end_ms=candidate.end_ms,
+    )
 
     # Clip is 1000..3000, so source 0 and 5000 clamp to 0 and 2000.
     assert points == [(0, 0.1), (2000, 0.9)]

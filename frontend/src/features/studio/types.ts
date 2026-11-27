@@ -31,4 +31,6 @@ export interface ExportSettings {
   resolution: "1080p" | "4k" | "720p";
   format: "mp4" | "mov";
   burnInSubtitles: boolean;
+  /** Follow the solved crop trajectory; falls back to a centred crop per clip. */
+  faceGuidedFraming: boolean;
 }

@@ -1,5 +1,14 @@
 import React from "react";
-import { Download, FileVideo, HardDrive, Cpu, Layers, Sparkles, CheckCircle2 } from "lucide-react";
+import {
+  Download,
+  FileVideo,
+  HardDrive,
+  Cpu,
+  Layers,
+  ScanFace,
+  Sparkles,
+  CheckCircle2,
+} from "lucide-react";
 import { ExportSettings } from "../../../features/studio/types";
 import { Switch } from "../../ui/Switch";
 
@@ -138,7 +147,27 @@ export const ExportTabContent: React.FC<ExportTabContentProps> = ({
         />
       </div>
 
-      {/* 5. Rough Estimates (informational, not guarantees) */}
+      {/* 5. Face-Guided Framing Toggle (explicit opt-in) */}
+      <div className="p-3 rounded-xl bg-obsidian-950/70 border border-slate-800/80 flex items-center justify-between">
+        <div className="space-y-0.5 pr-2 min-w-0">
+          <div className="flex items-center gap-1.5 text-white font-semibold">
+            <ScanFace className="h-3.5 w-3.5 text-laqta-200" aria-hidden="true" />
+            <span>Face-Guided Framing</span>
+          </div>
+          <p className="text-[10px] text-slate-400 leading-snug">
+            Pan the 9:16 crop to follow a detected face. Frontal faces only — clips without a solved
+            trajectory export with a centred crop.
+          </p>
+        </div>
+        <Switch
+          checked={settings.faceGuidedFraming}
+          onChange={(faceGuidedFraming) => onUpdateSettings({ faceGuidedFraming })}
+          label="Face-Guided Framing"
+          testId="face-guided-framing-toggle"
+        />
+      </div>
+
+      {/* 6. Rough Estimates (informational, not guarantees) */}
       <div className="p-3 rounded-xl bg-obsidian-950/70 border border-slate-800/80 space-y-1.5 text-[11px] text-slate-400">
         <div className="flex justify-between items-center">
           <span className="flex items-center space-x-1.5">
@@ -156,7 +185,7 @@ export const ExportTabContent: React.FC<ExportTabContentProps> = ({
         </div>
       </div>
 
-      {/* 6. Live Rendering Progress Bar */}
+      {/* 7. Live Rendering Progress Bar */}
       {isExporting && (
         <div
           className="space-y-2 p-3.5 rounded-xl bg-laqta-950/40 border border-laqta-800/60 shadow-lg"
@@ -178,7 +207,7 @@ export const ExportTabContent: React.FC<ExportTabContentProps> = ({
         </div>
       )}
 
-      {/* 7. Ready Download Card */}
+      {/* 8. Ready Download Card */}
       {downloadUrl && !isExporting && (
         <div
           className="p-3.5 rounded-xl bg-emerald-950/60 border border-emerald-500/50 shadow-lg space-y-2.5"
@@ -210,7 +239,7 @@ export const ExportTabContent: React.FC<ExportTabContentProps> = ({
         </div>
       )}
 
-      {/* 8. Export Processing Notice */}
+      {/* 9. Export Processing Notice */}
       <div className="flex items-start space-x-2 text-[11px] text-cyan-300 bg-cyan-950/40 border border-cyan-800/50 rounded-xl px-3 py-2">
         <Sparkles className="h-3.5 w-3.5 shrink-0 mt-0.5" aria-hidden="true" />
         <span>
@@ -219,7 +248,7 @@ export const ExportTabContent: React.FC<ExportTabContentProps> = ({
         </span>
       </div>
 
-      {/* 9. Primary Export CTA Button */}
+      {/* 10. Primary Export CTA Button */}
       <button
         type="button"
         onClick={onExport}

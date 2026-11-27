@@ -10,6 +10,7 @@ from app.schemas.jobs import (
     JobCreateRequest,
     JobResponse,
     JobStatus,
+    PipelineJobRequest,
 )
 
 router = APIRouter()
@@ -159,7 +160,9 @@ async def clear_project_jobs(project_id: str) -> dict[str, int]:
     status_code=status.HTTP_201_CREATED,
     summary="Enqueue full pipeline job for project",
 )
-async def create_project_pipeline_job(project_id: str) -> JobResponse:
+async def create_project_pipeline_job(
+    project_id: str, payload: PipelineJobRequest | None = None
+) -> JobResponse:
     """Enqueue end-to-end shorts generation pipeline (s01..s06) for a project."""
     project = repo.get_project(project_id)
     if not project:
@@ -169,11 +172,17 @@ async def create_project_pipeline_job(project_id: str) -> JobResponse:
         )
     media_list = repo.list_project_media(project_id)
     media_id = media_list[0].id if media_list else None
+    config = (
+        {"face_guided_framing": True}
+        if payload is not None and payload.face_guided_framing
+        else None
+    )
     try:
         record = await job_manager.submit_job(
             project_id=project_id,
             job_type="pipeline",
             media_id=media_id,
+            config=config,
         )
         return _to_job_response(record)
     except ValueError as e:

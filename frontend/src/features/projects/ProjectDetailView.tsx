@@ -177,6 +177,7 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
     resolution: "1080p",
     format: "mp4",
     burnInSubtitles: true,
+    faceGuidedFraming: false,
   });
 
   // Mirror the prop into local state during render (React's documented
@@ -395,7 +396,9 @@ export const ProjectDetailView: React.FC<ProjectDetailViewProps> = ({
 
     try {
       const job = await api.createRenderJob(targetCandidate.id, {
-        layout: "center_crop",
+        // face_guided is an explicit request: the backend centres the crop and
+        // records a fallback reason when this clip has no solved trajectory.
+        layout: exportSettings.faceGuidedFraming ? "face_guided" : "center_crop",
         quality: exportSettings.resolution === "720p" ? "cpu_friendly" : "high",
         caption_format: exportSettings.burnInSubtitles ? "ass" : "none",
         style: buildCaptionStyle(captionOptions),

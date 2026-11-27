@@ -395,11 +395,19 @@ export class ApiClient {
    */
   async createPipelineJob(
     projectId: string,
-    options: { stages?: string[]; force?: boolean } = {},
+    options: { stages?: string[]; force?: boolean; faceGuidedFraming?: boolean } = {},
   ): Promise<JobResponse> {
+    // The pipeline endpoint reads face_guided_framing; keep the wire key in
+    // snake_case and only send it when the caller asked for it.
+    const body: Record<string, unknown> = {};
+    if (options.stages !== undefined) body.stages = options.stages;
+    if (options.force !== undefined) body.force = options.force;
+    if (options.faceGuidedFraming !== undefined) {
+      body.face_guided_framing = options.faceGuidedFraming;
+    }
     return this.request<JobResponse>(`/api/projects/${projectId}/pipeline-jobs`, {
       method: "POST",
-      body: JSON.stringify(options),
+      body: JSON.stringify(body),
     });
   }
 

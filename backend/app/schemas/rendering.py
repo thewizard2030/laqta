@@ -14,6 +14,9 @@ class LayoutMode(StrEnum):
 
     CENTER_CROP = "center_crop"
     BLURRED_BACKGROUND = "blurred_background"
+    # Follows the crop trajectory solved by s06_reframe_subs. Frontal-face
+    # only, and falls back to a centred crop when a clip has no trajectory.
+    FACE_GUIDED = "face_guided"
 
 
 class QualityPreset(StrEnum):
