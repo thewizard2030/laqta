@@ -78,6 +78,20 @@ To retry after fixing a token or transient error, re-run the `publish-release` j
 
 ---
 
+## Completed Release Record: `v0.4.0` (2026-11-28)
+
+- **Tag & Verified Target Commit:** `v0.4.0` (`c77a3b606a95edd7735c6c004a84e8884b52cb14`) -> [`45904d525e53b81a3f6cbbc5e0c822e223add3c1`](https://github.com/thewizard2030/laqta/commit/45904d525e53b81a3f6cbbc5e0c822e223add3c1) (PR #31)
+- **CircleCI `ci` workflow:** `58f3dbe8-e3c9-4175-9dfb-cbc0e8fea98c` — `backend`: `success`, `frontend`: `success`.
+- **CircleCI `release` workflow:** [`c3dc63e2-97b1-4351-8b3a-e88ce445ae0c`](https://app.circleci.com/workflow/c3dc63e2-97b1-4351-8b3a-e88ce445ae0c) — `frontend`: `success`, `backend`: **`failed`**, `publish-release`: `not run`.
+  - The `backend` step was killed 58 s into the test suite at ~91 % of its progress output, with no failing test, no traceback and no junit results written. The identical tree had already passed the same `backend` job on the `ci` workflow above and `./scripts/check.sh` (all 15 gates) locally.
+  - CircleCI rejected re-running the workflow for both the maintainer and the agent (`Permission denied`), so `publish-release` could not be re-triggered.
+- **Publishing path used:** the same verified procedure `publish-release` runs, executed from the immutable tag — `scripts/check_version.py`, `scripts/release_notes.py v0.4.0 --check`, `git archive --prefix="laqta-v0.4.0/" v0.4.0`, then `scripts/publish_github_release.py --tag v0.4.0 --verify-git-tag`. This is **not** a CircleCI-verified publication and is recorded as such; the CircleCI `release` workflow for `v0.4.0` remains red.
+- **Published GitHub Release:** https://github.com/thewizard2030/laqta/releases/tag/v0.4.0
+- **Source Tarball Asset:** [`laqta-v0.4.0.tar.gz`](https://github.com/thewizard2030/laqta/releases/download/v0.4.0/laqta-v0.4.0.tar.gz) (`5568111` bytes, SHA-256 `c29cc6a00a14a8b96b07ae4e82e486392f1bb40c59d854e5fa587656c9e0d5ef`)
+- **Independent verification:** downloaded the asset from the published release, recomputed the SHA-256 above and matched it against the API `sha256:` digest, and confirmed the archive contains `qatta/__init__.py` reporting `0.4.0`, `qatta/stages/s06_reframe_subs/detector.py`, `qatta/stages/s06_reframe_subs/frame_sampler.py`, `tests/test_s06_render_face_guided.py`, `backend/tests/test_render_face_guided.py`, and `backend/requirements-analysis-lock.txt` pinning `opencv-python==4.14.0.94`.
+
+---
+
 ## Completed Release Record: `v0.3.1` (2026-11-24)
 
 - **Tag & Verified Target Commit:** `v0.3.1` (`122a6122f7d362d87df7628e55857b5a3a9665fa`) -> [`d240a32431dcc824d546e1b9a42e81a40dc4adbf`](https://github.com/thewizard2030/laqta/commit/d240a32431dcc824d546e1b9a42e81a40dc4adbf) (PR #29)

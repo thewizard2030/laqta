@@ -93,6 +93,13 @@ pytest tests --tb=short
 ```
 
 - **Local validation:** `.circleci/config.yml` passed `circleci config validate`, YAML parsing passed across all 8 config/workflow files, and `scripts/publish_github_release.py` passed unit verification (`tests/test_publish_github_release.py`).
+- **Remote CircleCI CI & `v0.4.0` publication:**
+  - `release/v0.4.0` (`a28c4d6`) passed CircleCI `ci` (`backend` and `frontend`, workflow `58f3dbe8-e3c9-4175-9dfb-cbc0e8fea98c`).
+  - Annotated tag `v0.4.0` on merged `main` commit `45904d525e53b81a3f6cbbc5e0c822e223add3c1` (PR #31) executed CircleCI `release` workflow [`c3dc63e2-97b1-4351-8b3a-e88ce445ae0c`](https://app.circleci.com/workflow/c3dc63e2-97b1-4351-8b3a-e88ce445ae0c): `frontend` (`success`), `backend` (**`failed`**), `publish-release` (`not run`).
+  - The `backend` failure was not an assertion: the "Run backend test suite" step ended after 58 s at ~91 % of its progress output with no failing test, no traceback and no junit output — a killed test process, not a red test. The same tree had already passed the identical `backend` job on the `ci` workflow and `./scripts/check.sh` (all 15 gates) locally.
+  - CircleCI refused to re-run the workflow for both the maintainer and the agent (`Permission denied`), so `publish-release` could not be re-triggered. The release was published from the immutable tag with the same verified procedure and script the job runs (`check_version.py`, `release_notes.py --check`, `git archive` from `v0.4.0`, `publish_github_release.py --verify-git-tag`).
+  - Published [GitHub Release `v0.4.0`](https://github.com/thewizard2030/laqta/releases/tag/v0.4.0) with source tarball `laqta-v0.4.0.tar.gz` (`5568111` bytes, SHA-256 `c29cc6a00a14a8b96b07ae4e82e486392f1bb40c59d854e5fa587656c9e0d5ef`).
+
 - **Remote CircleCI CI & `v0.3.1` publication:**
   - `release/v0.3.1` (`e3fff75`) passed CircleCI `ci` (`backend` and `frontend`).
   - Annotated tag `v0.3.1` on merged `main` commit `d240a32431dcc824d546e1b9a42e81a40dc4adbf` (PR #29) executed CircleCI `release` workflow [`913c44df-32db-42c4-9fac-a5e990a2df86`](https://app.circleci.com/workflow/913c44df-32db-42c4-9fac-a5e990a2df86): `backend` (`success`), `frontend` (`success`), and `publish-release` (`success`).
